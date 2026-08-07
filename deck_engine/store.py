@@ -103,10 +103,41 @@ def build(raw_dir: Path = config.RAW_DIR, db_path: Path = config.DB_PATH) -> Pat
     return db_path
 
 
+# Which stratum a list was published under. Challenge-class is every class
+# except league, so the rule is drawn once and both readings of it agree.
+_STRATUM = "CASE WHEN event_class = 'league' THEN 'league' ELSE 'challenge-class' END"
+
+
 def _rows(cursor: duckdb.DuckDBPyConnection) -> list[dict]:
     """An executed cursor's rows, each keyed by the column it selected."""
     names = [c[0] for c in cursor.description]
     return [dict(zip(names, row)) for row in cursor.fetchall()]
+
+
+def _count(counts: list[dict], stratum: str, camp: str, unit: str) -> int:
+    """One camp's population in one stratum, in `unit`: `pilots` counts a pilot
+    once however many times they published, `lists` counts every publication."""
+    return sum(c[unit] for c in counts if (c["stratum"], c["camp"]) == (stratum, camp))
+
+
+def _share(counts: list[dict], stratum: str, camp: str, unit: str) -> float:
+    """That population against the whole stratum's."""
+    total = sum(c[unit] for c in counts if c["stratum"] == stratum)
+    return _count(counts, stratum, camp, unit) / total
+
+
+def _cap_effect(gap: float, uncapped: float) -> str:
+    """What counting each pilot once did to the uncapped gap.
+
+    A gap one grinder produced is caught here rather than published: their
+    trophies are one pilot's, so capping either turns the figure round or takes
+    most of it away. Only a gap the cap leaves standing is the camp's.
+    """
+    if gap * uncapped < 0:
+        return "flips"
+    if abs(gap) < config.CAP_COLLAPSE * abs(uncapped):
+        return "collapses"
+    return "holds"
 
 
 def _query(db_path: Path, columns: str, source: str, where: str, params: list) -> list[dict]:
@@ -159,13 +190,78 @@ def camp_ratio(db_path: Path = config.DB_PATH) -> list[dict]:
             con.execute(
                 "SELECT date, stratum, camp, count(*) AS lists,"
                 " count(*) / sum(count(*)) OVER (PARTITION BY date, stratum) AS share"
-                " FROM (SELECT date, camp, CASE WHEN event_class = 'league' THEN 'league'"
-                "       ELSE 'challenge-class' END AS stratum"
+                f" FROM (SELECT date, camp, {_STRATUM} AS stratum"
                 "       FROM decklists WHERE archetype = ?)"
                 " GROUP BY date, stratum, camp ORDER BY date, stratum, camp",
                 [config.ARCHETYPE],
             )
         )
+
+
+def conversion_gap(db_path: Path = config.DB_PATH) -> list[dict]:
+    """Each camp's share of league-trophy pilots less its share of challenge-class
+    pilots, either side of the regime boundary.
+
+    A league 5-0 is a real win record, so the stratum does carry performance
+    information. What it does not publish is the denominator: a camp's trophy
+    count is its entries times its conversion, and only the product is served.
+    The challenge-class stratum stands in for that denominator, which is what
+    turns two raw counts into a reading.
+
+    The two strata truncate at different bars, so the gap measures the shape of
+    a camp's outcomes and not its quality: a league 5-0 is the extreme right
+    tail, a challenge top-32 a wide band. A camp short of 5-0s and long on
+    challenge finishes is flatter, not worse. It is hypothesis-grade evidence
+    that routes to playtesting, and it never enters performance tilt.
+
+    Two confounds would otherwise make it noise, so the controls are in the row
+    rather than available beside it. Grinding volume is one: one pilot's
+    trophies are one pilot's, so the published `gap` counts each pilot once per
+    camp, `uncapped` is the same figure over every published list, and
+    `cap_effect` says what the cap did to it. ADR 0001 keeps the dumps as
+    published, repeat 5-0s and all, and this does not reopen that: the cap is
+    applied to the reading, and the publication count stays beside it. The
+    regime boundary is the other confound, so each side of it gets its own row.
+
+    A pilot who registered both camps counts once in each, so the shares are
+    over camp commitments and sum to their stratum. Counting such a pilot once
+    overall would leave the shares summing past 1 and no reading to take.
+    """
+    with duckdb.connect(db_path, read_only=True) as con:
+        counts = _rows(
+            con.execute(
+                "SELECT CASE WHEN date >= ? THEN 'post-regime' ELSE 'pre-regime' END AS regime,"
+                f" {_STRATUM} AS stratum, camp,"
+                " count(DISTINCT pilot) AS pilots, count(*) AS lists"
+                " FROM decklists WHERE archetype = ? GROUP BY ALL",
+                [config.REGIME_BOUNDARY, config.ARCHETYPE],
+            )
+        )
+
+    rows = []
+    for regime in ("pre-regime", "post-regime"):
+        side = [c for c in counts if c["regime"] == regime]
+        for camp in sorted({c["camp"] for c in side}):
+            league_share = _share(side, "league", camp, "pilots")
+            challenge_share = _share(side, "challenge-class", camp, "pilots")
+            gap = league_share - challenge_share
+            uncapped = _share(side, "league", camp, "lists") - _share(
+                side, "challenge-class", camp, "lists"
+            )
+            rows.append(
+                {
+                    "regime": regime,
+                    "camp": camp,
+                    "league_pilots": _count(side, "league", camp, "pilots"),
+                    "challenge_pilots": _count(side, "challenge-class", camp, "pilots"),
+                    "league_share": league_share,
+                    "challenge_share": challenge_share,
+                    "gap": gap,
+                    "uncapped": uncapped,
+                    "cap_effect": _cap_effect(gap, uncapped),
+                }
+            )
+    return rows
 
 
 def near_miss_lists(db_path: Path = config.DB_PATH, day: str | None = None) -> list[dict]:
