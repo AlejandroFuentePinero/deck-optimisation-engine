@@ -1,4 +1,4 @@
-"""The single test seam: real cached payloads in, externally meaningful verdicts out.
+"""The pipeline's single test seam: real cached payloads in, verdicts out.
 
 Fixtures are the immutable raw cache of every Modern event published on
 2026-08-05, captured from the live site. Nothing here asserts on parser
@@ -158,7 +158,7 @@ class CapturedSite:
     def __init__(self):
         self.fetches: list[str] = []
 
-    def event_slugs(self, since, fmt, until):
+    def event_slugs(self, since, fmt, until, today):
         """Everything it published, July and August alike. Which days the index
         lists is the site's business, and is verified against the live site."""
         return sorted(self.EVENTS)
@@ -273,3 +273,36 @@ def test_a_withheld_refetch_leaves_the_capture_already_cached_standing(tmp_path)
     # 2026-08-05 is unsettled on 2026-08-06, so every event on it is refetched.
     refresh("2026-08-01", "2026-08-31", raw_dir, db, source=WithholdingSite(), today="2026-08-06")
     assert store.goryos_lists(db, "2026-08-05") == captured
+
+
+def test_a_capture_interrupted_mid_write_is_not_left_in_the_cache(tmp_path, monkeypatch):
+    """A settled event on disk is never refetched, so a payload left half
+    written by a run that died would be kept forever, and every later rebuild
+    would fail to parse it.
+
+    A capture therefore lands whole or not at all. Killing the process is stood
+    in for by truncating the write itself, since the cost is the same either way.
+    """
+    site = CapturedSite()
+    raw_dir, db = tmp_path / "raw", tmp_path / "engine.duckdb"
+    killed = "modern-challenge-32-2026-08-0512850696"
+    whole_write = Path.write_text
+
+    def die_partway(self, data, *args, **kwargs):
+        if killed not in self.name:
+            return whole_write(self, data, *args, **kwargs)
+        whole_write(self, data[: len(data) // 2], *args, **kwargs)
+        raise KeyboardInterrupt(self.name)
+
+    monkeypatch.setattr(Path, "write_text", die_partway)
+    with pytest.raises(KeyboardInterrupt):
+        refresh("2026-08-01", "2026-08-31", raw_dir, db, source=site, today="2026-08-31")
+    monkeypatch.undo()
+
+    assert not (raw_dir / f"{killed}.json").exists()
+
+    # Nothing on disk is a gap, so the re-run captures it and the day is whole.
+    site.fetches.clear()
+    refresh("2026-08-01", "2026-08-31", raw_dir, db, source=site, today="2026-08-31")
+    assert killed in site.fetches
+    assert {row["pilot"] for row in store.goryos_lists(db, "2026-08-05")} == GORYOS_PILOTS_2026_08_05
