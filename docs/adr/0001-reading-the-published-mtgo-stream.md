@@ -33,7 +33,10 @@ when first captured and 10 lists an hour later, while the completed 2026-08-06
 dump stayed at 58 across the same interval. Its 5-0s are published as they
 finish, so a day captured while it is still running is a partial capture. The
 site also publishes on US time while this runs on Australian time, which puts
-the local date up to a day ahead of the site's.
+the local date up to a day ahead of the site's. It catches up within the local
+day: the 08-07 dump was already serving 12 lists at 15:18 local on 2026-08-07.
+Every one of the seven months backfilled publishes an event dated its first, so
+a new month's index is populated before local time leaves the first.
 
 **The site intermittently serves a 200 whose content is missing:** a month index
 listing no events, or an event page whose payload holds metadata and no lists.
@@ -57,6 +60,15 @@ their 62 and 41 lists while 08-06 and 08-07 had begun stubbing instead.
   listing events, an event payload holding lists. Anything else is retried, and
   a refresh that cannot reach an event caches the rest and then fails naming the
   gap, so an incomplete run is never mistaken for a complete one.
+- A month beginning today or later is one the site has not opened yet, so its
+  index failing to serve is not a failure. Local time turns the month over some
+  fourteen hours before MTGO does, which puts a run on the local first ahead of
+  the site's first event of the month. Every month already open is held to the
+  rule above, since there an absent index cannot be told apart from a stub.
+- A capture lands whole or not at all: the payload is written beside its slug and
+  moved into place. The cache is immutable and keyed on the file being there, so
+  a payload half written by a run that died would be kept for good and would
+  break every rebuild from then on.
 - A gap is an event with nothing on disk. An unsettled day the site will not
   serve keeps the capture it already has and does not fail the run: that refetch
   was for what the day may have gained, not because the capture was wrong, so
@@ -86,8 +98,10 @@ their 62 and 41 lists while 08-06 and 08-07 had begun stubbing instead.
   three days cost a handful of refetches per run. If MTGO ever publishes a 5-0
   more than three days late, that list is lost; nothing observed suggests it
   does, and the window is a config value.
-- An index that lists no events cannot be told apart from a stub, so on the
-  local first of a month, while the site's clock is still on the last of the
-  previous one, a run can exhaust its retries on the new month's index and fail.
-  Nothing is lost, the message names the index, and the next run works; the
-  alternative, accepting an empty index, would let a stub silently drop a month.
+- An index that lists no events cannot be told apart from a stub, so the
+  rollover tolerance is drawn on the calendar and closes at the end of the local
+  first. The stream above says that is the whole of the window: the month's
+  index is populated before local time leaves the first. Widening the tolerance
+  to any month that lists no events would instead let a stub drop a month.
+- A `.partial` file is left behind by a run that died mid-write. Nothing reads
+  it, since the cache loads `*.json`, and the next run overwrites it.

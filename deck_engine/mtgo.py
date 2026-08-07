@@ -3,8 +3,10 @@
 Every event page is a JS app that embeds its whole payload as
 ``window.MTGO.decklists.data = {...};``. That blob is the API.
 
-Excluded from the automated test seam by design (see the PRD's Testing
-Decisions); verified by spot-checking fetched counts against the live site.
+The network is excluded from the automated test seam by design (see the PRD's
+Testing Decisions), and is verified by spot-checking fetched counts against the
+live site. The calendar rule deciding which month may have no index yet is not
+network, and is tested.
 """
 
 import json
@@ -68,18 +70,30 @@ def _months(since: str, until: str) -> list[tuple[int, int]]:
     return months
 
 
-def event_slugs(since: str, fmt: str, until: str) -> list[str]:
-    """Slugs of every published `fmt` event from `since` to `until` (YYYY-MM-DD)."""
-    return sorted(
-        {
+def event_slugs(since: str, fmt: str, until: str, today: str) -> list[str]:
+    """Slugs of every published `fmt` event from `since` to `until` (YYYY-MM-DD).
+
+    Local time turns the month over some fourteen hours before MTGO does, so a
+    month beginning on `today` or later is one the site has published nothing
+    into yet: its index is empty rather than missing. A month already open and
+    failing to serve is the site stubbing, which is common and does not reliably
+    clear, so reading that as empty would silently drop the month from the run.
+    """
+    now = date.fromisoformat(today)
+    slugs = set()
+    for year, month in _months(since, until):
+        try:
+            page = _get(f"{BASE}/decklists/{year}/{month:02d}", SLUG_RE.search)
+        except Unavailable:
+            if date(year, month, 1) < now:
+                raise
+            continue
+        slugs.update(
             slug
-            for year, month in _months(since, until)
-            for slug, day in SLUG_RE.findall(
-                _get(f"{BASE}/decklists/{year}/{month:02d}", SLUG_RE.search)
-            )
+            for slug, day in SLUG_RE.findall(page)
             if since <= day <= until and slug.startswith(f"{fmt}-")
-        }
-    )
+        )
+    return sorted(slugs)
 
 
 def _carries_lists(page: str) -> bool:

@@ -33,7 +33,7 @@ def refresh(
     settled = date.fromisoformat(until) - timedelta(days=config.UNSETTLED_DAYS)
     raw_dir.mkdir(parents=True, exist_ok=True)
     gaps = []
-    for slug in source.event_slugs(since, config.FORMAT, until):
+    for slug in source.event_slugs(since, config.FORMAT, until, today):
         path = raw_dir / f"{slug}.json"
         cached = path.exists()
         if cached and mtgo.slug_day(slug) < settled.isoformat():
@@ -44,7 +44,11 @@ def refresh(
             if not cached:
                 gaps.append(str(gap))
             continue
-        path.write_text(json.dumps(payload, indent=1), encoding="utf-8")
+        # Landed whole or not at all: a capture half written by a run that died
+        # would be a settled file the cache never refetches and never parses.
+        partial = path.with_suffix(".partial")
+        partial.write_text(json.dumps(payload, indent=1), encoding="utf-8")
+        partial.replace(path)
 
     store.build(raw_dir, db_path)
     if gaps:
