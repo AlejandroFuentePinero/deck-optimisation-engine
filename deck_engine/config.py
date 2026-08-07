@@ -9,6 +9,14 @@ DB_PATH = REPO_ROOT / "data" / "engine.duckdb"
 
 FORMAT = "modern"
 
+# How far back the analysis history reaches: two regimes' worth of events.
+HISTORY_START = "2026-02-01"
+
+# How long an event's publication can still change. A league dump gains 5-0s
+# through its own day, and the site publishes on US time while we run on
+# Australian time, so the last few days are refetched rather than trusted.
+UNSETTLED_DAYS = 3
+
 # Membership rule: every signature card, in the mainboard.
 ARCHETYPE = "goryos"
 SIGNATURE_CARDS = (

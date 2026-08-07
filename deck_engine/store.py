@@ -15,6 +15,7 @@ CREATE OR REPLACE TABLE decklists (
     event_class VARCHAR,
     date VARCHAR,
     placement INTEGER,
+    swiss_points INTEGER,
     record VARCHAR,
     archetype VARCHAR
 )
@@ -27,7 +28,7 @@ def build(raw_dir: Path = config.RAW_DIR, db_path: Path = config.DB_PATH) -> Pat
     with duckdb.connect(db_path) as con:
         con.execute(SCHEMA)
         con.executemany(
-            "INSERT INTO decklists VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO decklists VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 (
                     d.pilot,
@@ -36,6 +37,7 @@ def build(raw_dir: Path = config.RAW_DIR, db_path: Path = config.DB_PATH) -> Pat
                     d.event_class,
                     d.date,
                     d.placement,
+                    d.swiss_points,
                     d.record,
                     d.archetype,
                 )
@@ -51,7 +53,7 @@ def goryos_lists(db_path: Path = config.DB_PATH, day: str | None = None) -> list
     params = [config.ARCHETYPE] + ([day] if day else [])
     with duckdb.connect(db_path, read_only=True) as con:
         cursor = con.execute(
-            f"SELECT pilot, event, event_id, event_class, date, placement, record"
+            f"SELECT pilot, event, event_id, event_class, date, placement, swiss_points, record"
             f" FROM decklists WHERE {where}"
             f" ORDER BY date DESC, placement NULLS LAST, pilot",
             params,
