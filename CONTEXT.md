@@ -91,7 +91,11 @@ A Modern B&R change or meta-warping set release that resets the relevance of pri
 The fraction of published winning lists an archetype occupies over a time window. A proxy for true field share, since only the winning portion of the field is visible.
 
 **Performance tilt**:
-For a configuration, its points-weighted adoption minus its raw adoption within challenge lists. Positive: overrepresented among high-point finishes. Negative on a rising configuration: the herd is adopting an underperformer.
+For a configuration, its points-weighted adoption minus its raw adoption within challenge lists. Positive: overrepresented among high-point finishes. Negative on a rising configuration: the herd is adopting an underperformer. Swiss points only, so no league list enters it.
+
+**Conversion gap**:
+For a camp, its share of league-trophy pilots minus its share of challenge-class pilots, over a regime-bounded window, counting each pilot once per camp. A league dump publishes trophies without their denominator: a camp's 5-0 count is its entries times its conversion, and only the product is served, so the challenge-class stratum stands in for the entries. The two strata truncate at different bars, so a camp short of 5-0s and long on challenge finishes is flatter, not worse. Hypothesis-grade evidence about outcome distribution: it routes to playtesting, never to a slot decision. Reported only beside its controls, since one grinder's trophies or a straddled regime boundary would otherwise produce it on their own. The cap either holds the gap, collapses it (leaving under half of the uncapped figure standing) or flips its sign, and the reading says which. It is applied to the reading and not to the cache, which stays as published (see ADR 0001).
+_Avoid_: performance tilt (a different figure, over the challenge stratum alone, that the conversion gap never feeds)
 
 **Top-32 truncation**:
 The visibility bias: challenges publish only the top 32, leagues only 5-0s. Losing lists never appear, so all analysis is conditioned on success.

@@ -90,7 +90,11 @@ their 62 and 41 lists while 08-06 and 08-07 had begun stubbing instead.
 - Performance tilt and every points-weighted figure carry a Swiss-only caveat
   that the report must state; a playoff run is worth nothing in the points column.
 - League adoption over-weights prolific pilots by construction. That is the
-  intended reading, and pet-tech and pilot-affinity flags interpret it.
+  intended reading, and pet-tech and pilot-affinity flags interpret it. A figure
+  whose whole subject is that over-weighting is the exception: the conversion
+  gap caps its league population at one list per pilot per camp and reports the
+  uncapped publication count beside it. The cap is on the reading; the cache and
+  the store stay exactly as published.
 - Counting the raw cache by file over-counts events by four. Count the store.
 - The published counts are the site's current ones: the 2026-08-06 league dump
   holds 58 lists today against the 55 recorded when issue #3 was written.

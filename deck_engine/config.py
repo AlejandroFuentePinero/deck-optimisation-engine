@@ -12,6 +12,10 @@ FORMAT = "modern"
 # How far back the analysis history reaches: two regimes' worth of events.
 HISTORY_START = "2026-02-01"
 
+# The regime boundary the history spans (see ADR 0001). Lists either side of it
+# belong to different eras, so every window is bounded by it.
+REGIME_BOUNDARY = "2026-05-18"
+
 # How long an event's publication can still change. A league dump gains 5-0s
 # through its own day, and the site publishes on US time while we run on
 # Australian time, so the last few days are refetched rather than trusted.
@@ -32,6 +36,10 @@ SIGNATURE_CARDS = (
 DIVERGENCE_CARD = "Fallaji Archaeologist"
 CAMPS = {"fallaji": (3, 4), "non-fallaji": (0,)}
 HYBRID_CAMP = "hybrid"
+
+# Conversion gap rule: how much of the uncapped figure counting each pilot once
+# has to leave standing before the gap is the camp's rather than a grinder's.
+CAP_COLLAPSE = 0.5
 
 # Watchlist rule: a non-member mainboarding this one is a near-miss, and what it
 # dropped is the rest of the trio.

@@ -25,6 +25,9 @@ FIXTURE_DUPLICATE = Path(__file__).parent / "fixtures" / "duplicate"
 FIXTURE_REPEATS = Path(__file__).parent / "fixtures" / "repeats"
 # Two captured challenges holding a list of every camp shape, plus a near-miss.
 FIXTURE_CAMPS = Path(__file__).parent / "fixtures" / "camps"
+# Both strata either side of the 2026-05-18 regime boundary, with a grinder in
+# them: Rvng took three of the four post-regime Fallaji league trophies here.
+FIXTURE_CONVERSION = Path(__file__).parent / "fixtures" / "conversion"
 # The pilot's own 75 as captured, which is not a fixture but the real thing.
 REFERENCE_CAPTURE = Path(__file__).parent.parent / "reference" / "2026-08-07-moxfield.txt"
 
@@ -328,6 +331,122 @@ def test_the_camp_ratio_never_pools_the_league_and_challenge_strata(tmp_path):
             "share": 1.0,
         },
     ]
+
+
+def test_the_conversion_gap_is_a_camps_league_pilot_share_less_its_challenge_share(tmp_path):
+    """What a camp converts into 5-0s, against how much of the field it is.
+
+    A league trophy is a real win record, but its denominator is unpublished: a
+    camp's trophy count is entries times conversion, and only the product is
+    served. The challenge stratum supplies the proxy denominator, so the gap is
+    the whole reading and neither raw count is.
+
+    Read off the seven captured payloads by hand. Post-regime the leagues hold
+    four Fallaji trophies from two pilots, Rvng having taken three of them, and
+    eight non-Fallaji trophies from seven; the two challenges hold one Fallaji,
+    one hybrid and six non-Fallaji lists, a pilot apiece. Pre-regime is one
+    trophy each way and a showcase challenge of one Fallaji to two non-Fallaji.
+
+    Every row carries its own controls, because the gap alone is unreadable:
+    the pilot counts it was computed over, the uncapped figure the per-pilot cap
+    was applied to, and the same figure the far side of the regime boundary.
+
+    The hybrids are in it for the reason they are in the camp ratio: a camp
+    converting worse than the experiment is the same news as it converting worse
+    than the other camp. Post-regime they hold a challenge list and no trophy,
+    which is a gap of the whole of their challenge share.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_CONVERSION, db)
+
+    assert store.conversion_gap(db) == [
+        {
+            "regime": "pre-regime",
+            "camp": "fallaji",
+            "league_pilots": 1,
+            "challenge_pilots": 1,
+            "league_share": pytest.approx(1 / 2),
+            "challenge_share": pytest.approx(1 / 3),
+            "gap": pytest.approx(1 / 6),
+            "uncapped": pytest.approx(1 / 6),
+            "cap_effect": "holds",
+        },
+        {
+            "regime": "pre-regime",
+            "camp": "non-fallaji",
+            "league_pilots": 1,
+            "challenge_pilots": 2,
+            "league_share": pytest.approx(1 / 2),
+            "challenge_share": pytest.approx(2 / 3),
+            "gap": pytest.approx(-1 / 6),
+            "uncapped": pytest.approx(-1 / 6),
+            "cap_effect": "holds",
+        },
+        {
+            "regime": "post-regime",
+            "camp": "fallaji",
+            "league_pilots": 2,
+            "challenge_pilots": 1,
+            "league_share": pytest.approx(2 / 9),
+            "challenge_share": pytest.approx(1 / 8),
+            "gap": pytest.approx(7 / 72),
+            "uncapped": pytest.approx(5 / 24),
+            "cap_effect": "collapses",
+        },
+        {
+            "regime": "post-regime",
+            "camp": "hybrid",
+            "league_pilots": 0,
+            "challenge_pilots": 1,
+            "league_share": pytest.approx(0.0),
+            "challenge_share": pytest.approx(1 / 8),
+            "gap": pytest.approx(-1 / 8),
+            "uncapped": pytest.approx(-1 / 8),
+            "cap_effect": "holds",
+        },
+        {
+            "regime": "post-regime",
+            "camp": "non-fallaji",
+            "league_pilots": 7,
+            "challenge_pilots": 6,
+            "league_share": pytest.approx(7 / 9),
+            "challenge_share": pytest.approx(3 / 4),
+            "gap": pytest.approx(1 / 36),
+            "uncapped": pytest.approx(-1 / 12),
+            "cap_effect": "flips",
+        },
+    ]
+
+
+def test_a_gap_one_grinder_produced_is_caught_by_the_cap_rather_than_published(tmp_path):
+    """The confound the gap would otherwise be: one pilot playing a great deal.
+
+    Rvng took three of the four post-regime Fallaji league trophies here. Over
+    published lists the camp converts far above its challenge share, and that
+    figure is mostly one pilot's grinding. Counting each pilot once leaves under
+    half of it standing, so the row reports a collapse rather than the gap.
+
+    The reading is the pair and never the survivor alone: a camp whose gap the
+    cap leaves intact has a different claim from one whose gap it guts, and
+    nothing in the row is dropped for the reader to have to ask for.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_CONVERSION, db)
+
+    trophies = [
+        row
+        for row in store.goryos_lists(db, camp="fallaji")
+        if row["event_class"] == "league" and row["date"] >= "2026-05-18"
+    ]
+    assert len(trophies) == 4
+    assert sum(row["pilot"] == "Rvng" for row in trophies) == 3
+
+    fallaji = next(
+        row
+        for row in store.conversion_gap(db)
+        if (row["regime"], row["camp"]) == ("post-regime", "fallaji")
+    )
+    assert (fallaji["league_pilots"], fallaji["cap_effect"]) == (2, "collapses")
 
 
 def test_the_reference_list_capture_belongs_to_the_non_fallaji_camp():
