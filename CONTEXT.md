@@ -42,9 +42,12 @@ A family of decks recognised by its signature cards. The target archetype here i
 **Signature card**:
 A card whose presence in a list identifies its archetype.
 
+**Printing**:
+One of the names the site publishes a single card under. Superior Spider-Man is the Marvel printing of Kavaero, Mind-Bitten, mechanically the same card, and a list is published under whichever its pilot registered. Printings merge to one card at ingestion and their copies are summed, before anything counts a configuration: a pilot registering both is playing a two-of, not two one-ofs.
+
 **Goryo's**:
-The Modern archetype being optimised: an Esper (WUB) list whose mainboard contains Goryo's Vengeance, Atraxa, Grand Unifier, and Psychic Frog, all three required. Green sources for casting Atraxa do not change membership.
-_Avoid_: Reanimator (broader family), Grixis Reanimator (a different archetype)
+The Modern archetype being optimised: an Esper (WUB) list whose mainboard contains Goryo's Vengeance, Atraxa, Grand Unifier, Psychic Frog and Ephemerate, all four required. Ephemerate is in the rule because the other three are as at home in a Grixis reanimator deck as in this one: it is the blink half of the Esper shell, and the line the two versions fall either side of. Green sources for casting Atraxa do not change membership.
+_Avoid_: Reanimator (broader family), Grixis Reanimator (a different archetype, and what the rule without Ephemerate lets in)
 
 **Configuration**:
 For a card in a list, the pair (mainboard copies, sideboard copies). The unit at which adoption is tracked: a main↔side migration is a configuration change even when total copies are constant. Deck-level counts (e.g. lands) are configurations of the list as a whole.
@@ -53,7 +56,7 @@ For a card in a list, the pair (mainboard copies, sideboard copies). The unit at
 The set of all distinct cards observed in the archetype's lists within the analysis history (roughly 100-120 cards for Goryo's).
 
 **Fringe card**:
-A card at under ~10% adoption across the archetype's analysis history, including cards returning to the pool after falling out. Playing one is innovation-grade novelty at a delta of one.
+A card at under ~10% adoption across the archetype's analysis history, including cards returning to the pool after falling out. Playing one is innovation-grade novelty at a delta of one. The share is read as of the day the card turns up, over the history behind it: counting the appearance itself would let a card the camp piles onto the week it arrives price itself out of being fringe, losing the one card everybody has suddenly started playing.
 _Avoid_: out-of-pool (never-seen is just the extreme case)
 
 **Variant**:

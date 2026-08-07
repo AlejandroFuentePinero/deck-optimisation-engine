@@ -3,9 +3,34 @@
 import argparse
 from pathlib import Path
 
-from . import config, meta
+from . import config, flags, meta
 from .refresh import refresh
 from .store import build, goryos_lists, meta_trend
+
+
+def _flag_line(flag: dict) -> str:
+    """One flag as a line, saying which reading raised it and where that leaves it.
+
+    A hype flag's two shares are the league stratum's and its state is the
+    challenge stratum's verdict, so the line names the stratum each came from:
+    unlabelled beside one another they would read as one figure moving, which is
+    the blend the two strata are kept apart to prevent.
+    """
+    where = f"{flag['camp']:<12} {flag['card']} {flag['main']}/{flag['side']}"
+    if flag["kind"] == "hype":
+        tilt = "" if flag["tilt"] is None else f" tilt {flag['tilt']:+.3f}"
+        return (
+            f"{flag['raised_on']}  hype    {where:<44}"
+            f" league {flag['from_adoption']:>4.0%} -> {flag['to_adoption']:>4.0%}"
+            f"{tilt}  challenge says {flag['state']}"
+            f"  after {flag['origin_pilot']} #{flag['origin_placement']}"
+            f" {flag['origin_event']} {flag['origin_date']}"
+        )
+    back = f" back after {flag['absent_days']}d" if flag["returning"] else ""
+    return (
+        f"{flag['appeared_on']}  fringe  {where:<44}"
+        f" {flag['historical_adoption']:>4.0%} of the history{back}  {flag['pilot']}"
+    )
 
 
 def main(argv=None) -> None:
@@ -30,6 +55,8 @@ def main(argv=None) -> None:
     trend.add_argument("archetype", nargs="?", default=config.META_ARCHETYPE)
     trend.add_argument("--window-days", type=int, default=config.META_WINDOW_DAYS)
 
+    commands.add_parser("flags", help="the hype watchlist and the fringe appearances")
+
     args = parser.parse_args(argv)
     if args.command == "refresh":
         refresh(args.since, args.until)
@@ -47,6 +74,13 @@ def main(argv=None) -> None:
         for row in snapshots:
             print(f"{row['captured_on']}  {row['share']:>6.1%}  {row['deck_count']:>4} decks")
         print(f"{len(snapshots)} {args.window_days}-day snapshot(s) of {args.archetype}")
+        return
+
+    if args.command == "flags":
+        ledger = flags.load()
+        for flag in ledger:
+            print(_flag_line(flag))
+        print(f"{len(ledger)} flag(s); run refresh to bring them up to date")
         return
 
     rows = goryos_lists(day=args.date)

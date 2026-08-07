@@ -19,6 +19,13 @@ META_WINDOW_DAYS = 14
 
 FORMAT = "modern"
 
+# Printings the site publishes as separate cards that are one card. Superior
+# Spider-Man is Kavaero, Mind-Bitten with the Marvel IP on it; a list is
+# published under whichever printing its pilot registered, and a pilot may
+# register both. The Magic name is the canonical one, being what most of the
+# history is already published under.
+CARD_ALIASES = {"Superior Spider-Man": "Kavaero, Mind-Bitten"}
+
 # How far back the analysis history reaches: two regimes' worth of events.
 HISTORY_START = "2026-02-01"
 
@@ -42,10 +49,14 @@ ARCHETYPE = "goryos"
 # The same deck under MTGGoldfish's name for it, which is how the meta layer
 # knows it: the mirror share is this archetype's own row in the field's table.
 META_ARCHETYPE = "Goryo's Vengeance"
+# Ephemerate is in the rule because the other three are as at home in a Grixis
+# reanimator deck as in this one. It is the blink half of the Esper shell, and
+# the line the two versions of the deck fall either side of.
 SIGNATURE_CARDS = (
     "Goryo's Vengeance",
     "Atraxa, Grand Unifier",
     "Psychic Frog",
+    "Ephemerate",
 )
 
 # Variant rule: the camps a member belongs to, by mainboard copies of the card
@@ -59,6 +70,29 @@ HYBRID_CAMP = "hybrid"
 # Conversion gap rule: how much of the uncapped figure counting each pilot once
 # has to leave standing before the gap is the camp's rather than a grinder's.
 CAP_COLLAPSE = 0.5
+
+# Hype rule: the spike a flag is raised on, read as a fortnight's adoption
+# against the fortnight before it. Nothing to do with FRESH_WINDOW_DAYS, which
+# is how far back a list still speaks for the archetype; this is how long the
+# domain says a hype spike takes to happen in.
+HYPE_WINDOW_DAYS = 14
+HYPE_FLOOR = 0.10
+HYPE_CEILING = 0.30
+
+# The smallest population a spike may be read off. A camp publishes single
+# figures of lists in a thin fortnight, where one pilot changing his mind clears
+# any threshold, and a flag raised on that is noise wearing a verdict's clothes.
+HYPE_MIN_LISTS = 8
+
+# The finish behind a spike has to be one the field would have seen: top-16 is
+# the performance cut, since the top-8 boundary is mostly tiebreakers.
+HYPE_ORIGIN_PLACEMENT = 16
+
+# Fringe rule: how little of the archetype's history a card can hold and still
+# be innovation-grade novelty when it appears, and how long a card has to have
+# been out of the pool for its reappearance to be a return rather than a gap.
+FRINGE_ADOPTION = 0.10
+RETURN_ABSENCE_DAYS = 28
 
 # Watchlist rule: a non-member mainboarding this one is a near-miss, and what it
 # dropped is the rest of the trio.

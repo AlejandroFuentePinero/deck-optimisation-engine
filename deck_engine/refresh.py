@@ -4,7 +4,7 @@ import json
 from datetime import date, timedelta
 from pathlib import Path
 
-from . import config, mtgo, store
+from . import config, flags, mtgo, store
 
 
 def refresh(
@@ -51,6 +51,9 @@ def refresh(
         partial.replace(path)
 
     store.build(raw_dir, db_path)
+    # The store is rebuilt from the cache and remembers nothing; the ledger
+    # beside it is where a flag's lifecycle and the run that raised it survive.
+    flags.record(db_path, today)
     if gaps:
         raise mtgo.Unavailable(
             f"{len(gaps)} published event(s) the site would not serve; "

@@ -130,8 +130,9 @@ def build(
 
 # Which stratum a list was published under. Challenge-class is every class
 # except league, so the rule is drawn once and both readings of it agree.
+LEAGUE = "league"
 CHALLENGE_CLASS = "challenge-class"
-_STRATUM = f"CASE WHEN event_class = 'league' THEN 'league' ELSE '{CHALLENGE_CLASS}' END"
+_STRATUM = f"CASE WHEN event_class = '{LEAGUE}' THEN '{LEAGUE}' ELSE '{CHALLENGE_CLASS}' END"
 
 # What a list's finish is worth: its Swiss points over the best Swiss total its
 # own event published. Normalising per event puts a 96-player challenge running
@@ -487,6 +488,48 @@ def land_counts(db_path: Path = config.DB_PATH) -> list[dict]:
     same kind of movement as a copy crossing into the sideboard.
     """
     return _adoption_table(db_path, ("lands",))
+
+
+def series(db_path: Path = config.DB_PATH, since: str = config.REGIME_BOUNDARY) -> list[dict]:
+    """The archetype's lists from `since` onward, each carrying the
+    configurations it registered, for the readings that are taken over time.
+
+    The two-window queries above answer what a camp plays now against what it
+    played before. A reading of an episode wants the days in between, so this
+    serves the lists themselves and leaves the binning to the caller.
+
+    `since` is a decision the caller makes, because the two readings taken over
+    this want different histories. A spike stops at the regime boundary, since
+    one measured across it would report the format's correction as the field's.
+    A card's fringeness is its share of the whole analysis history, which is
+    what the glossary means by one.
+    """
+    scope = [config.ARCHETYPE, since]
+    with duckdb.connect(db_path, read_only=True) as con:
+        lists = _rows(
+            con.execute(
+                f"SELECT list_id, pilot, event, camp, {_STRATUM} AS stratum,"
+                " date, placement, weight"
+                f" FROM ({_WEIGHTED}) WHERE archetype = ? AND date >= ?",
+                scope,
+            )
+        )
+        registered = _rows(
+            con.execute(
+                "SELECT list_id, card, main, side FROM configurations JOIN decklists"
+                " USING (list_id) WHERE archetype = ? AND date >= ?",
+                scope,
+            )
+        )
+
+    configurations: dict[int, list[tuple]] = {}
+    for row in registered:
+        configurations.setdefault(row["list_id"], []).append(
+            (row["card"], row["main"], row["side"])
+        )
+    for row in lists:
+        row["configurations"] = configurations.get(row["list_id"], [])
+    return lists
 
 
 def near_miss_lists(db_path: Path = config.DB_PATH, day: str | None = None) -> list[dict]:
