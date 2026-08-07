@@ -10,8 +10,8 @@ from pathlib import Path
 
 import pytest
 
-from deck_engine import mtgo, store
-from deck_engine.classify import classify_cache
+from deck_engine import mtgo, reference, store
+from deck_engine.classify import camp, classify_cache
 from deck_engine.refresh import refresh
 
 FIXTURE_RAW = Path(__file__).parent / "fixtures" / "raw"
@@ -23,6 +23,10 @@ FIXTURE_DUPLICATE = Path(__file__).parent / "fixtures" / "duplicate"
 # One captured league dump in which a pilot trophied twice on the day, on two
 # lists that are not the same 75.
 FIXTURE_REPEATS = Path(__file__).parent / "fixtures" / "repeats"
+# Two captured challenges holding a list of every camp shape, plus a near-miss.
+FIXTURE_CAMPS = Path(__file__).parent / "fixtures" / "camps"
+# The pilot's own 75 as captured, which is not a fixture but the real thing.
+REFERENCE_CAPTURE = Path(__file__).parent.parent / "reference" / "2026-08-07-moxfield.txt"
 
 # The day's Goryo's lists, read off the published decklists by hand.
 GORYOS_PILOTS_2026_08_05 = {
@@ -209,6 +213,134 @@ def test_an_event_listed_under_two_slugs_is_one_event():
     assert len(lists) == 32
     assert len({d.pilot for d in lists}) == 32
     assert {d.date for d in lists} == {"2026-07-08"}
+
+
+def test_camps_split_the_archetype_by_the_divergence_card():
+    """Fallaji Archaeologist is the fork in the archetype's construction.
+
+    Read off the two captured challenges: Rvng on three copies and BERNASTORRES
+    on four are the Fallaji camp, Walker735 and Darkchrome6538 on none are the
+    non-Fallaji camp, and Gerardo94 on two has committed to neither.
+    """
+    lists = classify_cache(FIXTURE_CAMPS)
+
+    camps = {d.pilot: d.camp for d in lists if d.archetype == "goryos"}
+    assert camps == {
+        "Rvng": "fallaji",
+        "BERNASTORRES": "fallaji",
+        "Gerardo94": "hybrid",
+        "Walker735": "non-fallaji",
+        "Darkchrome6538": "non-fallaji",
+    }
+
+
+def test_a_camps_consensus_population_is_its_own_lists_and_never_the_hybrids(tmp_path):
+    """Consensus is computed per camp, so a camp's population is only its own.
+
+    Gerardo94's two copies are an experiment in neither direction: counting that
+    list into either camp would move that camp's consensus towards a build no
+    pilot in it registered. It stays in the archetype, and out of both.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_CAMPS, db)
+
+    fallaji = {row["pilot"] for row in store.goryos_lists(db, camp="fallaji")}
+    non_fallaji = {row["pilot"] for row in store.goryos_lists(db, camp="non-fallaji")}
+
+    assert fallaji == {"Rvng", "BERNASTORRES"}
+    assert non_fallaji == {"Walker735", "Darkchrome6538"}
+    assert "Gerardo94" in {row["pilot"] for row in store.goryos_lists(db)}
+
+
+def test_near_miss_lists_are_watchlisted_with_what_they_kept_and_what_they_dropped(tmp_path):
+    """A near-miss is potential variant innovation, not a member.
+
+    nikkuniku finished 25th on 2026-07-22 playing Goryo's Vengeance and Psychic
+    Frog with no Atraxa: exactly the shape worth watching, and exactly the shape
+    that would drag the archetype's own numbers towards a deck it isn't.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_CAMPS, db)
+
+    watchlist = store.near_miss_lists(db)
+
+    assert [(r["pilot"], r["date"], r["placement"]) for r in watchlist] == [
+        ("nikkuniku", "2026-07-22", 25)
+    ]
+    assert watchlist[0]["kept"] == ["Goryo's Vengeance", "Psychic Frog"]
+    assert watchlist[0]["dropped"] == ["Atraxa, Grand Unifier"]
+
+    # Watchlisted, and out of every archetype figure: no membership, no camp.
+    assert "nikkuniku" not in {row["pilot"] for row in store.goryos_lists(db)}
+
+
+def test_the_camp_ratio_is_queryable_as_a_series_over_time(tmp_path):
+    """Which way the archetype is drifting is a question about the split.
+
+    The two captured days answer it: one non-Fallaji list on 2026-07-22, then
+    four lists on 2026-07-29 split two Fallaji, one non-Fallaji, one hybrid. The
+    hybrids are in the denominator because how much of the archetype is
+    experimenting is part of the picture, and the shares sum to the day.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_CAMPS, db)
+
+    challenge = "challenge-class"
+    assert store.camp_ratio(db) == [
+        {"date": "2026-07-22", "stratum": challenge, "camp": "non-fallaji", "lists": 1, "share": 1.0},
+        {"date": "2026-07-29", "stratum": challenge, "camp": "fallaji", "lists": 2, "share": 0.5},
+        {"date": "2026-07-29", "stratum": challenge, "camp": "hybrid", "lists": 1, "share": 0.25},
+        {"date": "2026-07-29", "stratum": challenge, "camp": "non-fallaji", "lists": 1, "share": 0.25},
+    ]
+
+
+def test_the_camp_ratio_never_pools_the_league_and_challenge_strata(tmp_path):
+    """A day's two strata publish on different terms, so they get separate shares.
+
+    2026-08-05 is the case: one Fallaji list of three in the day's challenges,
+    none of the three league trophies. Pooled, the day reads 17% Fallaji, which
+    is a number no stratum reported and which moves with how many leagues
+    happened to publish rather than with what pilots registered.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_RAW, db)
+
+    assert store.camp_ratio(db) == [
+        {
+            "date": "2026-08-05",
+            "stratum": "challenge-class",
+            "camp": "fallaji",
+            "lists": 1,
+            "share": pytest.approx(1 / 3),
+        },
+        {
+            "date": "2026-08-05",
+            "stratum": "challenge-class",
+            "camp": "non-fallaji",
+            "lists": 2,
+            "share": pytest.approx(2 / 3),
+        },
+        {
+            "date": "2026-08-05",
+            "stratum": "league",
+            "camp": "non-fallaji",
+            "lists": 3,
+            "share": 1.0,
+        },
+    ]
+
+
+def test_the_reference_list_capture_belongs_to_the_non_fallaji_camp():
+    """The pilot's own 75 is read by the rule the field is read by.
+
+    It has to be: the slot audit compares the reference list against its camp's
+    consensus, so a reference list of no camp would have nothing to answer to.
+    The 2026-08-07 capture plays no Fallaji Archaeologist.
+    """
+    mainboard, sideboard = reference.read(REFERENCE_CAPTURE)
+
+    assert camp(mainboard) == "non-fallaji"
+    assert (sum(mainboard.values()), sum(sideboard.values())) == (60, 15)
 
 
 class CapturedSite:

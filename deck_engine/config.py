@@ -24,3 +24,15 @@ SIGNATURE_CARDS = (
     "Atraxa, Grand Unifier",
     "Psychic Frog",
 )
+
+# Variant rule: the camps a member belongs to, by mainboard copies of the card
+# the archetype forks on. No list in the history sideboards it, so the mainboard
+# count is the whole commitment. A count between the camps is a hybrid
+# experiment: it belongs to neither consensus.
+DIVERGENCE_CARD = "Fallaji Archaeologist"
+CAMPS = {"fallaji": (3, 4), "non-fallaji": (0,)}
+HYBRID_CAMP = "hybrid"
+
+# Watchlist rule: a non-member mainboarding this one is a near-miss, and what it
+# dropped is the rest of the trio.
+WATCHLIST_CARD = "Goryo's Vengeance"
