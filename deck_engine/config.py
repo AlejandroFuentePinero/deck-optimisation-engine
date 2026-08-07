@@ -26,6 +26,12 @@ HISTORY_START = "2026-02-01"
 # belong to different eras, so every window is bounded by it.
 REGIME_BOUNDARY = "2026-05-18"
 
+# The fresh window: how far back a published list still speaks for the archetype
+# as it stands. The baseline is what is left of the regime behind it, which is
+# why only this length is named. Nothing to do with META_WINDOW_DAYS, which is
+# the window MTGGoldfish took a reading over.
+FRESH_WINDOW_DAYS = 14
+
 # How long an event's publication can still change. A league dump gains 5-0s
 # through its own day, and the site publishes on US time while we run on
 # Australian time, so the last few days are refetched rather than trusted.

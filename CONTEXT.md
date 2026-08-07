@@ -83,10 +83,10 @@ _Avoid_: candidate on its own (a hypothesis candidate is a different thing: a cl
 ### Analytical concepts
 
 **Fresh window**:
-The recent period whose lists represent the current state of the archetype and meta.
+The recent period whose lists represent the current state of the archetype and meta. Fourteen days, ending on the last day the store holds a published list for rather than on today, so a quiet week shortens no window.
 
 **Baseline window**:
-The longer comparison period that deltas are computed against. Bounded by meta regime changes, since older lists lose relevance.
+The longer comparison period that deltas are computed against. Bounded by meta regime changes, since older lists lose relevance, and it stops where the fresh window starts: the two are disjoint, so a delta is movement and not a fortnight compared against a period containing it.
 
 **Regime change**:
 A Modern B&R change or meta-warping set release that resets the relevance of prior lists. Lists on either side of a regime boundary belong to different eras and are not directly comparable.
@@ -99,6 +99,12 @@ One dated reading of MTGGoldfish's archetype table, transcribed by hand and kept
 
 **Mirror share**:
 Goryo's own meta share: how much of the field the archetype plays against itself. The join a conditional hypothesis needs, since a slot bought on mirror density is only earned while that density stands. Read as of a date, which is answered by the last snapshot taken on or before it, stale readings included and marked as such.
+
+**Adoption**:
+For a configuration, the share of a population's lists that registered it. The population is one camp, in one stratum, over one window, and never a blend of them: the same configuration reads differently in each, and a share over two of anything is a number no population reported. Deck-level configurations, such as the land count, are read the same way.
+
+**Points-weighted adoption**:
+The same share with each list weighted by its Swiss points over the best Swiss total its own event published. The per-event normalisation puts a long challenge on the same scale as a short one, so a configuration cannot climb on having been registered at the events that ran more rounds. Challenge-class only: a league publishes no standings to weigh a list by. Always read beside raw adoption, since their difference is performance tilt.
 
 **Performance tilt**:
 For a configuration, its points-weighted adoption minus its raw adoption within challenge lists. Positive: overrepresented among high-point finishes. Negative on a rising configuration: the herd is adopting an underperformer. Swiss points only, so no league list enters it.
