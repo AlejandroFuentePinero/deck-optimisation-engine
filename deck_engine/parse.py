@@ -13,6 +13,9 @@ from pathlib import Path
 # What a slug appends to the event kind: publication date plus event id.
 DATED_SUFFIX_RE = re.compile(r"-\d{4}-\d{2}-\d{2}\d+$")
 
+# How the payload types a land, in the fixed-width column it publishes types in.
+LAND_TYPE = "LAND"
+
 
 @dataclass
 class Decklist:
@@ -28,6 +31,7 @@ class Decklist:
     record: str | None
     mainboard: dict[str, int]
     sideboard: dict[str, int]
+    lands: int
     archetype: str | None = None
     camp: str | None = None
 
@@ -38,6 +42,29 @@ def _cards(entries: list[dict]) -> dict[str, int]:
         name = entry["card_attributes"]["card_name"]
         counts[name] = counts.get(name, 0) + int(entry["qty"])
     return counts
+
+
+def _lands(entries: list[dict]) -> int:
+    """The list's land count, which the domain reads as a configuration of the
+    75 as a whole.
+
+    The mainboard's alone: how much land a deck runs is a decision about the
+    60, and a sideboard land is a card brought in for a matchup.
+
+    The payload types the cards it publishes, so no list of lands is kept here,
+    and what it types is the front face. So this is the front-face count: a
+    modal double-faced card with a land back is typed by its spell half and does
+    not reach it. Sink into Stupor is the one this archetype plays, and a list
+    running it reads a land lighter here than its pilot would call it.
+
+    A split card carries no type at all, which is no loss: the site publishes
+    none whose halves are lands.
+    """
+    return sum(
+        int(entry["qty"])
+        for entry in entries
+        if (entry["card_attributes"].get("card_type") or "").strip() == LAND_TYPE
+    )
 
 
 def _event_class(payload: dict) -> str:
@@ -91,6 +118,7 @@ def parse_event(payload: dict) -> list[Decklist]:
                 record=result,
                 mainboard=_cards(raw["main_deck"]),
                 sideboard=_cards(raw["sideboard_deck"]),
+                lands=_lands(raw["main_deck"]),
             )
         )
     return lists

@@ -11,7 +11,7 @@ from pathlib import Path
 
 import pytest
 
-from deck_engine import meta, mtgo, reference, store
+from deck_engine import config, meta, mtgo, reference, store
 from deck_engine.classify import camp, classify_cache
 from deck_engine.refresh import refresh
 
@@ -29,6 +29,15 @@ FIXTURE_CAMPS = Path(__file__).parent / "fixtures" / "camps"
 # Both strata either side of the 2026-05-18 regime boundary, with a grinder in
 # them: Rvng took three of the four post-regime Fallaji league trophies here.
 FIXTURE_CONVERSION = Path(__file__).parent / "fixtures" / "conversion"
+# Eight captured events reaching back from 2026-08-05: both strata inside the
+# fresh fortnight, both strata behind it in the baseline, and a pre-regime
+# challenge the baseline has to stop short of. Every camp is represented, and
+# the day's non-Fallaji challenge lists disagree on where Consign to Memory
+# goes at a constant four copies.
+FIXTURE_ADOPTION = Path(__file__).parent / "fixtures" / "adoption"
+# One captured showcase qualifier whose only non-Fallaji list, karatedom's,
+# scored nothing: a camp whose whole window is worth zero points.
+FIXTURE_POINTLESS = Path(__file__).parent / "fixtures" / "zero-points"
 # The pilot's own 75 as captured, which is not a fixture but the real thing.
 REFERENCE_CAPTURE = Path(__file__).parent.parent / "reference" / "2026-08-07-moxfield.txt"
 # The meta history as it stands, which is likewise the real thing: the 14-day
@@ -451,6 +460,307 @@ def test_a_gap_one_grinder_produced_is_caught_by_the_cap_rather_than_published(t
         if (row["regime"], row["camp"]) == ("post-regime", "fallaji")
     )
     assert (fallaji["league_pilots"], fallaji["cap_effect"]) == (2, "collapses")
+
+
+def _configurations(rows, card, camp, stratum):
+    """One card's rows for one camp in one stratum, keyed by the configuration."""
+    return {
+        (row["main"], row["side"]): row
+        for row in rows
+        if (row["card"], row["camp"], row["stratum"]) == (card, camp, stratum)
+    }
+
+
+def test_adoption_is_read_per_camp_per_stratum_and_per_window(tmp_path):
+    """Four terms make an adoption figure, and dropping any of them makes it a
+    different number: which camp, which stratum, which window, which configuration.
+
+    Consign to Memory in the fresh fortnight is the case. The non-Fallaji camp's
+    three challenge lists split two to one over where the fourth copy goes; the
+    Fallaji camp's three are unanimous on all four in the side; the three league
+    trophies are unanimous the other way. Pooled, that is a card at 100% adoption
+    on a configuration nobody in the archetype agrees about.
+
+    The camp's own baseline sits beside each figure, since a share on its own
+    says nothing about which way it is moving.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+
+    rows = store.adoption(db)
+
+    def fresh(camp, stratum):
+        return {
+            configuration: (row["fresh_lists"], row["fresh_population"], row["fresh_adoption"])
+            for configuration, row in _configurations(
+                rows, "Consign to Memory", camp, stratum
+            ).items()
+        }
+
+    # AldenCates and Kollslaw main one and side three; Walker735 sides all four.
+    assert fresh("non-fallaji", "challenge-class") == {
+        (1, 3): (2, 3, pytest.approx(2 / 3)),
+        (0, 4): (1, 3, pytest.approx(1 / 3)),
+        # Registered in the baseline by Phryziel and Prim3Time, by nobody since.
+        (2, 2): (0, 3, 0.0),
+    }
+    assert fresh("fallaji", "challenge-class") == {(0, 4): (3, 3, 1.0)}
+    assert fresh("non-fallaji", "league") == {(1, 3): (3, 3, 1.0)}
+
+    # The delta is against the camp's own baseline, in its own stratum: the
+    # main copy is new since, and the split the camp used to run is gone.
+    moved = _configurations(rows, "Consign to Memory", "non-fallaji", "challenge-class")
+    assert (moved[(1, 3)]["baseline_lists"], moved[(1, 3)]["baseline_population"]) == (0, 4)
+    assert moved[(1, 3)]["delta"] == pytest.approx(2 / 3)
+    assert moved[(2, 2)]["baseline_adoption"] == pytest.approx(1 / 2)
+    assert moved[(2, 2)]["delta"] == pytest.approx(-1 / 2)
+
+
+def test_a_main_to_side_migration_at_a_constant_total_is_a_configuration_change(tmp_path):
+    """The reading the configuration unit exists for.
+
+    Zeect trophied twice in the same league dump having moved a Solitude to the
+    sideboard between runs, and every non-Fallaji challenge list in the fresh
+    window runs four Consign to Memory. On totals both cards look untouched: the
+    camp is on four copies before and four copies after, and a count of copies
+    would report nothing to see. Where the copies go changed, and adoption
+    splits across the two configurations to say so.
+
+    The Solitude half is Zeect alone, since he is the whole of that window's
+    Fallaji league population: one pilot changing his mind between runs, which
+    the row says by carrying a population of two lists. The Consign half is
+    three pilots at three seats, and there the split is the camp's.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+
+    rows = store.adoption(db)
+
+    migrated = _configurations(rows, "Solitude", "fallaji", "league")
+    assert {
+        configuration: row["baseline_adoption"] for configuration, row in migrated.items()
+    } == {(4, 0): 0.5, (3, 1): 0.5}
+    assert {main + side for main, side in migrated} == {4}
+
+    consign = _configurations(rows, "Consign to Memory", "non-fallaji", "challenge-class")
+    assert {main + side for main, side in consign} == {4}
+    assert consign[(1, 3)]["fresh_adoption"] == pytest.approx(2 / 3)
+    assert consign[(0, 4)]["fresh_adoption"] == pytest.approx(1 / 3)
+
+
+def test_points_weighting_is_each_finish_against_its_own_events_best(tmp_path):
+    """Raw adoption counts lists; weighted adoption counts how they finished.
+
+    A list is worth its Swiss points over the best Swiss total its event
+    published, so a 96-player challenge running more rounds cannot outvote a
+    challenge 32 on round count alone. Walker735's 12 points came out of an
+    event topping out at 21 and AldenCates' 12 out of one topping out at 18: the
+    same points, and not the same finish.
+
+    The fresh non-Fallaji challenge lists are AldenCates 12/18, Kollslaw 12/18
+    and Walker735 12/21, so the camp's weight is 2/3 + 2/3 + 4/7 = 40/21. The
+    two lists maining a Consign to Memory hold 4/3 of it, which is 0.7 against a
+    raw 2/3, so the configuration tilts +1/30. Walker735's sided fourth copy
+    takes the other side of it.
+
+    The tilt is the pair's difference and is only ever read beside them: +1/30
+    on two lists of three is a camp that has barely finished ahead, and the raw
+    share is what says so.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+
+    rows = store.adoption(db)
+
+    consign = _configurations(rows, "Consign to Memory", "non-fallaji", "challenge-class")
+    assert consign[(1, 3)]["fresh_adoption"] == pytest.approx(2 / 3)
+    assert consign[(1, 3)]["fresh_weighted"] == pytest.approx(0.7)
+    assert consign[(1, 3)]["fresh_tilt"] == pytest.approx(1 / 30)
+    assert consign[(0, 4)]["fresh_weighted"] == pytest.approx(0.3)
+    assert consign[(0, 4)]["fresh_tilt"] == pytest.approx(-1 / 30)
+
+    # The Fallaji camp is Acecalna 12/18, Rvng 12/21 and BERNASTORRES 18/21, so
+    # its weight is 44/21. The playset is the two of them holding 32/21 of it,
+    # which is 8/11 against a raw 2/3: Rvng's three-copy build is the drag.
+    playset = _configurations(rows, "Fallaji Archaeologist", "fallaji", "challenge-class")
+    assert playset[(4, 0)]["fresh_adoption"] == pytest.approx(2 / 3)
+    assert playset[(4, 0)]["fresh_weighted"] == pytest.approx(8 / 11)
+    assert playset[(4, 0)]["fresh_tilt"] == pytest.approx(2 / 33)
+    assert playset[(3, 0)]["fresh_tilt"] == pytest.approx(-2 / 33)
+
+
+def test_no_league_list_reaches_a_points_weighted_figure_or_the_performance_tilt(tmp_path):
+    """Performance tilt is Swiss points, and a league publishes none.
+
+    The rule was recorded in `CONTEXT.md` before there was any tilt code for it
+    to bind to, and it would otherwise hold only by accident: league rows carry
+    no `swiss_points` for a weighting to pick up. So the fixture puts both
+    strata inside the fresh window and the rule is asserted rather than assumed.
+
+    The non-Fallaji camp published six lists in the fortnight, three trophies
+    and three challenge finishes, and the trophies main the Consign the
+    challenge lists disagree about. Pooled, they would be three quarters of the
+    camp on that configuration and would weigh nothing while they said so.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+
+    rows = store.adoption(db)
+
+    trophies = [row for row in rows if row["stratum"] == "league"]
+    assert trophies, "the fixture has to carry the stratum for the rule to bind"
+    assert not [
+        row
+        for row in trophies
+        if any(
+            row[figure] is not None
+            for figure in ("fresh_weighted", "fresh_tilt", "baseline_weighted", "baseline_tilt")
+        )
+    ]
+
+    # The weighted figure is the challenge stratum's own population, and the
+    # camp's trophies are no part of it.
+    consign = _configurations(rows, "Consign to Memory", "non-fallaji", "challenge-class")
+    assert consign[(1, 3)]["fresh_population"] == 3
+    assert consign[(1, 3)]["fresh_weighted"] == pytest.approx(0.7)
+    assert _configurations(rows, "Consign to Memory", "non-fallaji", "league")[(1, 3)] == {
+        "camp": "non-fallaji",
+        "stratum": "league",
+        "card": "Consign to Memory",
+        "main": 1,
+        "side": 3,
+        "fresh_lists": 3,
+        "fresh_population": 3,
+        "fresh_adoption": 1.0,
+        "fresh_weighted": None,
+        "fresh_tilt": None,
+        # No non-Fallaji trophy was published in the baseline, so the camp has
+        # no league reading there to compare against and no delta to report.
+        "baseline_lists": 0,
+        "baseline_population": 0,
+        "baseline_adoption": None,
+        "baseline_weighted": None,
+        "baseline_tilt": None,
+        "delta": None,
+    }
+
+
+def test_a_camp_whose_window_scored_nothing_is_read_raw_rather_than_crashed_on(tmp_path):
+    """A weighting divides by what the camp's window was worth, and a window can
+    be worth nothing.
+
+    karatedom took the only non-Fallaji seat of the 2026-07-25 qualifier and
+    dropped every Swiss round, so the camp's whole challenge population that
+    fortnight weighs zero. There is no performance to distribute over: the raw
+    share still stands, since the list was registered and published, but a
+    weighted share of a pointless window is not a figure with a meaning.
+
+    Thin camps in a fortnight are the ordinary case here, not a contrived one.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_POINTLESS, db)
+
+    rows = store.adoption(db)
+
+    pointless = _configurations(rows, "Psychic Frog", "non-fallaji", "challenge-class")
+    assert pointless[(4, 0)]["fresh_adoption"] == 1.0
+    assert pointless[(4, 0)]["fresh_weighted"] is None
+    assert pointless[(4, 0)]["fresh_tilt"] is None
+
+    # The camp beside it scored, so it is read as usual: nothing here suppresses
+    # a weighting beyond the population that has no points to weigh with.
+    scoring = _configurations(rows, "Psychic Frog", "fallaji", "challenge-class")
+    assert scoring[(4, 0)]["fresh_weighted"] == 1.0
+
+
+def test_both_windows_are_configuration_values_and_the_baseline_stops_at_the_regime(
+    tmp_path, monkeypatch
+):
+    """How far back the archetype is read is a decision, and it is held in one place.
+
+    The fresh window is a length in days and the baseline is what is left of the
+    regime behind it, so the pair moves with `FRESH_WINDOW_DAYS` and
+    `REGIME_BOUNDARY` and with nothing else. Lengthening the fresh window pulls
+    the older challenges into it; moving the boundary back is what it takes to
+    reach a list from the era before it.
+
+    The 2026-03-21 showcase is in the fixture and in no window: its three lists
+    are the archetype as it was built before the B&R change, and averaging them
+    into a baseline the fresh window is compared against would report the
+    correction the format made as a change of the camp's mind.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+
+    def population(window, camp, stratum):
+        rows = _configurations(store.adoption(db), "Solitude", camp, stratum)
+        return next(iter(rows.values()))[f"{window}_population"]
+
+    # 2026-07-22 is a fortnight and a day behind the last published list, so
+    # Darkchrome6538 is the baseline's and the fresh window holds the day's three.
+    assert population("fresh", "non-fallaji", "challenge-class") == 3
+    assert population("baseline", "non-fallaji", "challenge-class") == 4
+    assert len(store.goryos_lists(db, "2026-03-21")) == 3, "the pre-regime lists are cached"
+
+    monkeypatch.setattr(config, "FRESH_WINDOW_DAYS", 40)
+    assert population("fresh", "non-fallaji", "challenge-class") == 7
+
+    monkeypatch.undo()
+    monkeypatch.setattr(config, "REGIME_BOUNDARY", "2026-01-01")
+    assert population("baseline", "non-fallaji", "challenge-class") == 6
+
+
+def test_the_land_count_is_a_configuration_of_the_list_as_a_whole(tmp_path):
+    """The manabase is a deck-level decision, and it is read like any other.
+
+    AldenCates registered 22 lands on 2026-08-05, counted off the published list
+    by hand: four Flooded Strand, four Polluted Delta, four Marsh Flats and ten
+    singleton duals, basics and creaturelands. Kollslaw matched him and
+    Walker735 came in a land lighter, so the camp's fresh challenge lists split
+    two to one, exactly as they do over where the fourth Consign goes.
+
+    Read against the baseline, that is the camp having moved up: no list behind
+    it ran 22. The two baseline lists counted at 20 each run a Sink into Stupor,
+    which the payload types as an instant, so the split there is the front-face
+    count and not two pilots disagreeing about the manabase.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+
+    rows = store.land_counts(db)
+
+    def distribution(window, camp, stratum):
+        return {
+            row["lands"]: row[f"{window}_adoption"]
+            for row in rows
+            if (row["camp"], row["stratum"]) == (camp, stratum)
+            and row[f"{window}_lists"]
+        }
+
+    assert distribution("fresh", "non-fallaji", "challenge-class") == {
+        22: pytest.approx(2 / 3),
+        21: pytest.approx(1 / 3),
+    }
+    assert distribution("fresh", "fallaji", "challenge-class") == {21: 1.0}
+    assert distribution("fresh", "non-fallaji", "league") == {
+        22: pytest.approx(2 / 3),
+        21: pytest.approx(1 / 3),
+    }
+    assert distribution("baseline", "non-fallaji", "challenge-class") == {
+        21: pytest.approx(1 / 2),
+        20: pytest.approx(1 / 2),
+    }
+
+    # A deck-level configuration answers the same questions a card's does: the
+    # 22-land build is new since the baseline, and it tilts the way the two
+    # lists registering it finished.
+    climbing = next(
+        row
+        for row in rows
+        if (row["camp"], row["stratum"], row["lands"]) == ("non-fallaji", "challenge-class", 22)
+    )
+    assert (climbing["baseline_adoption"], climbing["delta"]) == (0.0, pytest.approx(2 / 3))
+    assert climbing["fresh_tilt"] == pytest.approx(1 / 30)
 
 
 def test_the_reference_list_capture_belongs_to_the_non_fallaji_camp():

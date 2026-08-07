@@ -3,6 +3,7 @@
 import csv
 import tempfile
 from collections.abc import Iterable
+from datetime import date, timedelta
 from pathlib import Path
 
 import duckdb
@@ -22,7 +23,8 @@ CREATE OR REPLACE TABLE decklists (
     swiss_points INTEGER,
     record VARCHAR,
     archetype VARCHAR,
-    camp VARCHAR
+    camp VARCHAR,
+    lands INTEGER
 )
 """
 
@@ -108,6 +110,7 @@ def build(
                     d.record,
                     d.archetype,
                     d.camp,
+                    d.lands,
                 )
                 for list_id, d in lists
             ),
@@ -127,7 +130,33 @@ def build(
 
 # Which stratum a list was published under. Challenge-class is every class
 # except league, so the rule is drawn once and both readings of it agree.
-_STRATUM = "CASE WHEN event_class = 'league' THEN 'league' ELSE 'challenge-class' END"
+CHALLENGE_CLASS = "challenge-class"
+_STRATUM = f"CASE WHEN event_class = 'league' THEN 'league' ELSE '{CHALLENGE_CLASS}' END"
+
+# What a list's finish is worth: its Swiss points over the best Swiss total its
+# own event published. Normalising per event puts a 96-player challenge running
+# more rounds on the same scale as a challenge 32, so a configuration cannot
+# climb on having been registered at the longer events. The best is taken over
+# the whole event and not over the archetype's lists in it, since what a finish
+# is measured against is the field it finished in front of. A league carries no
+# points, so this is NULL there and no league list can ever weigh anything.
+_WEIGHTED = """
+    SELECT *, swiss_points / max(swiss_points) OVER (PARTITION BY event_id) AS weight
+    FROM decklists
+"""
+
+# The archetype's lists inside the two windows, each carrying what an adoption
+# figure is taken over: the camp that registered it, the stratum that published
+# it, which of the windows it fell in, and what its finish is worth. The
+# baseline is the rest of the regime behind the fresh window, so a list from the
+# era before the boundary is in neither: it belongs to a different archetype in
+# all but name.
+_SCOPED = f"""
+    SELECT list_id, camp, {_STRATUM} AS stratum, weight, lands,
+           -- `window` is SQL's own word, so the domain's one is quoted.
+           CASE WHEN date > ? THEN 'fresh' ELSE 'baseline' END AS "window"
+    FROM ({_WEIGHTED}) WHERE archetype = ? AND date >= ? AND date <= ?
+"""
 
 
 def _rows(cursor: duckdb.DuckDBPyConnection) -> list[dict]:
@@ -336,6 +365,128 @@ def conversion_gap(db_path: Path = config.DB_PATH) -> list[dict]:
                 }
             )
     return rows
+
+
+def _reading(window: str, stratum: str, population: dict | None, taken: dict | None) -> dict:
+    """One window's reading of one configuration: how many lists took it, out of
+    how many the camp published in that stratum, and what share that is.
+
+    Inside the challenge stratum the share is read twice, raw and weighted by
+    what each list's finish was worth, and the tilt is the second less the
+    first: positive means the configuration is overrepresented among the better
+    Swiss finishes. It is the pair that is the reading, since a tilt on three
+    lists is a tilt on three lists.
+
+    Weighting is the challenge stratum's alone. A league publishes 5-0s and no
+    standings, so there is no finish there to weigh a list by, and a league
+    share is raw or it is nothing. A camp whose whole window scored no Swiss
+    points is read the same way: there is no performance to distribute over, so
+    the raw share stands alone rather than the weighting dividing by nothing.
+
+    A window the camp published nothing in has no reading rather than a zero:
+    0% adoption says the camp registered lists and none took the configuration,
+    which is a different claim from the camp not having shown up.
+    """
+    reading = {"lists": 0, "population": 0, "adoption": None, "weighted": None, "tilt": None}
+    if population is not None:
+        reading["lists"] = taken["lists"] if taken else 0
+        reading["population"] = population["lists"]
+        reading["adoption"] = reading["lists"] / population["lists"]
+        if stratum == CHALLENGE_CLASS and population["weight"]:
+            reading["weighted"] = (taken["weight"] if taken else 0.0) / population["weight"]
+            reading["tilt"] = reading["weighted"] - reading["adoption"]
+    return {f"{window}_{name}": value for name, value in reading.items()}
+
+
+def _adoption_table(db_path: Path, keys: tuple[str, ...], join: str = "") -> list[dict]:
+    """Adoption of whatever `keys` name, per camp, per stratum, per window.
+
+    The windows are the two the archetype is read over, and they are drawn here
+    once for every figure that spans them: the fresh window is the last
+    `config.FRESH_WINDOW_DAYS` of published lists, the baseline is the rest of
+    the regime behind it, and the two are disjoint so a delta is movement rather
+    than a window compared against a period containing it.
+
+    They are anchored on the last day the store holds a list for and not on the
+    clock, so a quiet week shortens no window: what is fresh is the most recent
+    fortnight of play, not whichever part of it happened to fall before today.
+    """
+    with duckdb.connect(db_path, read_only=True) as con:
+        as_of = con.execute("SELECT max(date) FROM decklists").fetchone()[0]
+        # An empty cache has no last published day to anchor on, and no windows.
+        if as_of is None:
+            return []
+        fresh_start = date.fromisoformat(as_of) - timedelta(days=config.FRESH_WINDOW_DAYS)
+        bounds = [fresh_start.isoformat(), config.ARCHETYPE, config.REGIME_BOUNDARY, as_of]
+
+        def grouped(columns: str, joined: str = "") -> list[dict]:
+            """The scoped lists tallied by camp, stratum and window, and by
+            whatever else `columns` adds. The population is the same tally with
+            nothing added, so a share and its denominator are counted one way."""
+            return _rows(
+                con.execute(
+                    f"WITH scoped AS ({_SCOPED})"
+                    f' SELECT camp, stratum, "window"{columns},'
+                    " count(*) AS lists, sum(weight) AS weight"
+                    f" FROM scoped {joined} GROUP BY ALL",
+                    bounds,
+                )
+            )
+
+        populations = grouped("")
+        counts = grouped("".join(f", {key}" for key in keys), join)
+
+    sizes = {(p["camp"], p["stratum"], p["window"]): p for p in populations}
+    taken: dict[tuple, dict] = {}
+    for count in counts:
+        key = (count["camp"], count["stratum"], *(count[name] for name in keys))
+        taken.setdefault(key, {})[count["window"]] = count
+
+    rows = []
+    for key, windows in sorted(taken.items()):
+        row = dict(zip(("camp", "stratum", *keys), key))
+        for window in ("fresh", "baseline"):
+            size = sizes.get((row["camp"], row["stratum"], window))
+            row |= _reading(window, row["stratum"], size, windows.get(window))
+        fresh, baseline = row["fresh_adoption"], row["baseline_adoption"]
+        row["delta"] = fresh - baseline if None not in (fresh, baseline) else None
+        rows.append(row)
+    return rows
+
+
+def adoption(db_path: Path = config.DB_PATH) -> list[dict]:
+    """Every configuration the archetype registered, per camp, per stratum, over
+    the fresh and baseline windows, with the delta between them.
+
+    The unit is the configuration and never the card: a copy moving between the
+    boards is a change the camp made at a constant total, and a count of copies
+    would report that as nothing having happened.
+
+    Camps are never pooled, because a configuration is only consensus within the
+    camp that registered it, and the strata are never pooled for the reason ADR
+    0001 gives: a league publishes 5-0s and a challenge publishes a top 32, so
+    one share over both would move with which events happened to run.
+
+    The unit of the population is the list and not the pilot, which the league
+    stratum exposes: one grinder trophying twice in a dump is two lists here, so
+    a thin league window can report one pilot changing his mind as a camp
+    splitting. The row carries its population for that reason. `conversion_gap`
+    caps per pilot because a league's trophy count is the whole of what it
+    measures there; here the configuration is, and a pilot who registered a
+    build twice did register it twice.
+    """
+    return _adoption_table(db_path, ("card", "main", "side"), "JOIN configurations USING (list_id)")
+
+
+def land_counts(db_path: Path = config.DB_PATH) -> list[dict]:
+    """How much land each camp runs, per stratum, over the same two windows.
+
+    A land count is a configuration of the list as a whole rather than of a card
+    in it, so it is read exactly as one: the distribution is the camp's lists
+    across the counts they registered, and the manabase climbing a land is the
+    same kind of movement as a copy crossing into the sideboard.
+    """
+    return _adoption_table(db_path, ("lands",))
 
 
 def near_miss_lists(db_path: Path = config.DB_PATH, day: str | None = None) -> list[dict]:
