@@ -20,6 +20,9 @@ FIXTURE_KINDS = Path(__file__).parent / "fixtures" / "kinds"
 # The 2026-07-08 challenge as the site served it: under its own slug, and again
 # under a second slug dated 2026-07-24 that the site later withdrew.
 FIXTURE_DUPLICATE = Path(__file__).parent / "fixtures" / "duplicate"
+# One captured league dump in which a pilot trophied twice on the day, on two
+# lists that are not the same 75.
+FIXTURE_REPEATS = Path(__file__).parent / "fixtures" / "repeats"
 
 # The day's Goryo's lists, read off the published decklists by hand.
 GORYOS_PILOTS_2026_08_05 = {
@@ -31,12 +34,39 @@ GORYOS_PILOTS_2026_08_05 = {
     "Acecalna",
 }
 
+# AldenCates' 15-card sideboard from Modern Challenge 32 12849509, read off the
+# published decklist by hand.
+ALDENCATES_SIDEBOARD = {
+    "Celestial Purge": 1,
+    "Consign to Memory": 3,
+    "March of Otherworldly Light": 2,
+    "Mystical Dispute": 3,
+    "Nihil Spellbomb": 2,
+    "Teferi, Time Raveler": 1,
+    "Wrath of the Skies": 3,
+}
+
 
 def test_trio_rule_selects_exactly_the_days_goryos_lists():
     lists = classify_cache(FIXTURE_RAW)
 
     members = {d.pilot for d in lists if d.archetype == "goryos"}
     assert members == GORYOS_PILOTS_2026_08_05
+
+
+def test_a_list_carries_its_published_sideboard_alongside_its_mainboard():
+    """A list is a 75, and the 15 are where sideboard plans live.
+
+    Their absence would read a main-to-side migration as a straight cut, so the
+    sideboard is loaded as published, next to the mainboard it was registered
+    with.
+    """
+    lists = classify_cache(FIXTURE_RAW)
+
+    alden = next(d for d in lists if d.pilot == "AldenCates")
+    assert alden.sideboard == ALDENCATES_SIDEBOARD
+    assert sum(alden.sideboard.values()) == 15
+    assert sum(alden.mainboard.values()) == 60
 
 
 def test_placement_is_the_published_finish_not_the_swiss_standing():
@@ -76,6 +106,43 @@ def test_query_returns_the_days_goryos_lists_with_their_provenance(tmp_path):
     # Two Modern Challenge 32 events ran that day; a shared name is not identity.
     assert rows["Kollslaw"]["event_id"] == finish["event_id"]
     assert rows["Acecalna"]["event_id"] != finish["event_id"]
+
+
+def test_a_cards_main_and_side_copies_are_queryable_separately_and_as_a_total(tmp_path):
+    """A configuration is the pair, so the two halves must stay tellable apart.
+
+    AldenCates registered Consign to Memory 1 main and 3 side: a count of main
+    copies alone calls that a one-of, and a count of the 75 calls it a playset.
+    Only the pair says what the list actually does.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_RAW, db)
+
+    def copies(card):
+        rows = {row["pilot"]: row for row in store.card_configurations(card, db, "2026-08-05")}
+        row = rows["AldenCates"]
+        return row["main"], row["side"], row["total"]
+
+    assert copies("Consign to Memory") == (1, 3, 4)
+    assert copies("Wrath of the Skies") == (0, 3, 3)
+    assert copies("Goryo's Vengeance") == (4, 0, 4)
+
+
+def test_one_pilots_two_trophies_are_two_lists_with_their_own_configurations(tmp_path):
+    """A league dump publishes every 5-0, so a pilot can appear in it twice.
+
+    Zeect trophied twice on 2026-06-24 having moved a Solitude to the sideboard
+    between runs: 4 main and 0 side, then 3 main and 1 side. That is the
+    migration at a constant total the whole configuration reading exists for, so
+    the two lists have to stay two, and a query keyed on the pilot would lose it.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_REPEATS, db)
+
+    rows = [r for r in store.card_configurations("Solitude", db) if r["pilot"] == "Zeect"]
+
+    assert len({r["list_id"] for r in rows}) == 2
+    assert {(r["main"], r["side"], r["total"]) for r in rows} == {(4, 0, 4), (3, 1, 4)}
 
 
 def test_challenge_rows_carry_swiss_points_and_leagues_carry_none(tmp_path):
@@ -219,6 +286,26 @@ def test_a_range_running_past_today_still_refetches_the_days_that_can_grow(tmp_p
     site.fetches.clear()
     refresh("2026-07-01", "2026-12-31", raw_dir, db, source=site, today="2026-08-06")
     assert {mtgo.slug_day(slug) for slug in site.fetches} == {"2026-08-05"}
+
+
+def test_a_first_run_that_caches_nothing_still_says_what_it_could_not_reach(tmp_path):
+    """The gap report is the whole value of a run that captured nothing.
+
+    A first run against a site serving none of what it published leaves an empty
+    cache, and the rebuild of an empty cache must not fail on its own account:
+    that would bury the one thing the run has to say under a database error.
+    """
+
+    class WithholdingSite(CapturedSite):
+        def fetch_payload(self, slug):
+            raise mtgo.Unavailable(slug)
+
+    raw_dir, db = tmp_path / "raw", tmp_path / "engine.duckdb"
+
+    with pytest.raises(mtgo.Unavailable, match="published event"):
+        refresh("2026-08-01", "2026-08-31", raw_dir, db, source=WithholdingSite(), today="2026-08-31")
+
+    assert store.goryos_lists(db) == []
 
 
 def test_refresh_caches_the_rest_when_the_site_withholds_an_event(tmp_path):

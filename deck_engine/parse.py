@@ -16,8 +16,7 @@ DATED_SUFFIX_RE = re.compile(r"-\d{4}-\d{2}-\d{2}\d+$")
 
 @dataclass
 class Decklist:
-    """A published list. Only the fields this tracer loads; sideboard and
-    per-card configuration arrive with configuration tracking."""
+    """A published list: the 75 as registered, with its provenance."""
 
     pilot: str
     event: str
@@ -28,6 +27,7 @@ class Decklist:
     swiss_points: int | None
     record: str | None
     mainboard: dict[str, int]
+    sideboard: dict[str, int]
     archetype: str | None = None
 
 
@@ -89,6 +89,7 @@ def parse_event(payload: dict) -> list[Decklist]:
                 swiss_points=swiss_points,
                 record=result,
                 mainboard=_cards(raw["main_deck"]),
+                sideboard=_cards(raw["sideboard_deck"]),
             )
         )
     return lists
