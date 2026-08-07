@@ -3,6 +3,10 @@
 Fixtures are the immutable raw cache of every Modern event published on
 2026-08-05, captured from the live site. Nothing here asserts on parser
 internals, schema shape, or intermediate tables.
+
+One reading is driven on written payloads instead, for the reason
+`tests/synthetic.py` gives: the captured days hold no camp split finely enough
+to tell it apart from the reading it would be confused with.
 """
 
 import csv
@@ -15,6 +19,8 @@ import pytest
 from deck_engine import config, meta, mtgo, reference, store
 from deck_engine.classify import camp, classify_cache
 from deck_engine.refresh import refresh
+from tests import synthetic
+from tests.synthetic import challenge, entry
 
 FIXTURE_RAW = Path(__file__).parent / "fixtures" / "raw"
 # One captured Last Chance: a Swiss-only event of a kind the day's cache lacks.
@@ -1009,6 +1015,343 @@ def test_an_examined_slot_yields_to_an_unexamined_one_the_camp_backs_no_better(t
         "Teferi, Time Raveler",
         "March of Otherworldly Light",
     ]
+
+
+def test_a_camp_core_slot_the_75_never_registered_is_reported_as_missing(tmp_path):
+    """The error the slot audit cannot see: a staple the pilot does not play.
+
+    The audit reads every slot the capture registered, so a configuration the
+    camp is near-unanimous on and the 75 has no copies of goes unmentioned by
+    it: there is no slot there to bucket. That is the larger error of the two,
+    since a missing staple costs more than a marginal flex slot.
+
+    The camp is unanimous on the single Griselbrand as the second reanimation
+    target, so a capture that drops it is a 75 out of step with everyone.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+    dropped = tmp_path / "dropped.txt"
+    dropped.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace("1 Griselbrand\n", ""), encoding="utf-8"
+    )
+
+    missing = reference.missing_core(reference.read(dropped), db)
+
+    assert [(row["card"], row["camp_main"], row["camp_side"]) for row in missing] == [
+        ("Griselbrand", 1, 0)
+    ]
+    assert missing[0]["camp_adoption"] == 1.0
+    assert (missing[0]["camp"], missing[0]["population"]) == ("non-fallaji", 3)
+
+    # The capture as it stands is missing none of them, which is what stops the
+    # reading reporting the whole camp at a 75 that is already in step with it.
+    assert reference.missing_core(reference.read(REFERENCE_V1), db) == []
+
+
+def test_a_slot_the_pilot_took_at_his_own_count_is_audited_and_not_called_missing(tmp_path):
+    """Missing is about the card, not the configuration the camp settled on.
+
+    A card the pilot plays fewer copies of than his camp does is a slot he took,
+    and the audit has it: a low confidence and a bucket saying nobody else is
+    there. Read at the configuration instead, the same slot would be reported
+    twice over, as a deviation the pilot registered and as a staple he does not
+    play, and the second of those is not true of a card in his 75.
+
+    The camp is unanimous on the two Prismatic Ending; this capture runs one.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+    trimmed = tmp_path / "trimmed.txt"
+    trimmed.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace("2 Prismatic Ending", "1 Prismatic Ending"),
+        encoding="utf-8",
+    )
+    captured = reference.read(trimmed)
+
+    assert [row["card"] for row in reference.missing_core(captured, db)] == []
+
+    slot = next(row for row in reference.slots(captured, db) if row["card"] == "Prismatic Ending")
+    assert (slot["main"], slot["side"], slot["confidence"]) == (1, 0, 0.0)
+    assert (slot["core"], slot["bucket"]) == (False, "unexamined-deviation")
+
+
+def test_a_missing_core_slot_queues_on_the_confidence_running_none_of_it_earns(tmp_path):
+    """Playing no copies is a configuration, and it is ranked as one.
+
+    A missing staple needs no rank of its own. The pilot registered `0/0`, the
+    camp's share of that is what confidence has always meant, and a camp
+    near-unanimous on a card leaves at most the core bar's remainder standing
+    there. So the existing order carries it: lowest first, and a slot the camp
+    is unanimously against the pilot on opens the queue.
+
+    Ahead, at the same confidence, of a deviation the pilot has a reason for:
+    the reason is what the tiebreak is about, and a card he has never played is
+    a card he has never thought about. Nothing here is boosted for being core.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+    dropped = tmp_path / "dropped.txt"
+    dropped.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8")
+        .replace("1 Griselbrand\n", "")
+        .replace(
+            "1 March of Otherworldly Light",
+            "1 March of Otherworldly Light  # the clean answer to a resolved Blood Moon",
+        ),
+        encoding="utf-8",
+    )
+    captured = reference.read(dropped)
+
+    audited = reference.slots(captured, db)
+    queue = reference.playtest_queue(audited + reference.missing_core(captured, db))
+
+    assert [(row["card"], row["confidence"]) for row in queue][:5] == [
+        ("Griselbrand", 0.0),
+        ("Pest Control", 0.0),
+        ("Spell Snare", 0.0),
+        ("Teferi, Time Raveler", 0.0),
+        ("March of Otherworldly Light", 0.0),
+    ]
+
+    # It is in the queue as the thing it is: no slot of the 75 to have taken,
+    # and so no bucket, which the four buckets are about slots the pilot took.
+    missing = next(row for row in queue if row["card"] == "Griselbrand")
+    assert (missing["missing"], missing["bucket"], missing["core"]) == (True, None, False)
+    assert not any(row["missing"] for row in audited)
+
+
+def test_the_confidence_of_a_missing_slot_counts_every_count_the_camp_runs_it_at(tmp_path):
+    """Running none of a card is a share of the camp, not the rest of one build.
+
+    A camp near-unanimous on a card can still be split over how many, and the
+    pilot is not on the odd build: he is on no copies at all. So what is left
+    once the core configuration is taken out is not his share, because the
+    lists that went to the other count are playing the card too. His share is
+    what is left once every count the camp registered is taken out.
+
+    Read off the core configuration alone, a camp unanimously playing the card
+    and merely disagreeing on the number would put the pilot who runs none of
+    it on the same confidence as one whose camp genuinely leaves the slot open.
+    The captured days cannot separate the two: every core configuration in them
+    stands at all of its camp, where the two readings agree.
+    """
+    db = tmp_path / "engine.duckdb"
+    # Nine of the ten on the single Griselbrand and the tenth on two of them, so
+    # the camp is unanimous that it plays one; nine on the single Archon and the
+    # tenth on none, so a tenth of the camp genuinely goes without.
+    entries = [
+        entry(f"pilot{i}", cards={"Griselbrand": (1, 0), "Archon of Cruelty": (1, 0)}, points=9, placement=i + 1)
+        for i in range(9)
+    ]
+    entries.append(entry("dissenter", cards={"Griselbrand": (2, 0)}, points=9, placement=10))
+    store.build(synthetic.write_cache(tmp_path / "raw", [challenge("2026-08-05", entries, "1")]), db)
+
+    dropped = tmp_path / "dropped.txt"
+    dropped.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace("1 Griselbrand\n", ""), encoding="utf-8"
+    )
+
+    missing = {row["card"]: row for row in reference.missing_core(reference.read(dropped), db)}
+
+    # Core on nine of the ten either way, so the two slots are the same slot to
+    # everything except who is left running none of the card.
+    assert missing["Griselbrand"]["camp_adoption"] == pytest.approx(0.9)
+    assert missing["Archon of Cruelty"]["camp_adoption"] == pytest.approx(0.9)
+
+    assert missing["Griselbrand"]["confidence"] == pytest.approx(0.0)
+    assert missing["Archon of Cruelty"]["confidence"] == pytest.approx(0.1)
+
+
+def test_a_staple_the_camp_splits_the_count_of_is_missing_at_no_count_of_its_own(tmp_path):
+    """A camp that agrees on the card and argues about the number still agrees.
+
+    Near-unanimity read off one configuration is near-unanimity about a count,
+    and the pilot running no copies is not disagreeing about a count: he is out
+    of the card entirely. A camp split evenly enough puts none of its counts
+    over the bar while every list in it plays the card, which is the strictest
+    case there is for playing it and the one a per-configuration reading drops.
+
+    Left there, the reading hides its worst finding behind its milder one: the
+    card nobody in the camp goes without is silent, and a card a tenth of them
+    do go without is reported.
+    """
+    db = tmp_path / "engine.duckdb"
+    # Six of the ten on the single Griselbrand and four on two of them, so no
+    # count of it clears the bar and yet nobody is off the card. Half the camp
+    # on the single Archon, which is a card the camp genuinely leaves open.
+    entries = [
+        entry(f"one{i}", cards={"Griselbrand": (1, 0), "Archon of Cruelty": (1, 0)}, points=9, placement=i + 1)
+        for i in range(5)
+    ]
+    entries.append(entry("one5", cards={"Griselbrand": (1, 0)}, points=9, placement=6))
+    entries += [
+        entry(f"two{i}", cards={"Griselbrand": (2, 0)}, points=9, placement=i + 7) for i in range(4)
+    ]
+    store.build(synthetic.write_cache(tmp_path / "raw", [challenge("2026-08-05", entries, "1")]), db)
+
+    dropped = tmp_path / "dropped.txt"
+    dropped.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace("1 Griselbrand\n", ""), encoding="utf-8"
+    )
+
+    missing = {row["card"]: row for row in reference.missing_core(reference.read(dropped), db)}
+
+    # The camp is unanimous on playing it, so the pilot has nobody with him.
+    assert missing["Griselbrand"]["confidence"] == pytest.approx(0.0)
+    assert missing["Griselbrand"]["camp_playing"] == pytest.approx(1.0)
+
+    # And the row says where the camp mostly is, which is not where it all is.
+    assert (missing["Griselbrand"]["camp_main"], missing["Griselbrand"]["camp_side"]) == (1, 0)
+    assert missing["Griselbrand"]["camp_adoption"] == pytest.approx(0.6)
+
+    # One row, not one per count: it is one card the 75 has none of.
+    reported = [row["card"] for row in reference.missing_core(reference.read(dropped), db)]
+    assert reported.count("Griselbrand") == 1
+
+    # Half a camp playing a card is not a camp that is near-unanimous about it.
+    assert "Archon of Cruelty" not in missing
+
+
+def test_a_staple_the_pilot_has_knowingly_cut_carries_his_reason_for_cutting_it(tmp_path):
+    """Where the reason for not playing a card goes: on the slot, at no copies.
+
+    An annotation lives on the line its slot is registered on, and a card the
+    75 does not play has no line, so the whole of the pilot's knowledge about
+    the cards he has left out had nowhere to be written. Without it a staple he
+    has thought about and cut reads exactly like one he has never considered,
+    and the reading would put it to him again every run between now and the
+    tournament.
+
+    Registering the slot at no copies is that line. It is the configuration the
+    reading already ranks him at, so the reason attaches to the slot the
+    pilot's `0/0` was always being read as, rather than to a second place the
+    75 would have to be kept in step with.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+    cut = tmp_path / "cut.txt"
+    cut.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace(
+            "1 Griselbrand", "0 Griselbrand  # the Frog draws deep enough that a second target is win-more"
+        ),
+        encoding="utf-8",
+    )
+    captured = reference.read(cut)
+
+    missing = reference.missing_core(captured, db)
+
+    # Still missing, because the camp is still unanimous and the 75 still runs
+    # none: what the pilot wrote down is why, not that the slot is now filled.
+    assert [row["card"] for row in missing] == ["Griselbrand"]
+    assert missing[0]["note"] == "the Frog draws deep enough that a second target is win-more"
+
+    # And not a slot of the 75, which is what no copies means. Audited, it
+    # would be read a second time, at a confidence its own `0/0` never earned.
+    assert not any(row["card"] == "Griselbrand" for row in reference.slots(captured, db))
+
+
+def test_a_staple_the_pilot_has_answered_yields_to_one_he_has_not(tmp_path):
+    """Recording the reason is what moves the slot down the queue.
+
+    Two staples the 75 runs none of stand at the same confidence, the camp
+    being unanimous on both. One the pilot has written a reason for cutting has
+    had the thinking done; one he has never said anything about has not, and
+    the camp cannot tell them apart. So the queue does, on the same rule it
+    already separates the two kinds of deviation by.
+
+    The reason is the whole of the difference here, so the two are chosen
+    against the name order that would otherwise decide it: Godless Shrine is
+    answered and would sort first, Quantum Riddler is not.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+    cut = tmp_path / "cut.txt"
+    cut.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8")
+        .replace("1 Godless Shrine", "0 Godless Shrine  # the Solitude pitch wants the white source untapped")
+        .replace("4 Quantum Riddler\n", ""),
+        encoding="utf-8",
+    )
+    captured = reference.read(cut)
+
+    queue = reference.playtest_queue(
+        reference.slots(captured, db) + reference.missing_core(captured, db)
+    )
+
+    assert [row["card"] for row in queue][:6] == [
+        "March of Otherworldly Light",
+        "Pest Control",
+        "Quantum Riddler",
+        "Spell Snare",
+        "Teferi, Time Raveler",
+        "Godless Shrine",
+    ]
+    assert [row["confidence"] for row in queue][:6] == [0.0] * 6
+
+
+def test_writing_down_a_cut_files_a_version_without_reporting_a_card_that_moved(tmp_path):
+    """Recording why a card is out is the pilot writing, not the 75 changing.
+
+    The cut itself is a change and the log has it: a copy the version stopped
+    running. Saying why is not, and the slot registered at no copies to say it
+    is not a configuration the 75 took. Read as one, the log would report the
+    annotation as a card moving, and taking the line out again would report a
+    second move back, for a 75 that has run none of the card throughout.
+    """
+    versions = tmp_path / "reference"
+    versions.mkdir()
+    shutil.copy(REFERENCE_V1, versions / REFERENCE_V1.name)
+
+    cut = tmp_path / "cut.txt"
+    cut.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace(
+            "1 Griselbrand", "0 Griselbrand  # the Frog draws deep enough to want no second target"
+        ),
+        encoding="utf-8",
+    )
+    filed = reference.capture(cut, versions)
+
+    # The pilot's reason is on the version that cut the card, which is the only
+    # place it can live: versions are appended, never edited.
+    assert filed.notes["Griselbrand"] == "the Frog draws deep enough to want no second target"
+    assert reference.history(versions) == [
+        {
+            "version": 2,
+            "from_version": 1,
+            "changes": [{"card": "Griselbrand", "before": (1, 0), "after": None}],
+        }
+    ]
+
+
+def test_a_slot_the_pilot_has_written_on_yields_wherever_its_confidence_puts_it(tmp_path):
+    """The tie is broken on the note, at every confidence and not just at none.
+
+    What the rule is about is whether the thinking has been done, and that is
+    as true of a slot most of the camp shares as of one none of it does: two
+    slots the camp backs equally are not equally urgent when the pilot has
+    already worked one of them out. Five slots here stand at two thirds of the
+    camp, and writing a reason on the one that sorted first sends it last.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+    annotated = tmp_path / "annotated.txt"
+    annotated.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace(
+            "1 Breeding Pool", "1 Breeding Pool  # the green source is only ever for Atraxa"
+        ),
+        encoding="utf-8",
+    )
+
+    queue = reference.playtest_queue(reference.slots(reference.read(annotated), db))
+
+    assert [row["card"] for row in queue][-5:] == [
+        "Flooded Strand",
+        "Marsh Flats",
+        "Nihil Spellbomb",
+        "Thoughtseize",
+        "Breeding Pool",
+    ]
+    assert [row["confidence"] for row in queue][-5:] == [pytest.approx(2 / 3)] * 5
 
 
 def test_a_camp_that_published_nothing_in_the_window_is_declined_rather_than_read(tmp_path):

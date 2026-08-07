@@ -53,6 +53,34 @@ def _slot_line(slot: dict) -> str:
     return f"  {slot['confidence']:>4.0%}  {where:<40} {slot['bucket']:<20}{delta}{tilt}{note}"
 
 
+def _missing_line(slot: dict) -> str:
+    """One camp-core slot the 75 registers no copies of, in the queue beside the
+    audited ones and ranked on the same confidence they are.
+
+    No bucket goes in the bucket column, because the four are verdicts on a slot
+    the pilot took and a fifth word there would make this the fifth of them.
+    What the camp runs goes there instead, and the delta and the tilt follow it
+    rather than standing in an audited slot's columns: they are the camp's
+    leading configuration's, and the pilot's `0/0` has neither. The note prints
+    last, where an audited slot's does, being his reason for leaving the card out.
+
+    Two camp shares print, because the confidence answers to the first of them.
+    A camp split over how many can be unanimous on the card while no count of it
+    is near-unanimous, and the leading count alone beside a confidence of none
+    would read as a figure contradicting itself rather than as a camp agreeing
+    on the card and arguing about the number.
+    """
+    delta = "" if slot["camp_delta"] is None else f" delta {slot['camp_delta']:+.2f}"
+    tilt = "" if slot["camp_tilt"] is None else f" tilt {slot['camp_tilt']:+.2f}"
+    note = f"  {slot['note']}" if slot["note"] else ""
+    where = f"{slot['card']} {_configuration(None)}"
+    camp = (
+        f"{slot['camp_playing']:.0%} of the camp plays it,"
+        f" {slot['camp_adoption']:.0%} on {slot['camp_main']}/{slot['camp_side']}"
+    )
+    return f"  {slot['confidence']:>4.0%}  {where:<40} {'':<20}{camp}{delta}{tilt}{note}"
+
+
 def _reference_log() -> None:
     """The change log: what each version of the 75 did to the one before it."""
     for entry in reference.history():
@@ -128,7 +156,8 @@ def main(argv=None) -> None:
     if args.command == "reference":
         captured = reference.current()
         audited = reference.slots(captured)
-        queue = reference.playtest_queue(audited)
+        missing = reference.missing_core(captured)
+        queue = reference.playtest_queue(audited + missing)
         print(f"reference list v{captured.version}, {captured.path.name}")
         _reference_log()
         # The reading names its own terms: a share of a camp, in a stratum, over
@@ -137,9 +166,16 @@ def main(argv=None) -> None:
             f"{audited[0]['camp']} camp, {audited[0]['stratum']},"
             f" {audited[0]['population']} list(s) in the fresh window"
         )
-        print(f"{sum(row['core'] for row in audited)} core, {len(queue)} flex, least backed first")
+        cores = sum(row["core"] for row in audited)
+        print(
+            f"{cores} core, {len(audited) - cores} flex,"
+            f" {len(missing)} missing core slot(s), least backed first"
+        )
+        # One line per slot, missing ones among the rest: they are ranked on the
+        # confidence every other line is ranked on, and printing them again in a
+        # block of their own would report one slot as two pieces of work.
         for slot in queue:
-            print(_slot_line(slot))
+            print(_missing_line(slot) if slot["missing"] else _slot_line(slot))
         return
 
     rows = goryos_lists(day=args.date)
