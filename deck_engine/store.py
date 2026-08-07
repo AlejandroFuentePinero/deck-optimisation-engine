@@ -21,7 +21,8 @@ CREATE OR REPLACE TABLE decklists (
     placement INTEGER,
     swiss_points INTEGER,
     record VARCHAR,
-    archetype VARCHAR
+    archetype VARCHAR,
+    camp VARCHAR
 )
 """
 
@@ -84,6 +85,7 @@ def build(raw_dir: Path = config.RAW_DIR, db_path: Path = config.DB_PATH) -> Pat
                     d.swiss_points,
                     d.record,
                     d.archetype,
+                    d.camp,
                 )
                 for list_id, d in lists
             ),
@@ -101,28 +103,104 @@ def build(raw_dir: Path = config.RAW_DIR, db_path: Path = config.DB_PATH) -> Pat
     return db_path
 
 
+def _rows(cursor: duckdb.DuckDBPyConnection) -> list[dict]:
+    """An executed cursor's rows, each keyed by the column it selected."""
+    names = [c[0] for c in cursor.description]
+    return [dict(zip(names, row)) for row in cursor.fetchall()]
+
+
 def _query(db_path: Path, columns: str, source: str, where: str, params: list) -> list[dict]:
     """The archetype's rows for one question, most recent and best finishes first."""
     with duckdb.connect(db_path, read_only=True) as con:
-        cursor = con.execute(
-            f"SELECT {columns} FROM {source}"
-            f" WHERE archetype = ?{f' AND {where}' if where else ''}"
-            f" ORDER BY date DESC, placement NULLS LAST, pilot",
-            [config.ARCHETYPE] + params,
+        return _rows(
+            con.execute(
+                f"SELECT {columns} FROM {source}"
+                f" WHERE archetype = ?{f' AND {where}' if where else ''}"
+                f" ORDER BY date DESC, placement NULLS LAST, pilot",
+                [config.ARCHETYPE] + params,
+            )
         )
-        names = [c[0] for c in cursor.description]
-        return [dict(zip(names, row)) for row in cursor.fetchall()]
 
 
-def goryos_lists(db_path: Path = config.DB_PATH, day: str | None = None) -> list[dict]:
-    """The archetype's lists, most recent and best finishes first."""
+def goryos_lists(
+    db_path: Path = config.DB_PATH, day: str | None = None, camp: str | None = None
+) -> list[dict]:
+    """The archetype's lists, most recent and best finishes first.
+
+    Naming a `camp` narrows to that camp's population, which is what consensus
+    is computed over: hybrids are members of the archetype and of no camp, so
+    they answer to neither.
+    """
+    filters = {"date": day, "camp": camp}
     return _query(
         db_path,
-        "pilot, event, event_id, event_class, date, placement, swiss_points, record",
+        "pilot, event, event_id, event_class, date, placement, swiss_points, record, camp",
         "decklists",
-        "date = ?" if day else "",
-        [day] if day else [],
+        " AND ".join(f"{column} = ?" for column, value in filters.items() if value),
+        [value for value in filters.values() if value],
     )
+
+
+def camp_ratio(db_path: Path = config.DB_PATH) -> list[dict]:
+    """How the archetype splits between the camps, per stratum, oldest day first.
+
+    Composition, and nothing about performance: it counts who registered what,
+    over a population that is only ever the published winners of either stratum.
+
+    A day's shares are taken over that stratum's lists, hybrids included: a camp
+    losing ground to the experiment is the same news as it losing ground to the
+    other camp, and dropping the hybrids would hide it. The two strata are never
+    pooled, because a league dump publishes an order of magnitude more lists than
+    a challenge does, so a pooled share would swing with which events happened to
+    run that day rather than with what pilots registered.
+    """
+    with duckdb.connect(db_path, read_only=True) as con:
+        return _rows(
+            con.execute(
+                "SELECT date, stratum, camp, count(*) AS lists,"
+                " count(*) / sum(count(*)) OVER (PARTITION BY date, stratum) AS share"
+                " FROM (SELECT date, camp, CASE WHEN event_class = 'league' THEN 'league'"
+                "       ELSE 'challenge-class' END AS stratum"
+                "       FROM decklists WHERE archetype = ?)"
+                " GROUP BY date, stratum, camp ORDER BY date, stratum, camp",
+                [config.ARCHETYPE],
+            )
+        )
+
+
+def near_miss_lists(db_path: Path = config.DB_PATH, day: str | None = None) -> list[dict]:
+    """The watchlist: lists mainboarding the namesake that miss full membership.
+
+    Each row says what it kept of the signature cards and what it dropped, which
+    is the whole reason to look at one: the drop is the variant it is proposing.
+    They are not the archetype, so no archetype figure counts them, and every
+    other query here is the archetype's.
+
+    A row is one list, grouped on `list_id` and never on its pilot and event: a
+    pilot near-missing twice in one league dump publishes two lists, and grouping
+    those together would union what two different 75s kept into a list nobody
+    registered.
+    """
+    signature = ", ".join("?" * len(config.SIGNATURE_CARDS))
+    with duckdb.connect(db_path, read_only=True) as con:
+        rows = _rows(
+            con.execute(
+                "SELECT list_id, pilot, event, event_id, event_class, date, placement,"
+                " swiss_points, record, list(card) AS kept"
+                " FROM decklists JOIN configurations USING (list_id)"
+                f" WHERE archetype IS NULL AND main > 0 AND card IN ({signature})"
+                + (" AND date = ?" if day else "")
+                + " GROUP BY ALL HAVING list_contains(list(card), ?)"
+                " ORDER BY date DESC, placement NULLS LAST, pilot",
+                [*config.SIGNATURE_CARDS, *([day] if day else []), config.WATCHLIST_CARD],
+            )
+        )
+
+    for row in rows:
+        kept = set(row["kept"])
+        row["kept"] = [card for card in config.SIGNATURE_CARDS if card in kept]
+        row["dropped"] = [card for card in config.SIGNATURE_CARDS if card not in kept]
+    return rows
 
 
 def card_configurations(
@@ -138,7 +216,7 @@ def card_configurations(
     """
     return _query(
         db_path,
-        "list_id, pilot, event_id, date, main, side, main + side AS total",
+        "list_id, pilot, event_id, date, camp, main, side, main + side AS total",
         "configurations JOIN decklists USING (list_id)",
         "card = ?" + (" AND date = ?" if day else ""),
         [card] + ([day] if day else []),

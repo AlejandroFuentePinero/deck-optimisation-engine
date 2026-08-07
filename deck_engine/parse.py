@@ -29,6 +29,7 @@ class Decklist:
     mainboard: dict[str, int]
     sideboard: dict[str, int]
     archetype: str | None = None
+    camp: str | None = None
 
 
 def _cards(entries: list[dict]) -> dict[str, int]:
