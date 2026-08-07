@@ -18,6 +18,16 @@ A continuous MTGO event. Only undefeated (5-0) lists are published, as trophy re
 **Challenge**:
 A scheduled MTGO tournament, often with hundreds of players. Only the top 32 lists are published.
 
+**Event class**:
+The kind of event a list was published under, kept exactly as the site publishes it: `league`, `challenge-32`, `challenge-64`, `challenge-96`, `showcase-challenge`, `showcase-qualifier`, `rc-qualifier`, `rc-super-qualifier`, `last-chance`.
+
+**Challenge-class**:
+Every event class except league: Swiss rounds, then publication of the top 32 with placement and Swiss points. The stratum that carries performance evidence.
+_Avoid_: tournament (the payload's own word, which does not distinguish the strata)
+
+**Swiss points**:
+A pilot's points from the Swiss rounds of a challenge-class event, 3 per win, as published in the standings. Excludes the playoff entirely, so a winner may hold fewer Swiss points than someone who finished below them. See ADR 0001.
+
 **Decklist**:
 A single published list: mainboard plus sideboard, with pilot, date, and event attached.
 
