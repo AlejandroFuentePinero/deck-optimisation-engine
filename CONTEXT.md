@@ -76,6 +76,10 @@ The user's own 75 being optimised. The final output of the project is the refere
 **Heuristic**:
 A piece of MTG expertise supplied by the user (gained from play, not derivable from data) that informs how the data is interpreted. Captured persistently so the co-intelligence improves across sessions.
 
+**Heuristic candidate**:
+A heuristic the agent inferred rather than the user stating it, including one raised against an adopted heuristic the evidence now contradicts. Staged with the evidence that raised it and never treated as knowledge; it becomes a heuristic only on an explicit verdict from the user, and expires unratified.
+_Avoid_: candidate on its own (a hypothesis candidate is a different thing: a claim about deck configuration)
+
 ### Analytical concepts
 
 **Fresh window**:
