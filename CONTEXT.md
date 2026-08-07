@@ -90,6 +90,12 @@ A Modern B&R change or meta-warping set release that resets the relevance of pri
 **Meta share**:
 The fraction of published winning lists an archetype occupies over a time window. A proxy for true field share, since only the winning portion of the field is visible.
 
+**Meta snapshot**:
+One dated reading of MTGGoldfish's archetype table, transcribed by hand and kept whole. Identified by the pair (capture date, window length), which the site serves neither of and the ingest stamps on: a share read over 30 days is a different measurement from one read over 14, so a trend is read within one window and never across two. Re-ingesting a pair corrects that entry rather than adding one, and a transcription whose own stamp disagrees is refused, since a mistyped date would file a reading no screenshot was taken for. The history is committed because, unlike an event, a screenshot cannot be fetched again.
+
+**Mirror share**:
+Goryo's own meta share: how much of the field the archetype plays against itself. The join a conditional hypothesis needs, since a slot bought on mirror density is only earned while that density stands. Read as of a date, which is answered by the last snapshot taken on or before it, stale readings included and marked as such.
+
 **Performance tilt**:
 For a configuration, its points-weighted adoption minus its raw adoption within challenge lists. Positive: overrepresented among high-point finishes. Negative on a rising configuration: the herd is adopting an underperformer. Swiss points only, so no league list enters it.
 

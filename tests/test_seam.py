@@ -5,12 +5,13 @@ Fixtures are the immutable raw cache of every Modern event published on
 internals, schema shape, or intermediate tables.
 """
 
+import csv
 import json
 from pathlib import Path
 
 import pytest
 
-from deck_engine import mtgo, reference, store
+from deck_engine import meta, mtgo, reference, store
 from deck_engine.classify import camp, classify_cache
 from deck_engine.refresh import refresh
 
@@ -30,6 +31,9 @@ FIXTURE_CAMPS = Path(__file__).parent / "fixtures" / "camps"
 FIXTURE_CONVERSION = Path(__file__).parent / "fixtures" / "conversion"
 # The pilot's own 75 as captured, which is not a fixture but the real thing.
 REFERENCE_CAPTURE = Path(__file__).parent.parent / "reference" / "2026-08-07-moxfield.txt"
+# The meta history as it stands, which is likewise the real thing: the 14-day
+# MTGGoldfish snapshot of 2026-08-07, transcribed from the screenshot by hand.
+META_HISTORY = Path(__file__).parent.parent / "data" / "meta"
 
 # The day's Goryo's lists, read off the published decklists by hand.
 GORYOS_PILOTS_2026_08_05 = {
@@ -644,3 +648,285 @@ def test_a_capture_interrupted_mid_write_is_not_left_in_the_cache(tmp_path, monk
     refresh("2026-08-01", "2026-08-31", raw_dir, db, source=site, today="2026-08-31")
     assert killed in site.fetches
     assert {row["pilot"] for row in store.goryos_lists(db, "2026-08-05")} == GORYOS_PILOTS_2026_08_05
+
+
+def _transcribe(path: Path, rows) -> Path:
+    """A MTGGoldfish screenshot as the pilot transcribes it: archetype, share, decks.
+
+    What the site shows carries no capture date and no window, which is what the
+    ingest supplies, so a transcription on its own is not yet a snapshot.
+    """
+    lines = "".join(f"{archetype},{pct},{decks}\n" for archetype, pct, decks in rows)
+    path.write_text("archetype,meta_pct,deck_count\n" + lines, encoding="utf-8")
+    return path
+
+
+def test_a_transcribed_snapshot_is_ingested_under_the_date_and_window_it_reads(tmp_path):
+    """A meta share is a reading of a window, and unreadable without both terms.
+
+    MTGGoldfish shows the table and not when it was taken or over how long, so the
+    ingest stamps the pair on. Two shares of the same archetype only compare on
+    the strength of it.
+    """
+    source = _transcribe(
+        tmp_path / "goldfish.csv",
+        [("Goryo's Vengeance", 10.0, 118), ("Boros Energy", 9.7, 115)],
+    )
+    meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
+
+    meta.ingest(source, "2026-08-07", 14, meta_dir)
+    store.build(FIXTURE_RAW, db, meta_dir)
+
+    assert store.meta_trend("Goryo's Vengeance", db) == [
+        {
+            "captured_on": "2026-08-07",
+            "window_days": 14,
+            "share": pytest.approx(0.100),
+            "deck_count": 118,
+        }
+    ]
+
+
+def test_the_mirror_share_helper_answers_with_the_reading_that_stood_on_a_date(tmp_path):
+    """A conditional hypothesis is argued on the meta it was argued in.
+
+    Goryo's is the field's number one deck, so the mirror is a matchup the 75
+    has to price in, and how much of the field is the mirror is the join such a
+    slot decision turns on. Readings are dated and sparse, so the answer for a
+    date is the last one taken on or before it, and it carries its own date so
+    a stale reading can be seen to be stale.
+    """
+    meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
+    for captured_on, pct, decks in [("2026-07-24", 7.5, 82), ("2026-08-07", 10.0, 118)]:
+        source = _transcribe(tmp_path / "goldfish.csv", [("Goryo's Vengeance", pct, decks)])
+        meta.ingest(source, captured_on, 14, meta_dir)
+    store.build(FIXTURE_RAW, db, meta_dir)
+
+    assert store.mirror_share("2026-08-07", db) == {
+        "captured_on": "2026-08-07",
+        "window_days": 14,
+        "share": pytest.approx(0.100),
+        "deck_count": 118,
+    }
+
+    # A date between readings gets the one that stood on it, not the later one.
+    assert store.mirror_share("2026-08-01", db)["captured_on"] == "2026-07-24"
+
+    # A date the history does not reach back to has no reading to give.
+    assert store.mirror_share("2026-07-01", db) is None
+
+
+def test_the_trend_reads_one_archetypes_share_across_the_whole_history(tmp_path):
+    """Meta drift from today to submission day is the point of keeping history.
+
+    A single reading says what the field is; two say which way it is going, and
+    a slot bought on the mirror's density wants the second. Each archetype's
+    line is its own: the field's decks rise and fall against each other, so a
+    trend pooling them would be the history of nothing in particular.
+    """
+    meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
+    history = [
+        ("2026-07-24", [("Goryo's Vengeance", 7.5, 82), ("Boros Energy", 11.2, 123)]),
+        ("2026-08-07", [("Goryo's Vengeance", 10.0, 118), ("Boros Energy", 9.7, 115)]),
+    ]
+    for captured_on, table in history:
+        meta.ingest(_transcribe(tmp_path / "goldfish.csv", table), captured_on, 14, meta_dir)
+    store.build(FIXTURE_RAW, db, meta_dir)
+
+    # Goryo's took the field's top spot off Boros Energy over the fortnight.
+    assert [(r["captured_on"], r["share"]) for r in store.meta_trend("Goryo's Vengeance", db)] == [
+        ("2026-07-24", pytest.approx(0.075)),
+        ("2026-08-07", pytest.approx(0.100)),
+    ]
+    assert [(r["captured_on"], r["share"]) for r in store.meta_trend("Boros Energy", db)] == [
+        ("2026-07-24", pytest.approx(0.112)),
+        ("2026-08-07", pytest.approx(0.097)),
+    ]
+
+
+def test_ingesting_the_same_snapshot_twice_leaves_the_history_one_entry_long(tmp_path):
+    """The history is a record of readings, and a reading happened once.
+
+    A hand transcription is easy to run again, off a re-cropped screenshot or a
+    corrected typo, and the second run is a correction rather than a new
+    reading. So a snapshot is identified by the two terms it was read on and
+    kept under them: re-ingesting rewrites that entry, and a trend built off the
+    history never counts one day of the meta twice.
+    """
+    meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
+    capture = META_HISTORY / "2026-08-07_14d.csv"
+
+    for _ in range(2):
+        written = meta.ingest(capture, "2026-08-07", 14, meta_dir)
+    store.build(FIXTURE_RAW, db, meta_dir)
+
+    assert [path.name for path in meta_dir.iterdir()] == [written.name]
+    assert len(store.meta_trend("Goryo's Vengeance", db)) == 1
+
+
+def test_the_history_opens_with_the_14_day_reading_of_2026_08_07(tmp_path):
+    """The first entry is the one the project starts from, and it is real.
+
+    MTGGoldfish's 14-day table of 2026-08-07 has Goryo's at the top of the field on
+    10.0% over 118 decks: the mirror is priced in, and the 75 is built knowing
+    it. The whole table is kept, not the archetype's row, because what the rest
+    of the field is doing is what a sideboard answers to.
+
+    The committed entry is exactly what the ingest writes, which is what makes
+    it an entry rather than a file that happens to be there.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_RAW, db, META_HISTORY)
+    capture = META_HISTORY / "2026-08-07_14d.csv"
+
+    assert store.mirror_share("2026-08-07", db) == {
+        "captured_on": "2026-08-07",
+        "window_days": 14,
+        "share": pytest.approx(0.100),
+        "deck_count": 118,
+    }
+    assert len(meta.snapshot_rows(META_HISTORY)) == 28, "the field as the screenshot showed it"
+
+    # Boros Energy, the field's other pillar, is the deck the rest is aimed at.
+    assert store.meta_trend("Boros Energy", db) == [
+        {
+            "captured_on": "2026-08-07",
+            "window_days": 14,
+            "share": pytest.approx(0.097),
+            "deck_count": 115,
+        }
+    ]
+
+    # Byte for byte: the history is committed, so an ingest that rewrote a
+    # reading it did not change would put the whole entry through the diff.
+    re_ingested = meta.ingest(capture, "2026-08-07", 14, tmp_path / "meta")
+    assert re_ingested.read_bytes() == capture.read_bytes()
+
+
+def test_a_trend_is_read_within_one_window_and_never_across_two(tmp_path):
+    """A share is a reading of a window, so two windows are two instruments.
+
+    The 30-day table smooths what the 14-day table shows, and a line drawn
+    through both would report the difference between the two as movement in the
+    field. Screenshotting the page at both lengths on one day is the natural
+    thing to do, so a query names the window it reads rather than taking what
+    the history happens to hold.
+    """
+    meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
+    for window, pct, decks in [(14, 10.0, 118), (30, 8.2, 241)]:
+        source = _transcribe(tmp_path / "goldfish.csv", [("Goryo's Vengeance", pct, decks)])
+        meta.ingest(source, "2026-08-07", window, meta_dir)
+    store.build(FIXTURE_RAW, db, meta_dir)
+
+    fortnight = store.meta_trend("Goryo's Vengeance", db)
+    assert [(r["window_days"], r["share"]) for r in fortnight] == [(14, pytest.approx(0.100))]
+
+    month = store.meta_trend("Goryo's Vengeance", db, window_days=30)
+    assert [(r["window_days"], r["share"]) for r in month] == [(30, pytest.approx(0.082))]
+
+    # The mirror is priced off the fresh window, and never off whichever
+    # reading of the day happened to be ingested last.
+    assert store.mirror_share("2026-08-07", db)["window_days"] == 14
+
+
+def test_a_transcription_that_carries_its_own_stamp_must_agree_with_the_one_given(tmp_path):
+    """A typo in the stamp is not a correction, it is an invented reading.
+
+    Re-ingesting a snapshot is normal, off a re-cropped screenshot or to fix a
+    transcribed row, and it rewrites the entry it names. Naming the wrong date
+    instead files a reading no screenshot was taken for, which the trend then
+    reports as the field having moved. A snapshot already carries its terms, so
+    the disagreement is caught here rather than published as drift.
+    """
+    meta_dir = tmp_path / "meta"
+    capture = META_HISTORY / "2026-08-07_14d.csv"
+
+    with pytest.raises(ValueError, match="2026-08-07"):
+        meta.ingest(capture, "2026-08-08", 14, meta_dir)
+
+    assert not meta_dir.exists(), "nothing is filed under a stamp the source denies"
+
+
+def test_an_empty_transcription_never_overwrites_the_reading_already_filed(tmp_path):
+    """A table of no archetypes is a transcription that went wrong, not a meta.
+
+    It arrives the same way a corrected one does, off a re-cropped screenshot,
+    and under the same stamp it would take the entry's place: the reading a
+    screenshot was taken for would be gone, and the trend would show the field
+    it recorded having never existed. The site never published an empty field.
+    """
+    meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
+    meta.ingest(META_HISTORY / "2026-08-07_14d.csv", "2026-08-07", 14, meta_dir)
+
+    with pytest.raises(ValueError, match="no archetypes"):
+        meta.ingest(_transcribe(tmp_path / "empty.csv", []), "2026-08-07", 14, meta_dir)
+
+    store.build(FIXTURE_RAW, db, meta_dir)
+    assert store.mirror_share("2026-08-07", db)["deck_count"] == 118
+
+
+def test_a_capture_date_that_is_not_a_date_is_refused_before_anything_is_filed(tmp_path):
+    """Every reading of the history is ordered on the capture date as text.
+
+    So a date that is not zero-padded sorts by its digits and not by its day:
+    2026-8-9 falls before 2026-08-10, and the mirror share as of that day comes
+    back a reading the later one had already superseded, with nothing to say it
+    had. The date also names the file, and a typed slash names a directory that
+    does not exist, so it is parsed before either use is made of it.
+    """
+    source = _transcribe(tmp_path / "goldfish.csv", [("Goryo's Vengeance", 10.0, 118)])
+    meta_dir = tmp_path / "meta"
+
+    with pytest.raises(ValueError, match="2026-8-9"):
+        meta.ingest(source, "2026-8-9", 14, meta_dir)
+
+    assert not meta_dir.exists()
+
+
+def test_a_file_in_the_history_that_is_not_a_snapshot_is_named_rather_than_crashed_on(tmp_path):
+    """The history holds what the ingest wrote, and a transcription is not that.
+
+    Dropping one beside the snapshots is the easy mistake, since that is where
+    it is going. It carries no stamp, so it is no reading of anything yet, and
+    every refresh ends by rebuilding the store: the daily loop is what stops. It
+    must say which file and why, rather than fail on a column that isn't there.
+    """
+    meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
+    meta.ingest(META_HISTORY / "2026-08-07_14d.csv", "2026-08-07", 14, meta_dir)
+    _transcribe(meta_dir / "goldfish.csv", [("Goryo's Vengeance", 10.0, 118)])
+
+    with pytest.raises(ValueError, match="goldfish.csv"):
+        store.build(FIXTURE_RAW, db, meta_dir)
+
+
+def test_an_ingest_killed_part_way_leaves_the_reading_already_filed_standing(tmp_path, monkeypatch):
+    """A snapshot is a raw capture in the sense a cached event is, so it lands
+    whole or not at all.
+
+    The history is committed and nothing refetches it, so an entry left half
+    written stays half written. It would still parse, too: a CSV that stops
+    early is a shorter table, and the trend would read the archetypes that never
+    made it as a field that had shrunk. Killing the process is stood in for by
+    dying after the header, the cost being the same either way.
+    """
+    meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
+    capture = META_HISTORY / "2026-08-07_14d.csv"
+    meta.ingest(capture, "2026-08-07", 14, meta_dir)
+
+    class DiesAfterTheHeader:
+        def __init__(self, handle, **kwargs):
+            self.handle = handle
+
+        def writerow(self, row):
+            self.handle.write(",".join(str(field) for field in row) + "\n")
+
+        def writerows(self, rows):
+            raise KeyboardInterrupt("part way through the entry")
+
+    monkeypatch.setattr(csv, "writer", DiesAfterTheHeader)
+    with pytest.raises(KeyboardInterrupt):
+        meta.ingest(capture, "2026-08-07", 14, meta_dir)
+    monkeypatch.undo()
+
+    store.build(FIXTURE_RAW, db, meta_dir)
+    assert store.mirror_share("2026-08-07", db)["deck_count"] == 118

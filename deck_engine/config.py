@@ -7,6 +7,16 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 RAW_DIR = REPO_ROOT / "data" / "raw"
 DB_PATH = REPO_ROOT / "data" / "engine.duckdb"
 
+# The meta history: one dated MTGGoldfish snapshot per file. Transcribed from a
+# screenshot by hand and committed, because unlike an event it cannot be
+# fetched again.
+META_DIR = REPO_ROOT / "data" / "meta"
+
+# The window a meta reading is taken over, and the fresh window's own length.
+# A share read over 30 days is a different measurement from one read over 14,
+# so every meta query names the window it wants rather than pooling them.
+META_WINDOW_DAYS = 14
+
 FORMAT = "modern"
 
 # How far back the analysis history reaches: two regimes' worth of events.
@@ -23,6 +33,9 @@ UNSETTLED_DAYS = 3
 
 # Membership rule: every signature card, in the mainboard.
 ARCHETYPE = "goryos"
+# The same deck under MTGGoldfish's name for it, which is how the meta layer
+# knows it: the mirror share is this archetype's own row in the field's table.
+META_ARCHETYPE = "Goryo's Vengeance"
 SIGNATURE_CARDS = (
     "Goryo's Vengeance",
     "Atraxa, Grand Unifier",
