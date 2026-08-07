@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 
-from . import config, flags, meta
+from . import config, flags, meta, reference
 from .refresh import refresh
 from .store import build, goryos_lists, meta_trend
 
@@ -33,6 +33,37 @@ def _flag_line(flag: dict) -> str:
     )
 
 
+def _configuration(pair: tuple[int, int] | None) -> str:
+    """A card's copies as the pair the domain reads, or a dash where the version
+    does not run the card at all: absent is absent, not a configuration of none."""
+    return "-" if pair is None else f"{pair[0]}/{pair[1]}"
+
+
+def _slot_line(slot: dict) -> str:
+    """One audited flex slot: what the camp did with it, and what the pilot said.
+
+    The bucket is a verdict and the share is the evidence, so the two are never
+    printed apart. The delta and the tilt sit beside them as the readings they
+    are, and neither is folded into the confidence the queue is ordered on.
+    """
+    delta = "" if slot["delta"] is None else f" delta {slot['delta']:+.2f}"
+    tilt = "" if slot["tilt"] is None else f" tilt {slot['tilt']:+.2f}"
+    note = f"  {slot['note']}" if slot["note"] else ""
+    where = f"{slot['card']} {_configuration((slot['main'], slot['side']))}"
+    return f"  {slot['confidence']:>4.0%}  {where:<40} {slot['bucket']:<20}{delta}{tilt}{note}"
+
+
+def _reference_log() -> None:
+    """The change log: what each version of the 75 did to the one before it."""
+    for entry in reference.history():
+        print(f"v{entry['from_version']} -> v{entry['version']}")
+        for change in entry["changes"]:
+            print(
+                f"  {change['card']:<40} {_configuration(change['before'])}"
+                f" -> {_configuration(change['after'])}"
+            )
+
+
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(prog="deck-engine", description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -56,6 +87,11 @@ def main(argv=None) -> None:
     trend.add_argument("--window-days", type=int, default=config.META_WINDOW_DAYS)
 
     commands.add_parser("flags", help="the hype watchlist and the fringe appearances")
+
+    commands.add_parser("reference", help="audit the reference list against its camp")
+
+    filed = commands.add_parser("reference-capture", help="file an export as the next version")
+    filed.add_argument("source", type=Path, help="the exported 75, in the published format")
 
     args = parser.parse_args(argv)
     if args.command == "refresh":
@@ -81,6 +117,29 @@ def main(argv=None) -> None:
         for flag in ledger:
             print(_flag_line(flag))
         print(f"{len(ledger)} flag(s); run refresh to bring them up to date")
+        return
+
+    if args.command == "reference-capture":
+        captured = reference.capture(args.source)
+        print(f"reference list v{captured.version} at {captured.path}")
+        _reference_log()
+        return
+
+    if args.command == "reference":
+        captured = reference.current()
+        audited = reference.slots(captured)
+        queue = reference.playtest_queue(audited)
+        print(f"reference list v{captured.version}, {captured.path.name}")
+        _reference_log()
+        # The reading names its own terms: a share of a camp, in a stratum, over
+        # a window is a different number from a share of any other three.
+        print(
+            f"{audited[0]['camp']} camp, {audited[0]['stratum']},"
+            f" {audited[0]['population']} list(s) in the fresh window"
+        )
+        print(f"{sum(row['core'] for row in audited)} core, {len(queue)} flex, least backed first")
+        for slot in queue:
+            print(_slot_line(slot))
         return
 
     rows = goryos_lists(day=args.date)

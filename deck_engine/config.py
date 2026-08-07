@@ -97,3 +97,21 @@ RETURN_ABSENCE_DAYS = 28
 # Watchlist rule: a non-member mainboarding this one is a near-miss, and what it
 # dropped is the rest of the trio.
 WATCHLIST_CARD = "Goryo's Vengeance"
+
+# The pilot's own 75, kept as `v1-...txt`, `v2-...txt` and so on: captures are
+# appended and never edited, so the change log is derived from them.
+REFERENCE_DIR = REPO_ROOT / "reference"
+
+# Core/flex rule: how much of its own camp has to have registered a
+# configuration for that slot of the reference list to be core rather than one
+# of the flex slots where the optimisation happens. Overridable per slot, on
+# the capture itself, since a pilot still arguing with a unanimous camp is the
+# case the threshold cannot see.
+CORE_ADOPTION = 0.90
+
+# Slot audit rule: where the camp stands on a flex slot. A majority of the camp
+# is its consensus. Below that, a share the size of the fringe bar is still a
+# minority with support behind it, and anything under that is the pilot's own
+# deviation, examined or not.
+CONSENSUS_ADOPTION = 0.50
+SUPPORTED_MINORITY = 0.10

@@ -7,6 +7,7 @@ internals, schema shape, or intermediate tables.
 
 import csv
 import json
+import shutil
 from pathlib import Path
 
 import pytest
@@ -41,8 +42,10 @@ FIXTURE_GRIXIS = Path(__file__).parent / "fixtures" / "grixis"
 # One captured showcase qualifier whose only non-Fallaji list, karatedom's,
 # scored nothing: a camp whose whole window is worth zero points.
 FIXTURE_POINTLESS = Path(__file__).parent / "fixtures" / "zero-points"
-# The pilot's own 75 as captured, which is not a fixture but the real thing.
-REFERENCE_CAPTURE = Path(__file__).parent.parent / "reference" / "2026-08-07-moxfield.txt"
+# The pilot's own 75 as captured, which is not a fixture but the real thing:
+# the 2026-08-07 Moxfield export, kept as version 1 of the reference list.
+REFERENCE_DIR = Path(__file__).parent.parent / "reference"
+REFERENCE_V1 = REFERENCE_DIR / "v1-2026-08-07-moxfield.txt"
 # The meta history as it stands, which is likewise the real thing: the 14-day
 # MTGGoldfish snapshot of 2026-08-07, transcribed from the screenshot by hand.
 META_HISTORY = Path(__file__).parent.parent / "data" / "meta"
@@ -774,10 +777,343 @@ def test_the_reference_list_capture_belongs_to_the_non_fallaji_camp():
     consensus, so a reference list of no camp would have nothing to answer to.
     The 2026-08-07 capture plays no Fallaji Archaeologist.
     """
-    mainboard, sideboard = reference.read(REFERENCE_CAPTURE)
+    captured = reference.read(REFERENCE_V1)
 
-    assert camp(mainboard) == "non-fallaji"
-    assert (sum(mainboard.values()), sum(sideboard.values())) == (60, 15)
+    assert camp(captured.mainboard) == "non-fallaji"
+    assert (sum(captured.mainboard.values()), sum(captured.sideboard.values())) == (60, 15)
+
+
+def test_the_moxfield_capture_is_version_one_of_the_reference_list():
+    """The list being optimised has a history, and this is where it starts.
+
+    The 2026-08-07 export is the 75 the project opens with, so every later
+    reading of "what changed" is read against it.
+    """
+    history = reference.versions(REFERENCE_DIR)
+
+    assert [captured.version for captured in history] == [1]
+    assert history[0].mainboard["Goryo's Vengeance"] == 4
+
+
+def test_a_changed_capture_becomes_the_next_version_and_the_delta_is_the_log(tmp_path):
+    """Versions are appended and never edited, so the log is derived from them.
+
+    A capture is what the pilot exported on a day, and the reason to keep the
+    one before it is to be able to say what moved: a slot audit that reported
+    the 75 without saying which way it had come would lose the change the
+    playtesting was about. Deriving the delta from the two captures rather than
+    recording it beside them is what stops the log and the lists disagreeing.
+    """
+    versions = tmp_path / "reference"
+    versions.mkdir()
+    shutil.copy(REFERENCE_V1, versions / REFERENCE_V1.name)
+    original = (versions / REFERENCE_V1.name).read_bytes()
+
+    export = tmp_path / "moxfield.txt"
+    export.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8")
+        .replace("3 Force of Negation", "2 Force of Negation")
+        .replace("2 Prismatic Ending", "1 Prismatic Ending"),
+        encoding="utf-8",
+    )
+    reference.capture(export, versions)
+
+    # Both retained: the earlier version is the one the delta is read against.
+    assert [captured.version for captured in reference.versions(versions)] == [1, 2]
+    assert (versions / REFERENCE_V1.name).read_bytes() == original
+
+    assert reference.history(versions) == [
+        {
+            "version": 2,
+            "from_version": 1,
+            "changes": [
+                {"card": "Force of Negation", "before": (3, 0), "after": (2, 0)},
+                {"card": "Prismatic Ending", "before": (2, 0), "after": (1, 0)},
+            ],
+        }
+    ]
+
+
+def test_the_slot_audit_partitions_the_75_and_buckets_every_flex_slot(tmp_path):
+    """What the reference list is answerable for, slot by slot.
+
+    Core is the near-universal part of the camp's 75 and is not where
+    optimisation happens; the flex slots are, and each one is a claim the camp
+    either shares, part of it shares, or nobody shares. The audit is read in the
+    reference list's own camp, in one stratum, over the fresh window: a slot is
+    only ever a deviation from a population that could have registered it.
+
+    Against the captured challenges the camp fields three fresh lists, so a
+    configuration stands at all three, two, one or none of them. Every slot in
+    the 2026-08-07 capture lands somewhere: twenty are unanimous, five carry two
+    thirds of the camp, three carry one, and four are the pilot's alone. Nothing
+    in the capture says why any of the four is there, which is exactly the
+    reading an unexamined deviation is.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+
+    audited = reference.slots(reference.read(REFERENCE_V1), db)
+
+    assert {row["card"]: row["bucket"] for row in audited if not row["core"]} == {
+        "Breeding Pool": "consensus",
+        "Flooded Strand": "consensus",
+        "Marsh Flats": "consensus",
+        "Nihil Spellbomb": "consensus",
+        "Thoughtseize": "consensus",
+        "Consign to Memory": "supported-minority",
+        "Force of Negation": "supported-minority",
+        "Wrath of the Skies": "supported-minority",
+        "March of Otherworldly Light": "unexamined-deviation",
+        "Pest Control": "unexamined-deviation",
+        "Spell Snare": "unexamined-deviation",
+        "Teferi, Time Raveler": "unexamined-deviation",
+    }
+    assert sum(row["core"] for row in audited) == 20
+
+    # A core slot is not audited: it is not where the optimisation is.
+    solitude = next(row for row in audited if row["card"] == "Solitude")
+    assert (solitude["confidence"], solitude["bucket"]) == (1.0, None)
+
+    # Each slot carries the reading it was filed on: which camp, how many lists
+    # it was taken over, and which way the configuration is moving.
+    thoughtseize = next(row for row in audited if row["card"] == "Thoughtseize")
+    assert (thoughtseize["main"], thoughtseize["side"]) == (3, 0)
+    assert (thoughtseize["camp"], thoughtseize["population"]) == ("non-fallaji", 3)
+    assert thoughtseize["confidence"] == pytest.approx(2 / 3)
+    assert thoughtseize["delta"] == pytest.approx(2 / 3 - 1 / 4)
+
+    # A configuration no list in the camp registered is a share of none, not a
+    # missing reading: the camp published, and none of it went there.
+    assert next(row for row in audited if row["card"] == "Pest Control")["confidence"] == 0.0
+
+
+def test_an_annotation_overrides_the_partition_and_makes_a_deviation_deliberate(tmp_path):
+    """The pilot's own knowledge about a slot, carried on the slot.
+
+    Adoption cannot tell a deviation the pilot has playtested from one nobody
+    has looked at, and it cannot know that a slot the camp is unanimous about is
+    one this pilot is still arguing with. Both are the pilot's to say, so both
+    are said in the same place: on the line the slot is registered on, in the
+    version that was captured with it.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+    annotated = tmp_path / "annotated.txt"
+    annotated.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8")
+        .replace("4 Solitude", "4 Solitude  # flex: the mirror may not want the fourth")
+        .replace("3 Thoughtseize", "3 Thoughtseize  # core")
+        .replace(
+            "1 March of Otherworldly Light",
+            "1 March of Otherworldly Light  # the clean answer to a resolved Blood Moon",
+        ),
+        encoding="utf-8",
+    )
+
+    audited = {row["card"]: row for row in reference.slots(reference.read(annotated), db)}
+
+    # Unanimous in the camp, and flex because the pilot has not settled it.
+    assert audited["Solitude"]["confidence"] == 1.0
+    assert (audited["Solitude"]["core"], audited["Solitude"]["bucket"]) == (False, "consensus")
+
+    # Two thirds of the camp, and core because the pilot has settled it.
+    assert (audited["Thoughtseize"]["core"], audited["Thoughtseize"]["bucket"]) == (True, None)
+
+    # The same slot nobody in the camp registered, now with a reason on it.
+    march = audited["March of Otherworldly Light"]
+    assert (march["confidence"], march["bucket"]) == (0.0, "deliberate-deviation")
+    assert march["note"] == "the clean answer to a resolved Blood Moon"
+
+
+def test_an_annotation_the_pilot_wrote_as_prose_is_all_note_and_no_override(tmp_path):
+    """`core` opening a sentence is the pilot writing, not the pilot overriding.
+
+    The override is a word the engine acts on and the note is prose it only
+    carries, so the capture marks off which it is rather than the engine reading
+    it out of whatever the sentence starts with. Taken from the first word,
+    `core to the Frog matchup` would file the slot core, drop it out of the
+    playtest queue, and print the pilot's own reason a word short.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+    annotated = tmp_path / "annotated.txt"
+    annotated.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace(
+            "1 Pest Control", "1 Pest Control  # core to the Frog matchup, never cut"
+        ),
+        encoding="utf-8",
+    )
+
+    audited = {row["card"]: row for row in reference.slots(reference.read(annotated), db)}
+
+    slot = audited["Pest Control"]
+    assert slot["note"] == "core to the Frog matchup, never cut"
+    assert (slot["core"], slot["bucket"]) == (False, "deliberate-deviation")
+
+
+def test_the_playtest_queue_ranks_the_flex_slots_least_backed_first(tmp_path):
+    """Where the playtesting goes: the slots the camp backs least.
+
+    A slot's confidence is how much of its own camp registered the exact
+    configuration the pilot did, and nothing else is folded into it: a blended
+    index would rank on a figure no population reported. So the queue opens on
+    the four slots nobody in the camp is on and closes on the ones two thirds of
+    it are, and the core slots are not in it at all.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+
+    queue = reference.playtest_queue(reference.slots(reference.read(REFERENCE_V1), db))
+
+    assert [(row["card"], row["confidence"]) for row in queue] == [
+        ("March of Otherworldly Light", 0.0),
+        ("Pest Control", 0.0),
+        ("Spell Snare", 0.0),
+        ("Teferi, Time Raveler", 0.0),
+        ("Consign to Memory", pytest.approx(1 / 3)),
+        ("Force of Negation", pytest.approx(1 / 3)),
+        ("Wrath of the Skies", pytest.approx(1 / 3)),
+        ("Breeding Pool", pytest.approx(2 / 3)),
+        ("Flooded Strand", pytest.approx(2 / 3)),
+        ("Marsh Flats", pytest.approx(2 / 3)),
+        ("Nihil Spellbomb", pytest.approx(2 / 3)),
+        ("Thoughtseize", pytest.approx(2 / 3)),
+    ]
+
+
+def test_an_examined_slot_yields_to_an_unexamined_one_the_camp_backs_no_better(tmp_path):
+    """Two slots the camp is equally silent on are not equally urgent.
+
+    One the pilot has a reason for has already had the thinking done; one
+    nothing has ever been said about has not. The camp cannot tell them apart,
+    so the queue does: at the same confidence, the unexamined slot is played
+    first.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+    annotated = tmp_path / "annotated.txt"
+    annotated.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace(
+            "1 March of Otherworldly Light",
+            "1 March of Otherworldly Light  # the clean answer to a resolved Blood Moon",
+        ),
+        encoding="utf-8",
+    )
+
+    queue = reference.playtest_queue(reference.slots(reference.read(annotated), db))
+
+    assert [row["card"] for row in queue][:4] == [
+        "Pest Control",
+        "Spell Snare",
+        "Teferi, Time Raveler",
+        "March of Otherworldly Light",
+    ]
+
+
+def test_a_camp_that_published_nothing_in_the_window_is_declined_rather_than_read(tmp_path):
+    """A slot is a deviation from a population, and there may be no population.
+
+    The camp having published nothing in that stratum's fresh window is not the
+    camp having registered lists that all went elsewhere: there is no consensus
+    to be part of, so every slot would read as a deviation from nobody. The
+    fallaji camp took no league trophy in the captured fortnight, and its
+    baseline rows are still rows, so an emptiness check on the rows alone would
+    audit the whole 75 against a population of none.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_ADOPTION, db)
+    fallaji = tmp_path / "fallaji.txt"
+    fallaji.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace(
+            "4 Goryo's Vengeance", "4 Goryo's Vengeance\n4 Fallaji Archaeologist"
+        ),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="fallaji"):
+        reference.slots(reference.read(fallaji), db, stratum="league")
+
+
+def test_a_capture_recording_only_what_the_pilot_knows_is_still_a_new_version(tmp_path):
+    """An annotation is part of the capture, so writing one down is a change.
+
+    Overrides and notes live on the slots of a version, and versions are never
+    edited: the only way to record that a deviation has now been thought about
+    is to file the version that says so. Holding the 75 to the configurations
+    alone would leave the pilot editing an immutable file to say anything.
+    """
+    versions = tmp_path / "reference"
+    versions.mkdir()
+    shutil.copy(REFERENCE_V1, versions / REFERENCE_V1.name)
+
+    export = tmp_path / "moxfield.txt"
+    export.write_text(
+        REFERENCE_V1.read_text(encoding="utf-8").replace(
+            "1 Griselbrand", "1 Griselbrand  # core: the second target is not up for debate"
+        ),
+        encoding="utf-8",
+    )
+    filed = reference.capture(export, versions)
+
+    assert filed.version == 2
+    assert filed.overrides == {"Griselbrand": "core"}
+    assert filed.notes == {"Griselbrand": "the second target is not up for debate"}
+
+    # The 75 itself did not move, and the change log says exactly that.
+    assert reference.history(versions) == [{"version": 2, "from_version": 1, "changes": []}]
+
+
+def test_a_capture_that_changed_nothing_is_not_a_new_version(tmp_path):
+    """A version is a decision about the 75, and re-exporting is not one.
+
+    Exporting the same list again is the easy thing to do, and filing it would
+    put a version carrying no delta into an append-only history that cannot
+    then drop it: the log would fill with days on which nothing happened.
+    """
+    versions = tmp_path / "reference"
+    versions.mkdir()
+    shutil.copy(REFERENCE_V1, versions / REFERENCE_V1.name)
+
+    with pytest.raises(ValueError, match="unchanged"):
+        reference.capture(REFERENCE_V1, versions)
+
+    assert [captured.version for captured in reference.versions(versions)] == [1]
+
+
+def test_a_file_beside_the_versions_that_carries_no_number_is_not_one_of_them(tmp_path):
+    """A version is a numbered capture, and the directory may hold other things.
+
+    The number is what the history is ordered on and what a version means, so a
+    file without one is not a point in it. Reading one in would leave the
+    versions unorderable and take every reference command down with it, over a
+    file nobody claimed was a 75.
+    """
+    versions = tmp_path / "reference"
+    versions.mkdir()
+    shutil.copy(REFERENCE_V1, versions / REFERENCE_V1.name)
+    (versions / "v-notes.txt").write_text("Mainboard\n4 Psychic Frog\n", encoding="utf-8")
+
+    assert [captured.version for captured in reference.versions(versions)] == [1]
+
+
+def test_an_export_registering_no_mainboard_is_refused_before_it_is_filed(tmp_path):
+    """A version is forever, so what is not a 75 never becomes one.
+
+    An export pasted without its board headings reads as a list of nothing, and
+    no mainboard is a Fallaji Archaeologist count of zero: the capture would be
+    filed under the non-fallaji camp and audited against a population it was
+    never registered in, out of a version that cannot afterwards be edited.
+    """
+    versions = tmp_path / "reference"
+    versions.mkdir()
+    export = tmp_path / "moxfield.txt"
+    export.write_text("4 Goryo's Vengeance\n4 Psychic Frog\n", encoding="utf-8")
+
+    with pytest.raises(ValueError, match="mainboard"):
+        reference.capture(export, versions)
+
+    assert list(versions.iterdir()) == []
 
 
 def test_the_reference_list_reads_two_printings_as_the_one_card_they_are(tmp_path):
@@ -793,9 +1129,7 @@ def test_the_reference_list_reads_two_printings_as_the_one_card_they_are(tmp_pat
         "Mainboard\n1 Kavaero, Mind-Bitten\n1 Superior Spider-Man\n", encoding="utf-8"
     )
 
-    mainboard, _ = reference.read(capture)
-
-    assert mainboard == {"Kavaero, Mind-Bitten": 2}
+    assert reference.read(capture).mainboard == {"Kavaero, Mind-Bitten": 2}
 
 
 class CapturedSite:

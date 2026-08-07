@@ -63,7 +63,7 @@ _Avoid_: out-of-pool (never-seen is just the extreme case)
 A recognised camp within the archetype, defined by a divergence card. Currently: Fallaji camp (3-4 copies) vs non-Fallaji camp (0 copies); 1-2 copies is a hybrid experiment belonging to neither consensus. Consensus builds and novelty are computed per variant, never across camps.
 
 **Core / flex slot**:
-Core is the near-universal part of the camp's 75 (default: configurations at 90%+ within-camp adoption); flex slots are the rest, where optimisation happens. Confidence is assessed per flex slot.
+Core is the near-universal part of the camp's 75 (default: configurations at 90%+ within-camp adoption, overridable per slot by a slot annotation); flex slots are the rest, where optimisation happens. Confidence is assessed per flex slot.
 
 **Near-miss list**:
 A list with mainboard Goryo's Vengeance that fails full membership. Surfaced as potential variant innovation, excluded from archetype metrics.
@@ -75,6 +75,21 @@ A falsifiable claim about deck configuration (e.g. "card X belongs in the main o
 
 **Reference list**:
 The user's own 75 being optimised. The final output of the project is the reference list as submitted to the tournament.
+
+**Reference list version**:
+One capture of the reference list, kept in the representation MTGO publishes a list in. Versions are appended and never edited, so the change log is derived from the captures rather than recorded beside them and cannot come to disagree with them. A capture that changed nothing is not a version: an append-only history cannot drop the empty entry it would file.
+
+**Slot annotation**:
+What the pilot knows about one slot, written on the line that slot is registered on: a `core:` or `flex:` word overriding where adoption would file it, and a note saying why the slot is what it is. The override is marked off with a colon rather than read out of whatever word the annotation opens on, since `core to the gameplan` is the pilot writing a note and filing the slot on its first word would drop the slot out of the playtest queue. Adoption cannot see either, since both are the pilot's, and the note is the whole of what tells a deviation that has been thought about from one nobody has looked at.
+
+**Slot audit**:
+Every flex slot of the reference list read against its own camp, in one stratum, over the fresh window, and filed in one of four buckets. Consensus where a majority of the camp registered the same configuration, supported minority where a real part of it did, deliberate deviation where almost none did and the slot carries a note, unexamined deviation where almost none did and nothing says why. Core slots are not audited: they are not where optimisation happens.
+
+**Confidence**:
+For a flex slot, the share of the pilot's own camp that registered the exact configuration the pilot did, and only that. An index folding in the delta or the performance tilt would rank the 75 on a figure no population reported; those readings are carried beside it instead.
+
+**Playtest queue**:
+The flex slots in the order playtesting should reach them: lowest confidence first, and at equal confidence the unexamined deviation ahead of the deliberate one, since the camp cannot tell them apart and only one of them has had the thinking done.
 
 **Heuristic**:
 A piece of MTG expertise supplied by the user (gained from play, not derivable from data) that informs how the data is interpreted. Captured persistently so the co-intelligence improves across sessions.

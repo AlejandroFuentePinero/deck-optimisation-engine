@@ -1,6 +1,12 @@
-# Reference list capture, 2026-08-07
+# Reference list version 1, captured 2026-08-07
 # Source: moxfield.com/decks/37YB-aKaO0uBqIAALJhpHg ("Goryos (Spotlight Brisbane 2026)")
-# Provisional format; engine will formalize reference-list tracking.
+#
+# Copies then card name, under a board heading, as MTGO publishes a list.
+# A `#` after a slot annotates it: an optional `core:` or `flex:` overriding the
+# partition adoption would put the slot on, then why the slot is what it is.
+# The colon is what marks the override off from a note that opens on the word.
+# Versions are appended and never edited; `deck-engine reference-capture` files
+# the next one.
 
 Mainboard
 4 Goryo's Vengeance
