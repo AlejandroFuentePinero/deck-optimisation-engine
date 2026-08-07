@@ -35,6 +35,9 @@ FIXTURE_CONVERSION = Path(__file__).parent / "fixtures" / "conversion"
 # the day's non-Fallaji challenge lists disagree on where Consign to Memory
 # goes at a constant four copies.
 FIXTURE_ADOPTION = Path(__file__).parent / "fixtures" / "adoption"
+# The 2026-08-02 Challenge 64, whose 32 lists hold four builds on the trio: three
+# Esper, and Arcbound_Papi's Grixis reanimator deck, which is a different deck.
+FIXTURE_GRIXIS = Path(__file__).parent / "fixtures" / "grixis"
 # One captured showcase qualifier whose only non-Fallaji list, karatedom's,
 # scored nothing: a camp whose whole window is worth zero points.
 FIXTURE_POINTLESS = Path(__file__).parent / "fixtures" / "zero-points"
@@ -272,8 +275,9 @@ def test_near_miss_lists_are_watchlisted_with_what_they_kept_and_what_they_dropp
     """A near-miss is potential variant innovation, not a member.
 
     nikkuniku finished 25th on 2026-07-22 playing Goryo's Vengeance and Psychic
-    Frog with no Atraxa: exactly the shape worth watching, and exactly the shape
-    that would drag the archetype's own numbers towards a deck it isn't.
+    Frog, with no Atraxa and no Ephemerate: exactly the shape worth watching,
+    and exactly the shape that would drag the archetype's own numbers towards a
+    deck it isn't.
     """
     db = tmp_path / "engine.duckdb"
     store.build(FIXTURE_CAMPS, db)
@@ -284,7 +288,7 @@ def test_near_miss_lists_are_watchlisted_with_what_they_kept_and_what_they_dropp
         ("nikkuniku", "2026-07-22", 25)
     ]
     assert watchlist[0]["kept"] == ["Goryo's Vengeance", "Psychic Frog"]
-    assert watchlist[0]["dropped"] == ["Atraxa, Grand Unifier"]
+    assert watchlist[0]["dropped"] == ["Atraxa, Grand Unifier", "Ephemerate"]
 
     # Watchlisted, and out of every archetype figure: no membership, no camp.
     assert "nikkuniku" not in {row["pilot"] for row in store.goryos_lists(db)}
@@ -776,6 +780,24 @@ def test_the_reference_list_capture_belongs_to_the_non_fallaji_camp():
     assert (sum(mainboard.values()), sum(sideboard.values())) == (60, 15)
 
 
+def test_the_reference_list_reads_two_printings_as_the_one_card_they_are(tmp_path):
+    """The pilot's own 75 goes through the same merge the field's lists do.
+
+    It has to be the same merge, because the reference list is only ever read
+    against the field: a capture keeping the two printings apart would compare a
+    two-of against a consensus counted on the merged name and report a card
+    missing and a card nobody plays, when the pilot registered the two-of.
+    """
+    capture = tmp_path / "capture.txt"
+    capture.write_text(
+        "Mainboard\n1 Kavaero, Mind-Bitten\n1 Superior Spider-Man\n", encoding="utf-8"
+    )
+
+    mainboard, _ = reference.read(capture)
+
+    assert mainboard == {"Kavaero, Mind-Bitten": 2}
+
+
 class CapturedSite:
     """The live site as it was, serving every captured payload it published.
 
@@ -1240,3 +1262,45 @@ def test_an_ingest_killed_part_way_leaves_the_reading_already_filed_standing(tmp
 
     store.build(FIXTURE_RAW, db, meta_dir)
     assert store.mirror_share("2026-08-07", db)["deck_count"] == 118
+
+
+def test_the_same_card_under_two_printings_is_one_card_with_its_copies_summed(tmp_path):
+    """Superior Spider-Man is Kavaero, Mind-Bitten with the Marvel IP on it.
+
+    MTGO publishes a list under whichever printing its pilot registered, and a
+    pilot may register both: Rvng ran one of each in the 2026-07-29 challenge,
+    which is a two-of. Read as published, one card's adoption history splits
+    down the middle and that list reads as two separate one-ofs, which is not a
+    configuration anybody registered.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_CAMPS, db)
+
+    rows = {r["pilot"]: r for r in store.card_configurations("Kavaero, Mind-Bitten", db)}
+    assert (rows["Rvng"]["main"], rows["Rvng"]["side"], rows["Rvng"]["total"]) == (2, 0, 2)
+    assert store.card_configurations("Superior Spider-Man", db) == []
+
+
+def test_a_grixis_build_on_the_trio_is_a_near_miss_and_not_the_archetype(tmp_path):
+    """The membership rule has to name the shell, not just the payoff.
+
+    Goryo's Vengeance, Atraxa and Psychic Frog are as at home in a Grixis
+    reanimator deck as in this one, so the trio alone lets a deck with another
+    manabase and another gameplan into the population every camp figure is read
+    over. Ephemerate is the blink half of the Esper shell and the line the two
+    versions fall either side of.
+
+    Arcbound_Papi finished 24th at the 2026-08-02 challenge on the trio with no
+    Ephemerate, on Faithless Looting and Blood Crypt. It leaves the archetype
+    and lands where a different construction direction belongs: the watchlist,
+    which says exactly what it kept and what it dropped.
+    """
+    db = tmp_path / "engine.duckdb"
+    store.build(FIXTURE_GRIXIS, db)
+
+    members = {row["pilot"] for row in store.goryos_lists(db)}
+    assert members == {"billskillz", "jussupinator", "DskBayWolf"}
+
+    watchlist = {row["pilot"]: row for row in store.near_miss_lists(db)}
+    assert watchlist["Arcbound_Papi"]["placement"] == 24
+    assert watchlist["Arcbound_Papi"]["dropped"] == ["Ephemerate"]

@@ -10,6 +10,8 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
+from . import config
+
 # What a slug appends to the event kind: publication date plus event id.
 DATED_SUFFIX_RE = re.compile(r"-\d{4}-\d{2}-\d{2}\d+$")
 
@@ -37,9 +39,17 @@ class Decklist:
 
 
 def _cards(entries: list[dict]) -> dict[str, int]:
+    """A board's cards and copies, printings of one card counted as that card.
+
+    The site publishes a list under whichever printing its pilot registered, and
+    a pilot may register two printings of the same card. Merging them here, at
+    the point names first become counts, is what stops a two-of reading as two
+    separate one-ofs and one card's adoption history splitting down the middle.
+    """
     counts: dict[str, int] = {}
     for entry in entries:
         name = entry["card_attributes"]["card_name"]
+        name = config.CARD_ALIASES.get(name, name)
         counts[name] = counts.get(name, 0) + int(entry["qty"])
     return counts
 

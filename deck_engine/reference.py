@@ -2,12 +2,18 @@
 
 from pathlib import Path
 
+from . import config
+
 
 def read(path: Path) -> tuple[dict[str, int], dict[str, int]]:
     """A capture's mainboard and sideboard, by card.
 
     The capture is the export as pasted: `4 Goryo's Vengeance` under a board
     heading, with `#` comments carrying where and when it came from.
+
+    Printings merge here as they do on ingestion of the field's lists, since the
+    reference list is only ever read against the field: keeping the two names
+    apart would compare a two-of against a consensus counted on the merged one.
     """
     boards = {"mainboard": {}, "sideboard": {}}
     board: dict[str, int] = {}
@@ -19,5 +25,6 @@ def read(path: Path) -> tuple[dict[str, int], dict[str, int]]:
             board = boards[line.lower()]
             continue
         copies, card = line.split(" ", 1)
+        card = config.CARD_ALIASES.get(card, card)
         board[card] = board.get(card, 0) + int(copies)
     return boards["mainboard"], boards["sideboard"]

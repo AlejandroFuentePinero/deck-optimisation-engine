@@ -49,7 +49,27 @@ both directions, and belong to neither consensus.
 within-camp; hybrids are flagged as innovation, excluded from camp consensus.
 The camp ratio over time is a tracked signal.
 
+**Ephemerate is part of what makes the deck Esper** (2026-08-07):
+The trio alone (Goryo's Vengeance, Atraxa, Psychic Frog) admits Grixis
+reanimator builds, which are a different deck with a different manabase, a
+different gameplan and no bearing on this 75. Ephemerate is the blink half of
+the Esper shell and the line the two versions fall either side of.
+*Applies*: Ephemerate joins the mainboard signature cards, so membership is the
+four and not the three. Grixis lists leave the archetype's population entirely;
+those that keep Goryo's Vengeance land on the near-miss watchlist, which is
+where a different construction direction belongs.
+
 ## Data interpretation
+
+**Kavaero, Mind-Bitten and Superior Spider-Man are one card** (2026-08-07):
+Superior Spider-Man is the Marvel printing of Kavaero; mechanically they are
+the same card, and the IP is the whole of the difference. MTGO publishes each
+list under whichever printing the pilot registered, and a pilot may register
+both.
+*Applies*: the two names merge at ingestion and their copies are summed, before
+anything counts a configuration. Eight lists in the history register both, and
+without the merge each reads as two separate one-ofs rather than the two-of it
+is, splitting one card's adoption history down the middle.
 
 **Hype corrects in about a week, and the weekend is the judge** (2026-08-07):
 One week of play is usually enough for reality to hit misconfigured or
