@@ -7,7 +7,7 @@ from pathlib import Path
 
 import duckdb
 
-from . import config
+from . import config, meta
 from .classify import classify_cache
 
 DECKLISTS_SCHEMA = """
@@ -38,6 +38,19 @@ CREATE OR REPLACE TABLE configurations (
 )
 """
 
+# The meta history, keyed by the two terms a reading is taken on. Archetypes
+# here are MTGGoldfish's own names for the whole field, and are nothing to do
+# with `decklists.archetype`, this engine's membership rule over the one deck.
+META_SNAPSHOTS_SCHEMA = """
+CREATE OR REPLACE TABLE meta_snapshots (
+    captured_on VARCHAR,
+    window_days INTEGER,
+    archetype VARCHAR,
+    share DOUBLE,
+    deck_count INTEGER
+)
+"""
+
 
 def _load(con: duckdb.DuckDBPyConnection, table: str, rows: Iterable[tuple]) -> None:
     """Bulk-load `rows` into `table`.
@@ -57,19 +70,28 @@ def _load(con: duckdb.DuckDBPyConnection, table: str, rows: Iterable[tuple]) -> 
             con.execute(f"COPY {table} FROM '{path}' (FORMAT CSV, HEADER false)")
 
 
-def build(raw_dir: Path = config.RAW_DIR, db_path: Path = config.DB_PATH) -> Path:
+def build(
+    raw_dir: Path = config.RAW_DIR,
+    db_path: Path = config.DB_PATH,
+    meta_dir: Path = config.META_DIR,
+) -> Path:
     """Rebuild the store from the raw cache. Derived data is never authoritative.
 
-    The two tables are one picture of the cache, so they land together or not at
+    The tables are one picture of the cache, so they land together or not at
     all: a rebuild that died between them would leave lists whose cards had gone,
-    and a card query would answer that nobody plays it rather than fail.
+    and a card query would answer that nobody plays it rather than fail. The meta
+    history is rebuilt with them for the same reason it is kept on disk: what the
+    field looked like is evidence a conditional hypothesis reads beside the lists.
     """
     db_path.parent.mkdir(parents=True, exist_ok=True)
     lists = list(enumerate(classify_cache(raw_dir)))
+    history = meta.snapshot_rows(meta_dir)
     with duckdb.connect(db_path) as con:
         con.execute("BEGIN TRANSACTION")
         con.execute(DECKLISTS_SCHEMA)
         con.execute(CONFIGURATIONS_SCHEMA)
+        con.execute(META_SNAPSHOTS_SCHEMA)
+        _load(con, "meta_snapshots", history)
         _load(
             con,
             "decklists",
@@ -170,6 +192,58 @@ def goryos_lists(
         " AND ".join(f"{column} = ?" for column, value in filters.items() if value),
         [value for value in filters.values() if value],
     )
+
+
+def meta_trend(
+    archetype: str,
+    db_path: Path = config.DB_PATH,
+    window_days: int = config.META_WINDOW_DAYS,
+) -> list[dict]:
+    """One archetype's share of the field across the snapshot history, oldest first.
+
+    `archetype` is MTGGoldfish's name for a deck and not this engine's: the meta
+    layer is the whole field, which v1 does not classify, and only the site's
+    vocabulary reaches across all of it.
+
+    The trend is read within one window, because a share is a reading of a
+    window: the 30-day table smooths what the 14-day table shows, so a line
+    drawn through both would report the difference between two instruments as
+    movement in the field. Each row still carries its window, since a reading
+    without both its terms cannot be compared to anything.
+    """
+    with duckdb.connect(db_path, read_only=True) as con:
+        return _rows(
+            con.execute(
+                "SELECT captured_on, window_days, share, deck_count FROM meta_snapshots"
+                " WHERE archetype = ? AND window_days = ? ORDER BY captured_on",
+                [archetype, window_days],
+            )
+        )
+
+
+def mirror_share(
+    day: str,
+    db_path: Path = config.DB_PATH,
+    window_days: int = config.META_WINDOW_DAYS,
+) -> dict | None:
+    """How much of the field the archetype itself was, as of `day`.
+
+    The mirror is a matchup the 75 is built against, so its density is the join
+    a conditional hypothesis needs: a main-deck card earned by mirror volume is
+    only earned while that volume stands.
+
+    Readings are dated and sparse, so `day` is answered by the last one taken on
+    or before it in `window_days`, which is the reading that stood on that day.
+    It comes back whole, its own terms included, so a stale answer can be told
+    from a fresh one. None means the history does not reach back that far, and
+    there is no reading to condition on.
+    """
+    stood = [
+        snapshot
+        for snapshot in meta_trend(config.META_ARCHETYPE, db_path, window_days)
+        if snapshot["captured_on"] <= day
+    ]
+    return stood[-1] if stood else None
 
 
 def camp_ratio(db_path: Path = config.DB_PATH) -> list[dict]:
