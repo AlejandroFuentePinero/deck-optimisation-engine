@@ -66,3 +66,12 @@ competitive field's assumptions and are where players (often the same ones who
 play challenges) test innovations first.
 *Applies*: league-derived stats are never blended with challenge stats;
 leagues drive novelty detection, challenges drive performance evidence.
+
+## Proposed, awaiting pilot verdict
+
+Heuristic candidates, held here until Alejandro rules on them. Nothing in this
+section is adopted knowledge and nothing here may steer an analysis. Each entry
+cites the evidence that raised it and counts the sessions it has been put to
+him in. See `.claude/skills/mtg-heuristics/SKILL.md`.
+
+_(none open)_
