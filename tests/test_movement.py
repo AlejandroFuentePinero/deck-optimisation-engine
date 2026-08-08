@@ -299,3 +299,73 @@ def test_the_unplayed_floor_and_cap_are_configuration_values(tmp_path):
     # rather than the tail going silently missing.
     (only,) = movement.unplayed(held, db, floor=0.10, limit=1)
     assert only["card"] == "Surgical Extraction" and only["dropped"] == 1
+
+
+def test_the_camp_is_scanned_for_what_is_crossing_rather_than_asked_about_one_card(tmp_path):
+    """The reading taken over every card the camp registered, not one named first.
+
+    `migration` answers about a card the reader already suspected, which cannot
+    reach the question it exists for: what is crossing is mostly what nobody has
+    looked at yet, so a pilot who has to name the card can only confirm what he
+    already thought. The whole camp goes through the same reading and what moved
+    furthest comes back first.
+
+    Two cards cross here in opposite directions and the camp holds a third
+    steady, arguing only about how many, which is a flex slot and not a
+    migration.
+    """
+    db = _built(
+        tmp_path,
+        [
+            _day(
+                BASELINE_DAY,
+                "12846209",
+                lambda seat: {MOVED: (0, 2), "Surgical Extraction": (1, 0), "Pest Control": (3, 0)},
+            ),
+            _day(
+                FRESH_DAY,
+                "12846210",
+                lambda seat: {MOVED: (2, 0), "Surgical Extraction": (0, 1)}
+                | ({"Pest Control": (4, 0)} if seat < 4 else {"Pest Control": (3, 0)}),
+            ),
+        ],
+    )
+
+    crossing = movement.migrations(db, CAMP)
+
+    assert [(row["card"], row["direction"]) for row in crossing] == [
+        ("Surgical Extraction", movement.TO_SIDE),
+        (MOVED, movement.TO_MAIN),
+    ], "both crossings read, and the card the camp only argued the count of is not one"
+
+
+def test_a_card_too_few_lists_deep_is_not_read_as_the_camp_moving_it(tmp_path):
+    """A shift is the difference between two shares, so a thin window carries it whole.
+
+    Three lists that all sideboard a card they used to main have crossed 100% of
+    its copies, which is what one pilot changing his mind looks like at that
+    population. A scan is exactly where such a figure arrives wearing a finding's
+    clothes, having been surfaced by nobody rather than asked for.
+    """
+    thin = "Celestial Purge"
+    db = _built(
+        tmp_path,
+        [
+            _day(
+                BASELINE_DAY,
+                "12846211",
+                lambda seat: {MOVED: (0, 2)} | ({thin: (2, 0)} if seat < 3 else {}),
+            ),
+            _day(
+                FRESH_DAY,
+                "12846212",
+                lambda seat: {MOVED: (2, 0)} | ({thin: (0, 2)} if seat < 3 else {}),
+            ),
+        ],
+    )
+
+    assert movement.migration(thin, db, CAMP)["direction"] == movement.TO_SIDE
+    assert [row["card"] for row in movement.migrations(db, CAMP)] == [MOVED], (
+        "the eight-list card is read and the three-list one is not"
+    )
+    assert [row["card"] for row in movement.migrations(db, CAMP, floor=3)] == [thin, MOVED]

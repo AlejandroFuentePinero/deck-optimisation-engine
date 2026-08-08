@@ -817,11 +817,14 @@ def test_the_moxfield_capture_is_version_one_of_the_reference_list():
     """The list being optimised has a history, and this is where it starts.
 
     The 2026-08-07 export is the 75 the project opens with, so every later
-    reading of "what changed" is read against it.
+    reading of "what changed" is read against it. The versions after it are the
+    pilot's to file, so what is pinned here is where the history opens and that
+    it stays ordered, never how far it has got.
     """
     history = reference.versions(REFERENCE_DIR)
 
-    assert [captured.version for captured in history] == [1]
+    assert [captured.version for captured in history] == list(range(1, len(history) + 1))
+    assert history[0].version == 1
     assert history[0].mainboard["Goryo's Vengeance"] == 4
 
 

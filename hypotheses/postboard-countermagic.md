@@ -21,3 +21,17 @@ that stood on the day, and the claim is only ever true of a meta.
 The two cards are not interchangeable inside the five. Which of them the camp
 cuts first, if it cuts, is what says whether the answer is fewer counterspells
 or a different mix of them.
+
+## Evidence
+
+### 2026-08-08 data
+
+non-fallaji camp, challenge-class, 40 list(s) in the fresh window.
+Mystical Dispute 0/3: 80% of the camp, delta +0.09
+Mystical Dispute 0/2: 18% of the camp, delta -0.06
+Spell Snare 0/1: 32% of the camp, delta +0.01
+Spell Snare 0/2: 20% of the camp, delta +0.02
+Spell Snare 1/1: 10% of the camp, delta +0.07
+Spell Snare 0/3: 8% of the camp, delta +0.06
+hype flag on Spell Snare 0/1 (decayed), raised 2026-08-07: adoption density, not card quality.
+mirror 10.0% of the field, read 2026-08-07 over 14 days.

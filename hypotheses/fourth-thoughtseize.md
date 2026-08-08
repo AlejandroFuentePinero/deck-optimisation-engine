@@ -20,3 +20,15 @@ whatever the adoption says.
 
 The third Force of Negation is also what the consign-mainboard record wants
 to spend. The two argue over the same slot, and both cannot be acted on.
+
+## Evidence
+
+### 2026-08-08 data
+
+non-fallaji camp, challenge-class, 40 list(s) in the fresh window.
+Thoughtseize 3/0: 70% of the camp, delta +0.39
+Thoughtseize 3/1: 25% of the camp, delta -0.19
+Thoughtseize 4/0: 5% of the camp, delta -0.12
+Force of Negation 2/0: 75% of the camp, delta +0.26
+Force of Negation 3/0: 18% of the camp, delta -0.16
+Force of Negation 2/1: 8% of the camp, delta -0.11

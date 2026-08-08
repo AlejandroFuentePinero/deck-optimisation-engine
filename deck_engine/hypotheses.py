@@ -334,7 +334,16 @@ def _rendered(entry: dict) -> list[str]:
         f" {entry['population']} list(s) in the fresh window."
     )
     for reading in entry["readings"]:
-        tilt = "" if reading["tilt"] is None else f", tilt {reading['tilt']:+.2f}"
+        # Under the floor the tilt is not written at all. An entry is permanent
+        # and the log is the argument a verdict gets written from, so a figure
+        # the domain says carries no performance reading is worse here than
+        # anywhere: it is a number a later reader would weigh, dated and filed
+        # beside the pilot's own findings as though it were evidence.
+        tilt = (
+            ""
+            if reading["tilt"] is None or abs(reading["tilt"]) < config.TILT_FLOOR
+            else f", tilt {reading['tilt']:+.2f}"
+        )
         delta = "" if reading["delta"] is None else f", delta {reading['delta']:+.2f}"
         lines.append(
             f"{reading['subject']} {reading['configuration']}:"

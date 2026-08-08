@@ -68,7 +68,7 @@ def _flag_line(flag: dict) -> str:
         )
 
     if flag["kind"] == "hype":
-        tilt = "" if flag["tilt"] is None else f" tilt {flag['tilt']:+.3f}"
+        tilt = _tilt(flag["tilt"], 3)
         return (
             f"{flag['raised_on']}  hype    {where:<44}"
             f" league {flag['from_adoption']:>4.0%} -> {flag['to_adoption']:>4.0%}"
@@ -89,18 +89,80 @@ def _configuration(pair: tuple[int, int] | None) -> str:
     return "-" if pair is None else f"{pair[0]}/{pair[1]}"
 
 
+def _resolved(card: str) -> str:
+    """A card asked for by name, under the name the store holds it by.
+
+    The site publishes two printings of one card and the store was built with
+    them merged, as every reading of the field is. Asked for under the other
+    printing, an unresolved name matches nothing and each reading comes back
+    empty: a confident null about a card a third of the camp plays, which is
+    worse than an error for reading as an answer.
+    """
+    return config.CARD_ALIASES.get(card, card)
+
+
+def _tilt(value: float | None, places: int = 2) -> str:
+    """A performance tilt, and nothing at all where it is under the floor.
+
+    Every published list already finished, so the Swiss points a camp's
+    fortnight spreads over are bunched and the tilt across this archetype's
+    configurations runs to a point or two. A column of figures that size reads
+    as a performance lens while carrying none, so what the domain says about it
+    is that below the floor it is not displayed. The figure stays on the row;
+    what is suppressed is the display of it.
+    """
+    if value is None or abs(value) < config.TILT_FLOOR:
+        return ""
+    return f" tilt {value:+.{places}f}"
+
+
+def _backing(slot: dict) -> str:
+    """A slot's share as the count a reader can check it against.
+
+    A verdict taken off forty lists is one a couple of them could reverse and a
+    bare percentage reads as a fact, so the count is printed beside every share.
+    """
+    return f"{slot['lists']}/{slot['population']} ({slot['confidence']:>4.0%})"
+
+
+def _stands(slot: dict) -> str:
+    """What the camp did about the card, beside what it did about the count.
+
+    The reading the exact-configuration share cannot carry, and the terminal was
+    printing the share without it. A slot at 8% is two opposite findings and
+    only this tells them apart: a card the camp barely plays, or a card it is
+    unanimous on where the pilot is a copy light. The second is the actionable
+    one and the share alone buries it.
+    """
+    if slot["camp_main"] is None:
+        return "the camp registered none of it"
+    return (
+        f"{slot['camp_playing']:.0%} play it,"
+        f" {slot['camp_adoption']:.0%} on {slot['camp_main']}/{slot['camp_side']}"
+    )
+
+
 def _slot_line(slot: dict) -> str:
     """One audited flex slot: what the camp did with it, and what the pilot said.
 
     The bucket is a verdict and the share is the evidence, so the two are never
-    printed apart. The delta and the tilt sit beside them as the readings they
-    are, and neither is folded into the confidence the queue is ordered on.
+    printed apart, and what the camp did about the card goes beside what it did
+    about the count: a deviation from a card the camp barely plays and a copy
+    short of one it is unanimous on are the same share and opposite findings.
+
+    A slot whose bucket a list or two would refile says so, since a bucket is a
+    categorical claim taken off forty-odd lists and the share alone hides how
+    close the call was. The delta and the tilt sit beside them as the readings
+    they are, and neither is folded into the confidence the queue is ordered on.
     """
     delta = "" if slot["delta"] is None else f" delta {slot['delta']:+.2f}"
-    tilt = "" if slot["tilt"] is None else f" tilt {slot['tilt']:+.2f}"
+    turns = f"  turns on {slot['boundary']}" if slot["boundary"] else ""
     note = f"  {slot['note']}" if slot["note"] else ""
     where = f"{slot['card']} {_configuration((slot['main'], slot['side']))}"
-    return f"  {slot['confidence']:>4.0%}  {where:<40} {slot['bucket']:<20}{delta}{tilt}{note}"
+    return (
+        f"  {_backing(slot):<12}  {where:<40} {slot['bucket']:<20}"
+        f" {_stands(slot)}{delta}{_tilt(slot['tilt'])}{turns}{note}"
+    )
 
 
 def _missing_line(slot: dict) -> str:
@@ -121,14 +183,16 @@ def _missing_line(slot: dict) -> str:
     on the card and arguing about the number.
     """
     delta = "" if slot["camp_delta"] is None else f" delta {slot['camp_delta']:+.2f}"
-    tilt = "" if slot["camp_tilt"] is None else f" tilt {slot['camp_tilt']:+.2f}"
     note = f"  {slot['note']}" if slot["note"] else ""
     where = f"{slot['card']} {_configuration(None)}"
     camp = (
         f"{slot['camp_playing']:.0%} of the camp plays it,"
         f" {slot['camp_adoption']:.0%} on {slot['camp_main']}/{slot['camp_side']}"
     )
-    return f"  {slot['confidence']:>4.0%}  {where:<40} {'':<20}{camp}{delta}{tilt}{note}"
+    return (
+        f"  {_backing(slot):<12}  {where:<40} {'':<20}"
+        f" {camp}{delta}{_tilt(slot['camp_tilt'])}{note}"
+    )
 
 
 def _hypothesis_lines(record: dict) -> list[str]:
@@ -332,6 +396,8 @@ def main(argv=None) -> None:
     traded.add_argument("--main", type=int, required=True)
     traded.add_argument("--side", type=int, required=True)
 
+    camped("migrations", "the cards the camp is moving between the boards")
+
     camped("climbing", "the cards new to the pool the camp is still taking up")
     camped("lineage", "departures traced through to what the field did with them")
     commands.add_parser("unplayed", help="what a real part of the camp plays that the 75 does not")
@@ -394,8 +460,11 @@ def main(argv=None) -> None:
         print("\n".join(_hypothesis_lines(ruled)))
         return
 
-    if args.command in ("card", "substitution", "climbing", "lineage"):
+    if args.command in ("card", "substitution", "migrations", "climbing", "lineage"):
         camp = args.camp or camp_of(reference.current().mainboard)
+
+    if args.command in ("card", "substitution"):
+        args.card = _resolved(args.card)
 
     if args.command == "card":
         print("\n".join(_card_lines(args.card, camp, args.main, args.side, args.board)))
@@ -420,6 +489,22 @@ def main(argv=None) -> None:
                     f"    {row['card']:<34} {_share(row['on_it'])} on it,"
                     f" {_share(row['elsewhere'])} elsewhere  {row['difference']:+.0%}"
                 )
+        return
+
+    if args.command == "migrations":
+        rows = movement.migrations(camp=camp)
+        for row in rows:
+            print(
+                f"{row['card']:<34} {row['shift']:+.0%} of copies, {row['direction']}"
+                f"  {row['baseline']['main_copies']} main /"
+                f" {row['baseline']['side_copies']} side"
+                f" -> {row['fresh']['main_copies']} main / {row['fresh']['side_copies']} side"
+                f"  {row['fresh']['lists']} fresh list(s)"
+            )
+        print(
+            f"{len(rows)} card(s) crossing at least {movement.BOARD_SHIFT:.0%} of their copies"
+            f" in the {camp} camp, off {config.MIGRATION_MIN_LISTS}+ lists in both windows"
+        )
         return
 
     if args.command == "climbing":

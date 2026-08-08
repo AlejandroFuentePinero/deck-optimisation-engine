@@ -1,0 +1,50 @@
+# Reference list version 2, captured 2026-08-08
+# Source: moxfield.com/decks/37YB-aKaO0uBqIAALJhpHg ("Goryos (Spotlight Brisbane 2026)")
+#
+# The same 75 as v1. What is new is the annotations: the slots where the count
+# differs from what the camp settled on, each pointing at the record that
+# carries the argument. A version files no configuration change, which is the
+# only way an annotation can be recorded at all.
+#
+# Copies then card name, under a board heading, as MTGO publishes a list.
+# A `#` after a slot annotates it: an optional `core:` or `flex:` overriding the
+# partition adoption would put the slot on, then why the slot is what it is.
+# The colon is what marks the override off from a note that opens on the word.
+# Versions are appended and never edited; `deck-engine reference-capture` files
+# the next one.
+
+Mainboard
+4 Goryo's Vengeance
+4 Atraxa, Grand Unifier
+4 Psychic Frog
+4 Ephemerate
+4 Solitude
+4 Faithful Mending
+4 Quantum Riddler
+3 Thoughtseize
+3 Force of Negation  # the third copy is the slot consign-mainboard and fourth-thoughtseize both want to spend; it stays at three until one of them is ruled on
+2 Prismatic Ending
+1 March of Otherworldly Light
+1 Griselbrand
+4 Marsh Flats
+4 Polluted Delta
+4 Flooded Strand
+1 Watery Grave
+1 Hallowed Fountain
+1 Godless Shrine
+1 Breeding Pool  # green-source: the one green source is for Atraxa and nothing else, and whether it should be Hedge Maze is a playtesting question
+1 Meticulous Archive
+1 Undercity Sewers
+1 Shadowy Backstreet
+1 Plains
+1 Island
+1 Swamp
+
+Sideboard
+4 Consign to Memory
+3 Mystical Dispute
+2 Nihil Spellbomb  # graveyard-hate: the count stays at two and the question is the split, whether the second piece answers a graveyard or answers a card
+2 Wrath of the Skies  # wrath-density: two sweepers and a Pest Control is the package under argument, against the camp's third Wrath
+2 Spell Snare  # postboard-countermagic: the fifth card on the blue axis, bought against the mirror share that stood on the day
+1 Pest Control  # wrath-density: holds the slot the camp's third Wrath of the Skies would take
+1 Teferi, Time Raveler  # second-teferi: whether a second copy earns a place, and what it would come out of, are one question

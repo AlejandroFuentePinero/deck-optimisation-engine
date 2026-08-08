@@ -90,6 +90,45 @@ def migration(
     }
 
 
+def migrations(
+    db_path: Path = config.DB_PATH,
+    camp: str = "non-fallaji",
+    stratum: str = CHALLENGE_CLASS,
+    floor: int = config.MIGRATION_MIN_LISTS,
+) -> list[dict]:
+    """Every card the camp is moving between the boards, furthest first.
+
+    `migration` answers about a card the reader already named, which is the
+    wrong way round for the question this reading exists for: what is crossing
+    is mostly what nobody has looked at yet, and a pilot who has to name the
+    card first can only confirm what he already suspected. So the same reading
+    is taken over every card the camp registered.
+
+    Under a floor of lists in either window the shift is not read at all. It is
+    the difference between two shares, so a thin window carries the whole of it,
+    and a card a handful of lists deep crosses its boards entirely when one
+    pilot moves one copy. The floor is what keeps a scan from manufacturing the
+    findings it is run to discover.
+    """
+    cards = sorted(
+        {
+            row["card"]
+            for row in adoption(db_path)
+            if (row["camp"], row["stratum"]) == (camp, stratum)
+        }
+    )
+    moved = [migration(card, db_path, camp, stratum) for card in cards]
+    return sorted(
+        (
+            row
+            for row in moved
+            if row["direction"] != STEADY
+            and min(row["fresh"]["lists"], row["baseline"]["lists"]) >= floor
+        ),
+        key=lambda row: (-abs(row["shift"]), row["card"]),
+    )
+
+
 def _fresh_lists(db_path: Path, camp: str, stratum: str) -> list[dict]:
     """The camp's fresh-window lists in one stratum, each with what it registered.
 

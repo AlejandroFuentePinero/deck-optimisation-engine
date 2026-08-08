@@ -21,3 +21,11 @@ What is at stake is what the land costs on the turn it comes down against what
 it costs over the game, in a deck that pays life to its own manabase already
 and wants the green source on a specific turn rather than early. That is a
 playtesting question, not an adoption one.
+
+## Evidence
+
+### 2026-08-08 data
+
+non-fallaji camp, challenge-class, 40 list(s) in the fresh window.
+Breeding Pool 1/0: 90% of the camp, delta +0.08
+Hedge Maze 1/0: 8% of the camp, delta -0.09

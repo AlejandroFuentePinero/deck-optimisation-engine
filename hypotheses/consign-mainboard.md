@@ -20,3 +20,17 @@ claim would be wrong even where the first half is right.
 
 The third Force of Negation is also what the fourth-thoughtseize record wants
 to spend. The two argue over the same slot, and both cannot be acted on.
+
+## Evidence
+
+### 2026-08-08 data
+
+non-fallaji camp, challenge-class, 40 list(s) in the fresh window.
+Force of Negation 2/0: 75% of the camp, delta +0.26
+Force of Negation 3/0: 18% of the camp, delta -0.16
+Force of Negation 2/1: 8% of the camp, delta -0.11
+Consign to Memory 0/4: 55% of the camp, delta -0.12
+Consign to Memory 1/3: 40% of the camp, delta +0.26
+Consign to Memory 0/3: 2% of the camp, delta -0.03
+Consign to Memory 2/2: 2% of the camp, delta -0.11
+hype flag on Consign to Memory 2/2 (decayed), raised 2026-08-07: adoption density, not card quality.

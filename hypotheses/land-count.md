@@ -24,3 +24,12 @@ underperformer, which is what the manabase drifting would look like.
 
 Which land the twenty-second one is is a separate argument; that is the
 green-source record.
+
+## Evidence
+
+### 2026-08-08 data
+
+non-fallaji camp, challenge-class, 40 list(s) in the fresh window.
+lands 22: 65% of the camp, delta +0.41
+lands 21: 32% of the camp, delta -0.37
+lands 20: 2% of the camp, delta -0.03

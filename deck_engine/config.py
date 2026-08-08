@@ -161,6 +161,15 @@ TRENDSETTER_FOLLOWERS = 2
 TRENDSETTER_SHARE = 0.05
 TRENDSETTER_WINDOW_DAYS = 14
 
+# Board migration rule: the smallest population either window may hold before a
+# card's copies crossing the boards is read as the camp moving it. A card three
+# lists deep moves its whole share when one pilot sideboards it, and a scan over
+# every card the camp registered is exactly where that arrives wearing a
+# finding's clothes rather than as a figure somebody went looking for. Both
+# windows, since the shift is the difference between two shares and either one
+# taken off a handful of lists carries the whole reading.
+MIGRATION_MIN_LISTS = 8
+
 # Watchlist rule: a non-member mainboarding this one is a near-miss, and what it
 # dropped is the rest of the trio.
 WATCHLIST_CARD = "Goryo's Vengeance"
