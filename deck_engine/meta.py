@@ -14,7 +14,7 @@ def ingest(
     source: Path,
     captured_on: str,
     window_days: int,
-    meta_dir: Path = config.META_DIR,
+    meta_dir: Path | None = None,
 ) -> Path:
     """Record a transcribed MTGGoldfish table as the snapshot it is, and say where.
 
@@ -49,6 +49,7 @@ def ingest(
         (captured_on, window_days, row["archetype"], row["meta_pct"], row["deck_count"])
         for row in table
     ]
+    meta_dir = meta_dir or config.META_DIR
     meta_dir.mkdir(parents=True, exist_ok=True)
     path = meta_dir / f"{captured_on}_{window_days}d.csv"
     # Landed whole or not at all, as a cached event is: a table that stops early
@@ -65,8 +66,16 @@ def ingest(
     return path
 
 
-def snapshot_rows(meta_dir: Path = config.META_DIR) -> list[tuple]:
+def snapshot_rows(meta_dir: Path | None = None) -> list[tuple]:
     """The whole history, as rows for the store.
+
+    Which history is resolved here rather than bound as a default, so that where
+    it lives is read at the call and not at import. Bound at import there is
+    exactly one directory a caller who names none can reach, and it is the
+    committed one: that makes the live history a silent input to everything that
+    does not name a directory. The readings then answer to how many screenshots
+    the pilot has transcribed, which is a fact about his week and not about the
+    code, and a test that omits the argument is pinned to it without saying so.
 
     MTGGoldfish publishes a percentage and the store speaks in shares, every
     other one of which is a fraction of its population, so the reading is
@@ -78,7 +87,7 @@ def snapshot_rows(meta_dir: Path = config.META_DIR) -> list[tuple]:
     a reading if the file were a snapshot after all.
     """
     rows = []
-    for path in sorted(meta_dir.glob("*.csv")):
+    for path in sorted((meta_dir or config.META_DIR).glob("*.csv")):
         with path.open(newline="", encoding="utf-8") as handle:
             if csv.DictReader(handle).fieldnames != list(FIELDS):
                 raise ValueError(f"{path} is no snapshot; ingest a transcription, do not file it")

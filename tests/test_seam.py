@@ -53,9 +53,16 @@ FIXTURE_POINTLESS = Path(__file__).parent / "fixtures" / "zero-points"
 # the 2026-08-07 Moxfield export, kept as version 1 of the reference list.
 REFERENCE_DIR = Path(__file__).parent.parent / "reference"
 REFERENCE_V1 = REFERENCE_DIR / "v1-2026-08-07-moxfield.txt"
-# The meta history as it stands, which is likewise the real thing: the 14-day
-# MTGGoldfish snapshot of 2026-08-07, transcribed from the screenshot by hand.
+# The committed meta history, which is the live one: the pilot transcribes a
+# screenshot whenever he takes one, so this directory grows as the season runs.
+# Only the test whose subject is that history reads it, and only for what stays
+# true as it lengthens. A reading driven off it would be asserting how many
+# screenshots have been taken.
 META_HISTORY = Path(__file__).parent.parent / "data" / "meta"
+# The 14-day snapshot of 2026-08-07, frozen out of that history: the meta a
+# reading is driven by, on the same footing as the raw payloads beside it. A
+# snapshot cannot be fetched again, so the fixture is a copy and not a fake.
+FIXTURE_META = Path(__file__).parent / "fixtures" / "meta"
 
 # The day's Goryo's lists, read off the published decklists by hand.
 GORYOS_PILOTS_2026_08_05 = {
@@ -1884,7 +1891,7 @@ def test_ingesting_the_same_snapshot_twice_leaves_the_history_one_entry_long(tmp
     history never counts one day of the meta twice.
     """
     meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
-    capture = META_HISTORY / "2026-08-07_14d.csv"
+    capture = FIXTURE_META / "2026-08-07_14d.csv"
 
     for _ in range(2):
         written = meta.ingest(capture, "2026-08-07", 14, meta_dir)
@@ -1894,20 +1901,61 @@ def test_ingesting_the_same_snapshot_twice_leaves_the_history_one_entry_long(tmp
     assert len(store.meta_trend("Goryo's Vengeance", db)) == 1
 
 
-def test_the_history_opens_with_the_14_day_reading_of_2026_08_07(tmp_path):
-    """The first entry is the one the project starts from, and it is real.
+def test_every_committed_snapshot_is_exactly_what_the_ingest_writes(tmp_path):
+    """What makes the history entries rather than files that happen to be there.
 
-    MTGGoldfish's 14-day table of 2026-08-07 has Goryo's at the top of the field on
-    10.0% over 118 decks: the mirror is priced in, and the 75 is built knowing
+    A screenshot cannot be fetched again, so the history is committed and hand
+    transcribed, and nothing downstream can tell a reading somebody typed
+    straight into the directory from one the ingest stamped. Put every entry back
+    through the ingest under the terms its own name claims: a file the ingest
+    would write differently comes back with different bytes, and one whose stamp
+    disagrees with its name is refused outright rather than rewritten.
+
+    Taken over the whole history rather than its first entry, so this gets
+    stronger every time the pilot transcribes a screenshot instead of breaking.
+    """
+    filed = sorted(META_HISTORY.glob("*.csv"))
+    assert filed, "the history is committed, so it is never empty"
+
+    for capture in filed:
+        captured_on, window = capture.stem.split("_")
+        re_ingested = meta.ingest(capture, captured_on, int(window.rstrip("d")), tmp_path / "meta")
+        assert re_ingested.read_bytes() == capture.read_bytes(), capture.name
+
+
+def test_the_committed_history_holds_one_entry_per_reading_it_took():
+    """A snapshot is identified by the pair it was read on, so the history cannot
+    hold that pair twice.
+
+    Re-ingesting a pair corrects that entry rather than adding one, which the
+    file name enforces while the ingest is what writes it. A second reading of
+    the same date and window arriving by hand would be two answers to one
+    question, and the trend would read it as the field having moved on a day it
+    did not.
+    """
+    taken = [row[:2] for row in meta.snapshot_rows(META_HISTORY)]
+
+    assert len(set(taken)) == len({path.stem for path in META_HISTORY.glob("*.csv")})
+    # Each entry keeps the whole table it was read off, not the archetype's row:
+    # what the rest of the field is doing is what a sideboard answers to.
+    assert all(taken.count(pair) > 1 for pair in set(taken))
+
+
+def test_the_history_opens_with_the_14_day_reading_of_2026_08_07(tmp_path):
+    """The reading the project starts from, and it is real.
+
+    MTGGoldfish's 14-day table of 2026-08-07 has Goryo's at the top of the field
+    on 10.0% over 118 decks: the mirror is priced in, and the 75 is built knowing
     it. The whole table is kept, not the archetype's row, because what the rest
     of the field is doing is what a sideboard answers to.
 
-    The committed entry is exactly what the ingest writes, which is what makes
-    it an entry rather than a file that happens to be there.
+    Read by asking for that day rather than by taking the history's only entry.
+    The history grows as the season runs, and a reading pinned to its length
+    would be asserting how many screenshots have been transcribed.
     """
     db = tmp_path / "engine.duckdb"
-    store.build(FIXTURE_RAW, db, META_HISTORY)
-    capture = META_HISTORY / "2026-08-07_14d.csv"
+    store.build(FIXTURE_RAW, db, FIXTURE_META)
+    opening = [row for row in meta.snapshot_rows(FIXTURE_META) if row[0] == "2026-08-07"]
 
     assert store.mirror_share("2026-08-07", db) == {
         "captured_on": "2026-08-07",
@@ -1915,22 +1963,15 @@ def test_the_history_opens_with_the_14_day_reading_of_2026_08_07(tmp_path):
         "share": pytest.approx(0.100),
         "deck_count": 118,
     }
-    assert len(meta.snapshot_rows(META_HISTORY)) == 28, "the field as the screenshot showed it"
+    assert len(opening) == 28, "the field as the screenshot showed it"
 
     # Boros Energy, the field's other pillar, is the deck the rest is aimed at.
-    assert store.meta_trend("Boros Energy", db) == [
-        {
-            "captured_on": "2026-08-07",
-            "window_days": 14,
-            "share": pytest.approx(0.097),
-            "deck_count": 115,
-        }
-    ]
-
-    # Byte for byte: the history is committed, so an ingest that rewrote a
-    # reading it did not change would put the whole entry through the diff.
-    re_ingested = meta.ingest(capture, "2026-08-07", 14, tmp_path / "meta")
-    assert re_ingested.read_bytes() == capture.read_bytes()
+    assert {
+        "captured_on": "2026-08-07",
+        "window_days": 14,
+        "share": pytest.approx(0.097),
+        "deck_count": 115,
+    } in store.meta_trend("Boros Energy", db)
 
 
 def test_a_trend_is_read_within_one_window_and_never_across_two(tmp_path):
@@ -1969,7 +2010,7 @@ def test_a_transcription_that_carries_its_own_stamp_must_agree_with_the_one_give
     the disagreement is caught here rather than published as drift.
     """
     meta_dir = tmp_path / "meta"
-    capture = META_HISTORY / "2026-08-07_14d.csv"
+    capture = FIXTURE_META / "2026-08-07_14d.csv"
 
     with pytest.raises(ValueError, match="2026-08-07"):
         meta.ingest(capture, "2026-08-08", 14, meta_dir)
@@ -1986,7 +2027,7 @@ def test_an_empty_transcription_never_overwrites_the_reading_already_filed(tmp_p
     it recorded having never existed. The site never published an empty field.
     """
     meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
-    meta.ingest(META_HISTORY / "2026-08-07_14d.csv", "2026-08-07", 14, meta_dir)
+    meta.ingest(FIXTURE_META / "2026-08-07_14d.csv", "2026-08-07", 14, meta_dir)
 
     with pytest.raises(ValueError, match="no archetypes"):
         meta.ingest(_transcribe(tmp_path / "empty.csv", []), "2026-08-07", 14, meta_dir)
@@ -2022,7 +2063,7 @@ def test_a_file_in_the_history_that_is_not_a_snapshot_is_named_rather_than_crash
     must say which file and why, rather than fail on a column that isn't there.
     """
     meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
-    meta.ingest(META_HISTORY / "2026-08-07_14d.csv", "2026-08-07", 14, meta_dir)
+    meta.ingest(FIXTURE_META / "2026-08-07_14d.csv", "2026-08-07", 14, meta_dir)
     _transcribe(meta_dir / "goldfish.csv", [("Goryo's Vengeance", 10.0, 118)])
 
     with pytest.raises(ValueError, match="goldfish.csv"):
@@ -2040,7 +2081,7 @@ def test_an_ingest_killed_part_way_leaves_the_reading_already_filed_standing(tmp
     dying after the header, the cost being the same either way.
     """
     meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
-    capture = META_HISTORY / "2026-08-07_14d.csv"
+    capture = FIXTURE_META / "2026-08-07_14d.csv"
     meta.ingest(capture, "2026-08-07", 14, meta_dir)
 
     class DiesAfterTheHeader:

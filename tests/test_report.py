@@ -22,6 +22,10 @@ import pytest
 from deck_engine import config, report, store
 
 FIXTURE_ADOPTION = Path(__file__).parent / "fixtures" / "adoption"
+# The frozen 14-day snapshot of 2026-08-07. The committed history grows as the
+# pilot transcribes screenshots, and a rendered figure read off it would be a
+# fact about how many he has taken rather than about what the page shows.
+FIXTURE_META = Path(__file__).parent / "fixtures" / "meta"
 REFERENCE_DIR = Path(__file__).parent.parent / "reference"
 HYPOTHESES_DIR = Path(__file__).parent.parent / "hypotheses"
 
@@ -93,7 +97,7 @@ def _section(document: str, anchor: str) -> str:
 def _rendered(tmp_path, flags=()) -> str:
     """The report of a run over the captured events, with `flags` as its ledger."""
     db = tmp_path / "engine.duckdb"
-    store.build(FIXTURE_ADOPTION, db)
+    store.build(FIXTURE_ADOPTION, db, FIXTURE_META)
     db.with_name("flags.json").write_text(json.dumps(list(flags)), encoding="utf-8")
     return report.render(db, REFERENCE_DIR, HYPOTHESES_DIR, TODAY)
 
@@ -191,7 +195,7 @@ def test_a_camp_staple_the_75_never_registered_queues_beside_the_slots_it_did(tm
         encoding="utf-8",
     )
     db = tmp_path / "engine.duckdb"
-    store.build(FIXTURE_ADOPTION, db)
+    store.build(FIXTURE_ADOPTION, db, FIXTURE_META)
 
     audit = _section(report.render(db, versions, HYPOTHESES_DIR, TODAY), "audit")
 
@@ -319,8 +323,8 @@ def test_the_meta_trend_carries_the_window_every_reading_of_it_was_taken_over(tm
 
     A share over 30 days is a different measurement from one over 14, so a
     reading without both its terms cannot be compared to anything: the window is
-    on the page with the date it was captured on. The history holds one
-    transcribed snapshot, taken on 2026-08-07 over 14 days.
+    on the page with the date it was captured on. The snapshot rendered here is
+    the frozen one, taken on 2026-08-07 over 14 days.
     """
     document = _rendered(tmp_path)
 
@@ -447,7 +451,7 @@ def test_a_cache_with_nothing_published_in_it_is_declined_rather_than_reported(t
     archetype plays nothing, which is a claim no population made.
     """
     db = tmp_path / "engine.duckdb"
-    store.build(tmp_path / "empty-cache", db)
+    store.build(tmp_path / "empty-cache", db, FIXTURE_META)
 
     with pytest.raises(ValueError, match="no published list"):
         report.render(db, REFERENCE_DIR, HYPOTHESES_DIR, TODAY)
@@ -462,7 +466,7 @@ def test_a_run_lands_as_one_file_named_for_the_day_it_read_the_cache_on(tmp_path
     cache said when it was written, and the later read is the truer one.
     """
     db = tmp_path / "engine.duckdb"
-    store.build(FIXTURE_ADOPTION, db)
+    store.build(FIXTURE_ADOPTION, db, FIXTURE_META)
     reports = tmp_path / "reports"
 
     landed = report.write(reports, db, REFERENCE_DIR, HYPOTHESES_DIR, TODAY)

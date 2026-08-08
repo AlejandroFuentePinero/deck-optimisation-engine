@@ -18,7 +18,7 @@ import pytest
 from deck_engine import hypotheses, ledger, reference, store
 from tests import synthetic
 from tests.test_flags import HELD_UP, SPIKE_SERIES, SPIKE_WEEKEND
-from tests.test_seam import FIXTURE_ADOPTION, META_HISTORY
+from tests.test_seam import FIXTURE_ADOPTION, FIXTURE_META
 
 # The day the reference list was captured on and the day after it, which is what
 # every reading here is dated at: the submission is 2026-08-27, so a record open
@@ -217,7 +217,7 @@ def test_a_conditional_record_joins_the_camps_configurations_to_the_mirror_share
     the configurations, with its own two terms on it.
     """
     db = tmp_path / "engine.duckdb"
-    store.build(FIXTURE_ADOPTION, db, META_HISTORY)
+    store.build(FIXTURE_ADOPTION, db, FIXTURE_META)
     _record(tmp_path / "hypotheses", "postboard-countermagic", COUNTERMAGIC)
 
     entry = hypotheses.evidence(
@@ -254,7 +254,7 @@ def test_a_conditional_record_says_so_when_no_meta_reading_stood_on_the_day(tmp_
     quietly be decided on half of what it asked for.
     """
     db = tmp_path / "engine.duckdb"
-    store.build(FIXTURE_ADOPTION, db, META_HISTORY)
+    store.build(FIXTURE_ADOPTION, db, FIXTURE_META)
     _record(tmp_path / "hypotheses", "postboard-countermagic", COUNTERMAGIC)
 
     entry = hypotheses.evidence(
@@ -504,7 +504,7 @@ def test_an_entry_dated_by_something_that_is_not_a_date_is_refused(tmp_path):
     That is the hazard `meta.ingest` guards, and this is the other door into it.
     """
     db = tmp_path / "engine.duckdb"
-    store.build(FIXTURE_ADOPTION, db, META_HISTORY)
+    store.build(FIXTURE_ADOPTION, db, FIXTURE_META)
     _record(tmp_path / "hypotheses", "postboard-countermagic", COUNTERMAGIC)
 
     with pytest.raises(ValueError):

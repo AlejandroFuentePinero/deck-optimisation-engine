@@ -75,7 +75,7 @@ def _load(con: duckdb.DuckDBPyConnection, table: str, rows: Iterable[tuple]) -> 
 def build(
     raw_dir: Path = config.RAW_DIR,
     db_path: Path = config.DB_PATH,
-    meta_dir: Path = config.META_DIR,
+    meta_dir: Path | None = None,
 ) -> Path:
     """Rebuild the store from the raw cache. Derived data is never authoritative.
 
@@ -90,6 +90,9 @@ def build(
     committed; written from a second read it could come to disagree with the
     store it is filed beside, and a record that disagrees with the thing it
     records is worse than none.
+
+    Where the meta history lives is resolved at the call and not bound as a
+    default, for the reason `meta.snapshot_rows` gives.
     """
     db_path.parent.mkdir(parents=True, exist_ok=True)
     lists = list(enumerate(classify_cache(raw_dir)))
