@@ -413,26 +413,51 @@ def _reading(window: str, stratum: str, population: dict | None, taken: dict | N
     return {f"{window}_{name}": value for name, value in reading.items()}
 
 
-def _adoption_table(db_path: Path, keys: tuple[str, ...], join: str = "") -> list[dict]:
-    """Adoption of whatever `keys` name, per camp, per stratum, per window.
+def windows(db_path: Path = config.DB_PATH) -> dict | None:
+    """The two windows the archetype is read over, and the day they hang off.
 
-    The windows are the two the archetype is read over, and they are drawn here
-    once for every figure that spans them: the fresh window is the last
-    `config.FRESH_WINDOW_DAYS` of published lists, the baseline is the rest of
-    the regime behind it, and the two are disjoint so a delta is movement rather
-    than a window compared against a period containing it.
+    The fresh window is the last `config.FRESH_WINDOW_DAYS` of published lists
+    and the baseline is the rest of the regime behind it. The two are disjoint,
+    so a delta is movement rather than a fortnight compared against a period
+    containing it, and their bounds are the inclusive days a list falls between.
 
     They are anchored on the last day the store holds a list for and not on the
     clock, so a quiet week shortens no window: what is fresh is the most recent
     fortnight of play, not whichever part of it happened to fall before today.
+    That is also why the anchor comes back beside the bounds. A reading is only
+    as fresh as the cache it was taken over, and a report naming its windows
+    without the day they end on would date a stale fortnight as today's.
+
+    None where the cache holds no published day to anchor on, and so no windows.
     """
     with duckdb.connect(db_path, read_only=True) as con:
         as_of = con.execute("SELECT max(date) FROM decklists").fetchone()[0]
-        # An empty cache has no last published day to anchor on, and no windows.
-        if as_of is None:
-            return []
-        fresh_start = date.fromisoformat(as_of) - timedelta(days=config.FRESH_WINDOW_DAYS)
-        bounds = [fresh_start.isoformat(), config.ARCHETYPE, config.REGIME_BOUNDARY, as_of]
+    if as_of is None:
+        return None
+    cut = date.fromisoformat(as_of) - timedelta(days=config.FRESH_WINDOW_DAYS)
+    return {
+        "as_of": as_of,
+        "fresh_start": (cut + timedelta(days=1)).isoformat(),
+        "fresh_end": as_of,
+        "baseline_start": config.REGIME_BOUNDARY,
+        "baseline_end": cut.isoformat(),
+    }
+
+
+def _adoption_table(db_path: Path, keys: tuple[str, ...], join: str = "") -> list[dict]:
+    """Adoption of whatever `keys` name, per camp, per stratum, per window.
+
+    The windows are `windows`', drawn there once for every figure that spans
+    them and read here rather than derived again: a table taken over one
+    fortnight and a report naming another would be the engine disagreeing with
+    itself about what it had just measured.
+    """
+    read = windows(db_path)
+    # An empty cache has no last published day to anchor on, and no windows.
+    if read is None:
+        return []
+    with duckdb.connect(db_path, read_only=True) as con:
+        bounds = [read["baseline_end"], config.ARCHETYPE, config.REGIME_BOUNDARY, read["as_of"]]
 
         def grouped(columns: str, joined: str = "") -> list[dict]:
             """The scoped lists tallied by camp, stratum and window, and by
@@ -458,11 +483,11 @@ def _adoption_table(db_path: Path, keys: tuple[str, ...], join: str = "") -> lis
         taken.setdefault(key, {})[count["window"]] = count
 
     rows = []
-    for key, windows in sorted(taken.items()):
+    for key, by_window in sorted(taken.items()):
         row = dict(zip(("camp", "stratum", *keys), key))
         for window in ("fresh", "baseline"):
             size = sizes.get((row["camp"], row["stratum"], window))
-            row |= _reading(window, row["stratum"], size, windows.get(window))
+            row |= _reading(window, row["stratum"], size, by_window.get(window))
         fresh, baseline = row["fresh_adoption"], row["baseline_adoption"]
         row["delta"] = fresh - baseline if None not in (fresh, baseline) else None
         rows.append(row)
