@@ -7,6 +7,13 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 RAW_DIR = REPO_ROOT / "data" / "raw"
 DB_PATH = REPO_ROOT / "data" / "engine.duckdb"
 
+# The pilot's own client logs, copied out of the MTGO install: one binary
+# Match_GameLog file per match played on this machine. Personal data with
+# opponent logins in it, so the directory stays out of the repository.
+GAMELOG_DIR = REPO_ROOT / "data" / "gamelogs"
+MATCHES_PATH = REPO_ROOT / "data" / "matches.jsonl"
+PILOT_LOGIN = "alejandrofp"
+
 # The meta history: one dated MTGGoldfish snapshot per file. Transcribed from a
 # screenshot by hand and committed, because unlike an event it cannot be
 # fetched again.

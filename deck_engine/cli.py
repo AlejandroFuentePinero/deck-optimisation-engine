@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 
-from . import config, hypotheses, index, ledger, meta, movement, outcome, reference, report
+from . import config, gamelogs, hypotheses, index, ledger, meta, movement, outcome, reference, report
 from .classify import camp as camp_of
 from .refresh import refresh
 from .store import CHALLENGE_CLASS, adoption, arrivals, build, goryos_lists, meta_trend
@@ -445,7 +445,22 @@ def main(argv=None) -> None:
     camped("lineage", "departures traced through to what the field did with them")
     commands.add_parser("unplayed", help="what a real part of the camp plays that the 75 does not")
 
+    commands.add_parser("gamelogs", help="parse the pilot's own MTGO match logs into records")
+
     args = parser.parse_args(argv)
+    if args.command == "gamelogs":
+        matches = gamelogs.load()
+        if not matches:
+            print(f"no Match_GameLog files under {config.GAMELOG_DIR}")
+            return
+        landed = gamelogs.write_matches(matches)
+        decided = [m for m in matches if m.winner and config.PILOT_LOGIN in m.players]
+        won = sum(1 for m in decided if m.winner == config.PILOT_LOGIN)
+        print(f"{len(matches)} match log(s), {matches[0].start[:10]} to {matches[-1].start[:10]}")
+        print(f"{won}-{len(decided) - won} for {config.PILOT_LOGIN} where the log decides a winner")
+        print(f"records at {landed}")
+        return
+
     if args.command == "refresh":
         change = refresh(args.since, args.until)
         print(f"since {args.since}: raw cache in {config.RAW_DIR}, store at {config.DB_PATH}")

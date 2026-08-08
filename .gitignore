@@ -7,4 +7,8 @@ data/engine.duckdb
 # raised, and a flag whose appearance has left the fresh window is in no cache
 # to rebuild from. Only the write-ahead file is transient.
 data/flags.partial
+# The pilot's own match logs and what parses out of them: personal data,
+# opponent logins included, and restorable from the MTGO client machine.
+data/gamelogs/
+data/matches.jsonl
 reports/
