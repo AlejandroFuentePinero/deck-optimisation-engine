@@ -73,6 +73,25 @@ A list with mainboard Goryo's Vengeance that fails full membership. Surfaced as 
 **Hypothesis**:
 A falsifiable claim about deck configuration (e.g. "card X belongs in the main over card Y"), tracked across pipeline runs. Evidence may be data-derived or pilot-supplied (playtesting, judgment); both are first-class. Hypotheses also direct where playtesting energy goes.
 
+**Hypothesis record**:
+One tracked hypothesis, kept whole: the claim, where it came from (the pilot's experience or the data), the status the argument has reached (open, supported, contradicted, inconclusive, decided), what evidence is sought, the subjects, the dated evidence log, and the verdict. A record is written by the pilot and appended to by the engine, so it is committed beside the 75 it argues about. The claim is stated from the side of change, against what the 75 already registers: a record arguing for what the list is already on is one no evidence can contradict.
+
+**Subject**:
+What a record names in the field's lists for the evidence layer to read: a card, or the deck-level configuration. A claim naming none is one no run can bring evidence to, and it will be settled on vibes after all.
+
+**Evidence entry**:
+One dated addition to a record's log, from one of three sources: `data` is the run's reading of the camp, `playtest` is what the pilot found playing it, `judgment` is what he knows that no published list reports. The three are entries of the same standing, in the one log: a data entry that outranked the other two would be the engine deciding the 75. A data entry over a hype-flagged configuration carries the caveat, since what a share measures after a spike is how many pilots copied a list.
+
+**Conditional hypothesis**:
+A record whose claim is only true of a meta, so its data entries carry the mirror share that stood on the day beside the configurations. A slot bought on mirror density stays bought only while that density stands.
+
+**Verdict**:
+What the 75 does about a claim, which every record gets before submission day whether or not the evidence settled anything: a hypothesis nobody ruled on is a slot decided by default, and inconclusive-keep-current is a decision. Separate from the status, which is how the evidence came out.
+_Avoid_: using this for a flag's state (a different reading, of what the field did about a configuration)
+
+**Days to submission**:
+What is left of the clock for every unresolved record, read against the day the 75 is handed in. It is what makes an open claim a piece of work rather than a note.
+
 **Reference list**:
 The user's own 75 being optimised. The final output of the project is the reference list as submitted to the tournament.
 

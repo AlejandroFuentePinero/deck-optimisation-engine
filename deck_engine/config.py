@@ -151,6 +151,15 @@ WATCHLIST_CARD = "Goryo's Vengeance"
 # appended and never edited, so the change log is derived from them.
 REFERENCE_DIR = REPO_ROOT / "reference"
 
+# The tracked hypotheses, one record per file. Written by the pilot and appended
+# to by the engine, so they are committed beside the 75 they argue about.
+HYPOTHESES_DIR = REPO_ROOT / "hypotheses"
+
+# The day the 75 is handed in: Spotlight Brisbane, paper. It is what makes an
+# open hypothesis urgent rather than merely unfinished, so every unresolved
+# record is read against it.
+SUBMISSION_DATE = "2026-08-27"
+
 # Core/flex rule: how much of its own camp has to have registered a
 # configuration for that slot of the reference list to be core rather than one
 # of the flex slots where the optimisation happens. Overridable per slot, on

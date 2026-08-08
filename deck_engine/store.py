@@ -621,6 +621,26 @@ def near_miss_lists(db_path: Path = config.DB_PATH, day: str | None = None) -> l
     return rows
 
 
+def card_pool(db_path: Path = config.DB_PATH) -> set[str]:
+    """Every distinct card the archetype's lists have registered in the history.
+
+    The pool is what tells a card the archetype has played and moved off from a
+    name no list has ever carried. Read over the whole history rather than a
+    window, because a card falling out of the fortnight is still a card the deck
+    plays, and the two readings that ask about a card outside the pool, novelty
+    and a name typed wrong, both mean never rather than not lately.
+    """
+    with duckdb.connect(db_path, read_only=True) as con:
+        return {
+            row[0]
+            for row in con.execute(
+                "SELECT DISTINCT card FROM configurations JOIN decklists USING (list_id)"
+                " WHERE archetype = ?",
+                [config.ARCHETYPE],
+            ).fetchall()
+        }
+
+
 def card_configurations(
     card: str, db_path: Path = config.DB_PATH, day: str | None = None
 ) -> list[dict]:
