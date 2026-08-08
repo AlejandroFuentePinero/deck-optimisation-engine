@@ -10,7 +10,6 @@ They read different histories, and each says why: a spike stops at the regime
 boundary, a card's fringeness is its share of the whole analysis history.
 """
 
-import json
 from datetime import date, timedelta
 from itertools import groupby
 from pathlib import Path
@@ -23,10 +22,6 @@ from .store import CHALLENGE_CLASS, LEAGUE, series
 # window ends on the Sunday, so the week it bins is the week that has been played.
 SATURDAY, SUNDAY = 5, 6
 WEEKEND = (SATURDAY, SUNDAY)
-
-# The ledger, which lives beside the store rather than at a path of its own:
-# it is that store's memory, and a run reading one has to be reading the other.
-LEDGER = "flags.json"
 
 
 def _tally(published: list[dict], window: tuple[str, str]) -> tuple[dict, dict]:
@@ -141,20 +136,75 @@ def _origin_finish(published: list[dict], key: tuple, window: tuple[str, str]) -
     }
 
 
-def fringe(db_path: Path = config.DB_PATH) -> list[dict]:
-    """Every fringe card appearing in the fresh window, earliest appearance first.
+def ordered_by_day(published: list[dict]) -> list[dict]:
+    """The series in the order a reading walks it, days whole and stable within.
+
+    Lists published on one day are one day's news, so which of them the store
+    happens to serve first decides nothing that a day-by-day reading says.
+    """
+    return sorted(published, key=lambda row: (row["date"], row["pilot"], row["list_id"]))
+
+
+def novelty(published: list[dict]) -> dict[int, dict[str, dict]]:
+    """For every list in the series, which of the cards it registered were fringe
+    on the day it was published, and what the history said about each.
 
     Fringe is a share of the archetype's whole analysis history, not of a camp's
     fortnight: a card almost nobody has ever played is innovation-grade novelty
-    wherever it turns up, and the camp it turned up in is on the row rather than
-    in the denominator. The history reaches back past the regime boundary here,
-    unlike the spike reading, because how much of the deck's life a card has been
-    part of does not reset when the format does.
+    wherever it turns up, and the camp it turned up in belongs on the row rather
+    than in the denominator.
+
+    The history is accumulated day by day rather than totalled up front, so an
+    appearance is read against what stood before it. Totalled, a card the camp
+    piles onto the week it arrives would carry its own adoption into its own
+    denominator, and the harder it broke out the less fringe it would look.
 
     A card returning to the pool after falling out of it is fringe on the same
     grounds and whatever its history says. Something that was a staple and then
     was gone for weeks is a decision when it comes back, and its historical
     share, which counts the era it was a staple in, would file it as consensus.
+
+    A list that is not a member of the archetype is read against the history and
+    never folded into it, since the card pool is what the archetype's own lists
+    have registered. That is what lets the watchlist be read for novelty without
+    a near-miss build's cards entering the pool it is measured against.
+    """
+    lists = 0
+    plays: dict[str, int] = {}
+    seen_on: dict[str, str] = {}
+    novel: dict[int, dict[str, dict]] = {}
+    for day, published_today in groupby(ordered_by_day(published), key=lambda row: row["date"]):
+        published_today = list(published_today)
+        for row in published_today:
+            for card, main, side in row["configurations"]:
+                absent = _days_between(seen_on[card], day) if card in seen_on else None
+                returning = absent is not None and absent >= config.RETURN_ABSENCE_DAYS
+                historical = plays.get(card, 0) / lists if lists else 0.0
+                if not returning and historical >= config.FRINGE_ADOPTION:
+                    continue
+                novel.setdefault(row["list_id"], {})[card] = {
+                    "main": main,
+                    "side": side,
+                    "historical_adoption": historical,
+                    "returning": returning,
+                    "absent_days": absent if returning else None,
+                }
+        for row in published_today:
+            if not row.get("member", True):
+                continue
+            lists += 1
+            for card, _, _ in row["configurations"]:
+                plays[card] = plays.get(card, 0) + 1
+                seen_on[card] = day
+    return novel
+
+
+def fringe(db_path: Path = config.DB_PATH) -> list[dict]:
+    """Every fringe card appearing in the fresh window, earliest appearance first.
+
+    The history reaches back past the regime boundary, unlike the spike reading,
+    because how much of the deck's life a card has been part of does not reset
+    when the format does.
 
     One flag per card per camp, carrying the appearance that raised it: the
     reason to look is the list, and the percentage is only how it got noticed.
@@ -165,48 +215,29 @@ def fringe(db_path: Path = config.DB_PATH) -> list[dict]:
 
     last = max(row["date"] for row in published)
     fresh = (date.fromisoformat(last) - timedelta(days=config.FRESH_WINDOW_DAYS)).isoformat()
+    novel = novelty(published)
 
-    # The history is accumulated day by day rather than totalled up front, so an
-    # appearance is read against what stood before it. Totalled, a card the camp
-    # piles onto the week it arrives would carry its own adoption into its own
-    # denominator, and the harder it broke out the less fringe it would look.
-    # Days are walked whole: lists published on one day are one day's news, and
-    # which of them the store happens to serve first decides nothing.
-    lists = 0
-    plays: dict[str, int] = {}
-    seen_on: dict[str, str] = {}
     raised: dict[tuple, dict] = {}
-    ordered = sorted(published, key=lambda row: (row["date"], row["pilot"], row["list_id"]))
-    for day, published_today in groupby(ordered, key=lambda row: row["date"]):
-        published_today = list(published_today)
-        for row in published_today if day > fresh else []:
-            for card, main, side in row["configurations"]:
-                if (card, row["camp"]) in raised:
-                    continue
-                absent = _days_between(seen_on[card], day) if card in seen_on else None
-                returning = absent is not None and absent >= config.RETURN_ABSENCE_DAYS
-                historical = plays.get(card, 0) / lists if lists else 0.0
-                if not returning and historical >= config.FRINGE_ADOPTION:
-                    continue
-                raised[(card, row["camp"])] = {
-                    "kind": "fringe",
-                    "camp": row["camp"],
-                    "card": card,
-                    "main": main,
-                    "side": side,
-                    "appeared_on": day,
-                    "pilot": row["pilot"],
-                    "event": row["event"],
-                    "placement": row["placement"],
-                    "historical_adoption": historical,
-                    "returning": returning,
-                    "absent_days": absent if returning else None,
-                }
-        for row in published_today:
-            lists += 1
-            for card, _, _ in row["configurations"]:
-                plays[card] = plays.get(card, 0) + 1
-                seen_on[card] = day
+    for row in ordered_by_day(published):
+        if row["date"] <= fresh:
+            continue
+        for card, reading in novel.get(row["list_id"], {}).items():
+            if (card, row["camp"]) in raised:
+                continue
+            raised[(card, row["camp"])] = {
+                "kind": "fringe",
+                "camp": row["camp"],
+                "card": card,
+                "main": reading["main"],
+                "side": reading["side"],
+                "appeared_on": row["date"],
+                "pilot": row["pilot"],
+                "event": row["event"],
+                "placement": row["placement"],
+                "historical_adoption": reading["historical_adoption"],
+                "returning": reading["returning"],
+                "absent_days": reading["absent_days"],
+            }
     return list(raised.values())
 
 
@@ -384,57 +415,3 @@ def hype(db_path: Path = config.DB_PATH) -> list[dict]:
                 }
             )
     return raised
-
-
-def detect(db_path: Path = config.DB_PATH) -> list[dict]:
-    """Every flag the store's series holds right now, hype episodes first."""
-    return hype(db_path) + fringe(db_path)
-
-
-def _identity(flag: dict) -> tuple:
-    """What makes two readings the same flag.
-
-    A hype flag is an episode, so the day the field moved is part of it: the
-    same configuration spiking again months later is a second episode and gets
-    its own record. A fringe flag is a card coming back into view, so the
-    configuration it came back in is not: a pilot sideboarding what used to be
-    a maindeck card is the same piece of news.
-    """
-    if flag["kind"] == "hype":
-        return (flag["kind"], flag["camp"], flag["card"], flag["main"], flag["side"],
-                flag["raised_on"])
-    return (flag["kind"], flag["camp"], flag["card"])
-
-
-def load(db_path: Path = config.DB_PATH) -> list[dict]:
-    """The ledger as it stands, or nothing where no run has written one yet."""
-    path = db_path.with_name(LEDGER)
-    return json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
-
-
-def record(db_path: Path = config.DB_PATH, today: str | None = None) -> list[dict]:
-    """Merge what the store says now into the ledger, and say what it holds.
-
-    Detection is a reading of the cache and the ledger is the engine's memory of
-    what it has raised, so the merge keeps both: a flag's state is whatever this
-    run makes of it, and `first_seen` stays the run that first said so.
-
-    A flag the run no longer detects is kept rather than dropped. A fringe flag
-    fires on an appearance, which is a moment, and the appearance leaves the
-    fresh window a fortnight later; dropping it then would make the engine's
-    memory exactly as long as its fresh window.
-    """
-    kept = {_identity(flag): flag for flag in load(db_path)}
-    today = today or date.today().isoformat()
-    for flag in detect(db_path):
-        seen = kept.get(_identity(flag), {}).get("first_seen", today)
-        kept[_identity(flag)] = flag | {"first_seen": seen}
-    ledger = sorted(kept.values(), key=lambda flag: (flag["first_seen"], _identity(flag)))
-
-    # Landed whole or not at all, as every capture here is: the ledger is what
-    # a run remembers, and half of one is a memory with flags missing from it.
-    path = db_path.with_name(LEDGER)
-    partial = path.with_suffix(".partial")
-    partial.write_text(json.dumps(ledger, indent=1), encoding="utf-8")
-    partial.replace(path)
-    return ledger

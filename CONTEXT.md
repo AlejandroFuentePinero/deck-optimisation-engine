@@ -141,11 +141,28 @@ The visibility bias: challenges publish only the top 32, leagues only 5-0s. Losi
 **Hype spike**:
 A surge in adoption of a card combination after a visible finish. Subsequent results reflect adoption density, not card quality. Self-correcting over time, and must not be read as optimisation.
 
+**Departure**:
+How far outside its camp a list is built: the cards hardly any of that camp registered that it did, plus the camp's near-unanimous cards it registered none of. Counted at the card and not the configuration, so a pilot on four copies of a land his camp runs three of has not departed from anything: a camp that agrees on a card and argues about the number is agreed on the card. Measured against the camp and stratum as they stood the day before publication, never as they stand now, since a list the field went on to copy would otherwise be read against its own influence. Two kinds clear the bar, and the reading says which. A card the archetype has barely played that the tally had never seen is a departure on its own, nobody arriving at such a card by drifting through flex slots; known cards recombined take five.
+
 **Breakthrough deck**:
-A list that deviates from the archetype norm, performs well, and sets the forward trend.
+A list that departs from what its camp had settled on, and performs. Whether the field then followed it is a later reading and a separate word, for which see trendsetter. A list registered in a camp answers to that camp however far from it the list is built; one the camp rule left out, a hybrid experiment or a near-miss list, is read against the camp it comes out nearest to and only up to a ceiling, past which it is another deck rather than a variant of that camp.
+_Avoid_: using this for a list the field took up (that is a trendsetter)
+
+**Trendsetter**:
+A breakthrough deck the field then took up: pilots the card was new to, and the archetype was not, registering it inside the fortnight after. Counted on the card and not on the list, since what spreads is the idea rather than the 75 around it, and a pilot registering the whole list is herd adoption instead. A first-time publisher is not one of these pilots: most of the names a league dump carries appear once, so counting them would read the game's turnover as follow-through. Until the fortnight closes the flag is being watched rather than answered, a departure that went nowhere being a verdict the field has to have had the time to reach.
 
 **Pilot affinity**:
 A pilot's persistent preference for pet cards. Concentrated adoption is signal in both directions: it inflates apparent field adoption, but a dissenter's repeated success with it is hypothesis-grade innovation.
+
+**Pet tech**:
+A configuration the post-regime history saw often enough to be a habit rather than a one-off, from one or two pilots only. Adoption counts lists, so it reports the same share whether several pilots converged or one repeated himself; the flag says which, and classifies rather than discounts. Read within a camp, as every share is. The hybrid bucket is not one: being the residue of the rule that draws the two camps, it is thin by construction, so nearly anything registered in it is one or two pilots' by default.
+
+**Proven pilot**:
+A pilot the baseline window saw finish above the cut more than once, challenge-class only, a league dump publishing no standings to make a cut at. The tier that tells a dissenter from an unknown. Read over the baseline window alone, so that it says who was already proven when a fresh list turned up rather than who the news itself proved.
+
+**Hypothesis candidate**:
+A claim about deck configuration that playtesting is owed, raised where a proven pilot's pet tech is also what he repeatedly finished on. Both halves carry weight: the tier is why his going against the herd is worth reading, and the finishes on that configuration are the claim.
+_Avoid_: heuristic candidate (a different thing: a claim about how the numbers are read)
 
 **Dissenter**:
 A pilot repeatedly performing well with a configuration that departs from the herd's current consensus. The opposite failure mode of herd adoption.

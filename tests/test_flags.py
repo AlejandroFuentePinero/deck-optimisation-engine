@@ -10,7 +10,7 @@ what finish it followed, and what the lifecycle did to it.
 
 import pytest
 
-from deck_engine import flags, store
+from deck_engine import flags, ledger, store
 from tests import synthetic
 from tests.synthetic import challenge, entry, league
 
@@ -225,14 +225,14 @@ def test_an_episode_is_dated_on_the_week_that_has_been_played(tmp_path):
         return [(f["card"], f["raised_on"]) for f in ledger if f["kind"] == "hype"]
 
     store.build(synthetic.write_cache(raw, LATE_CLIMB), db)
-    assert episodes(flags.record(db, today="2026-06-30")) == [], "the week is still being played"
+    assert episodes(ledger.record(db, today="2026-06-30")) == [], "the week is still being played"
 
     store.build(synthetic.write_cache(raw, [_dump("2026-07-01", 0)]), db)
-    assert episodes(flags.record(db, today="2026-07-01")) == []
+    assert episodes(ledger.record(db, today="2026-07-01")) == []
 
     store.build(synthetic.write_cache(raw, [_dump("2026-07-05", 6)]), db)
 
-    assert episodes(flags.record(db, today="2026-07-05")) == [(HYPED, "2026-07-05")]
+    assert episodes(ledger.record(db, today="2026-07-05")) == [(HYPED, "2026-07-05")]
 
 
 def test_a_flag_cannot_resolve_before_a_weekend_of_challenge_data_has_landed(tmp_path):
@@ -488,17 +488,22 @@ def test_a_flag_keeps_the_day_it_was_raised_while_its_state_moves_on(tmp_path):
     raw, db = tmp_path / "raw", tmp_path / "engine.duckdb"
 
     store.build(synthetic.write_cache(raw, _resolution_series([])), db)
-    raised = flags.record(db, today="2026-06-29")
+    raised = ledger.record(db, today="2026-06-29")
     assert [(flag["state"], flag["first_seen"]) for flag in raised] == [("raised", "2026-06-29")]
 
     store.build(synthetic.write_cache(raw, HELD_UP), db)
-    resolved = flags.record(db, today="2026-07-09")
+    resolved = ledger.record(db, today="2026-07-09")
 
     assert [(flag["state"], flag["first_seen"]) for flag in resolved] == [
         ("established", "2026-06-29")
     ]
     assert resolved[0]["raised_on"] == "2026-06-28"
-    assert flags.load(db) == resolved
+    assert ledger.load(db) == resolved
+
+
+def _fringe_cards(recorded: list[dict]) -> set:
+    """The cards the ledger's fringe flags name, whatever else is filed beside them."""
+    return {flag["card"] for flag in recorded if flag["kind"] == "fringe"}
 
 
 def test_a_flag_stays_in_the_ledger_after_the_appearance_that_raised_it_scrolls_out(tmp_path):
@@ -512,16 +517,16 @@ def test_a_flag_stays_in_the_ledger_after_the_appearance_that_raised_it_scrolls_
     raw, db = tmp_path / "raw", tmp_path / "engine.duckdb"
 
     store.build(synthetic.write_cache(raw, FRINGE_SERIES), db)
-    appeared = flags.record(db, today="2026-08-06")
-    assert {flag["card"] for flag in appeared} == {NOVEL, RETURNED}
+    appeared = _fringe_cards(ledger.record(db, today="2026-08-06"))
+    assert appeared == {NOVEL, RETURNED}
 
     quiet = [_dump("2026-08-12", 0), _dump("2026-08-19", 0)]
     store.build(synthetic.write_cache(raw, quiet), db)
 
-    assert flags.detect(db) == [], "the appearances are behind the fresh window now"
-    kept = flags.record(db, today="2026-08-20")
-    assert {flag["card"] for flag in kept} == {NOVEL, RETURNED}
-    assert {flag["first_seen"] for flag in kept} == {"2026-08-06"}
+    assert flags.fringe(db) == [], "the appearances are behind the fresh window now"
+    kept = ledger.record(db, today="2026-08-20")
+    assert _fringe_cards(kept) == {NOVEL, RETURNED}
+    assert {flag["first_seen"] for flag in kept if flag["kind"] == "fringe"} == {"2026-08-06"}
 
 
 def test_a_verdict_is_not_read_off_a_challenge_window_too_thin_to_carry_one(tmp_path):
