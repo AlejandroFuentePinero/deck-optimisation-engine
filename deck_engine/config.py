@@ -94,6 +94,55 @@ HYPE_ORIGIN_PLACEMENT = 16
 FRINGE_ADOPTION = 0.10
 RETURN_ABSENCE_DAYS = 28
 
+# Pet tech rule: a configuration registered this many times over the post-regime
+# history, by this few distinct pilots, is one pilot's preference rather than
+# the field's. Enough appearances that it is a habit and not a one-off, few
+# enough pilots that the share it holds is really theirs.
+PET_TECH_APPEARANCES = 3
+PET_TECH_PILOTS = 2
+
+# Proven pilot rule: how many challenge-class top-16 finishes over the baseline
+# window put a pilot in the tier whose dissent is worth a hypothesis. A
+# challenge is a ten-hour tournament and availability caps how often anyone
+# enters one, so the count stays modest. Top-16 because the top-8 boundary is
+# mostly tiebreakers between identical records.
+PROVEN_PILOT_FINISHES = 2
+PROVEN_PILOT_PLACEMENT = 16
+
+# Breakthrough rule: how many cards outside its camp a list has to be built on
+# to be a departure rather than flex-slot drift, and how well it has to have
+# finished for that departure to have performed. Top-16 as everywhere, since the
+# top-8 boundary is mostly tiebreakers. A card the archetype barely plays is a
+# departure at a delta of one and answers to neither figure. What counts as one
+# card outside the camp is drawn once, at the bars the slot audit is read at:
+# SUPPORTED_MINORITY below, for a card hardly any of the camp plays, and
+# CORE_ADOPTION for one it is near-unanimous on that the list runs none of.
+BREAKTHROUGH_DELTA = 5
+BREAKTHROUGH_PLACEMENT = 16
+
+# And how far outside a camp a list that was never in it may be read, above
+# which it is another deck rather than a variant of that camp. Only a list the
+# camp rule left out answers to this: a list in a camp is a build of it by the
+# rule that put it there, however far from the consensus it is built, but a
+# hybrid or a near-miss is only read against a camp on the assumption that it is
+# one of that camp's, and this is where the assumption fails. A dozen cards is a
+# sixth of a 75, which is past any argument about flex slots and into a list
+# that shares a namesake with the archetype and not a deck.
+BREAKTHROUGH_CEILING = 12
+
+# The smallest population a camp may be read against, for the reason the hype
+# floor exists: a camp a handful of lists deep has settled on nothing, and a
+# share of six lists moves by a sixth when one pilot changes his mind.
+BREAKTHROUGH_MIN_LISTS = 8
+
+# Trendsetter rule: how many pilots the card was new to have to take up one of a
+# breakthrough's own, and how long they have to do it in, for the departure to
+# have set the trend rather than merely been one. Two, which puts three pilots
+# on the card and past the bar at which it would still read as one pilot's pet.
+# A fortnight, which is how long the field takes to answer a finish.
+TRENDSETTER_FOLLOWERS = 2
+TRENDSETTER_WINDOW_DAYS = 14
+
 # Watchlist rule: a non-member mainboarding this one is a near-miss, and what it
 # dropped is the rest of the trio.
 WATCHLIST_CARD = "Goryo's Vengeance"

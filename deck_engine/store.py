@@ -160,6 +160,20 @@ _SCOPED = f"""
 """
 
 
+# The watchlist rule, drawn once: a non-member whose mainboard holds the
+# namesake, and what each such list kept of the signature cards. The reading
+# that lists them and the reading that feeds them to the pilot detector are the
+# same rule, so neither can come to disagree about what a near-miss is.
+_SIGNATURE = ", ".join("?" * len(config.SIGNATURE_CARDS))
+_NEAR_MISS = f"""
+    SELECT list_id, list(card) AS kept
+    FROM decklists JOIN configurations USING (list_id)
+    WHERE archetype IS NULL AND main > 0 AND card IN ({_SIGNATURE})
+    GROUP BY list_id HAVING list_contains(list(card), ?)
+"""
+_NEAR_MISS_SCOPE = [*config.SIGNATURE_CARDS, config.WATCHLIST_CARD]
+
+
 def _rows(cursor: duckdb.DuckDBPyConnection) -> list[dict]:
     """An executed cursor's rows, each keyed by the column it selected."""
     names = [c[0] for c in cursor.description]
@@ -522,6 +536,18 @@ def series(db_path: Path = config.DB_PATH, since: str = config.REGIME_BOUNDARY) 
             )
         )
 
+    return _attached(lists, registered)
+
+
+def _attached(lists: list[dict], registered: list[dict]) -> list[dict]:
+    """Each list carrying the configurations it registered.
+
+    The two come back from separate queries over the same scope rather than one
+    join, because a list and its cards are one row and thirty: joined, every
+    column of the list would be served once per card it plays. Both readings
+    that serve a series share this, so the archetype's lists and the watchlist's
+    arrive in the one shape and nothing downstream has to know which it has.
+    """
     configurations: dict[int, list[tuple]] = {}
     for row in registered:
         configurations.setdefault(row["list_id"], []).append(
@@ -530,6 +556,37 @@ def series(db_path: Path = config.DB_PATH, since: str = config.REGIME_BOUNDARY) 
     for row in lists:
         row["configurations"] = configurations.get(row["list_id"], [])
     return lists
+
+
+def near_miss_series(
+    db_path: Path = config.DB_PATH, since: str = config.REGIME_BOUNDARY
+) -> list[dict]:
+    """The watchlist's lists from `since` onward, shaped as `series` rows are.
+
+    A near-miss list is where a variant comes from, so the readings that look for
+    one have to reach it, and they read a series. It comes back in the same shape
+    the archetype's does and says the two things that are different about it: it
+    is in no camp, having failed the rule the camps are drawn inside, and it is
+    no member, so nothing may fold it into a figure the archetype reports.
+    """
+    with duckdb.connect(db_path, read_only=True) as con:
+        lists = _rows(
+            con.execute(
+                "SELECT list_id, pilot, event, NULL AS camp, false AS member,"
+                f" {_STRATUM} AS stratum, date, placement, weight"
+                f" FROM ({_WEIGHTED}) JOIN ({_NEAR_MISS}) USING (list_id) WHERE date >= ?",
+                [*_NEAR_MISS_SCOPE, since],
+            )
+        )
+        registered = _rows(
+            con.execute(
+                "SELECT list_id, card, main, side FROM configurations"
+                f" JOIN ({_NEAR_MISS}) USING (list_id) JOIN decklists USING (list_id)"
+                " WHERE date >= ?",
+                [*_NEAR_MISS_SCOPE, since],
+            )
+        )
+    return _attached(lists, registered)
 
 
 def near_miss_lists(db_path: Path = config.DB_PATH, day: str | None = None) -> list[dict]:
@@ -545,18 +602,15 @@ def near_miss_lists(db_path: Path = config.DB_PATH, day: str | None = None) -> l
     those together would union what two different 75s kept into a list nobody
     registered.
     """
-    signature = ", ".join("?" * len(config.SIGNATURE_CARDS))
     with duckdb.connect(db_path, read_only=True) as con:
         rows = _rows(
             con.execute(
                 "SELECT list_id, pilot, event, event_id, event_class, date, placement,"
-                " swiss_points, record, list(card) AS kept"
-                " FROM decklists JOIN configurations USING (list_id)"
-                f" WHERE archetype IS NULL AND main > 0 AND card IN ({signature})"
-                + (" AND date = ?" if day else "")
-                + " GROUP BY ALL HAVING list_contains(list(card), ?)"
-                " ORDER BY date DESC, placement NULLS LAST, pilot",
-                [*config.SIGNATURE_CARDS, *([day] if day else []), config.WATCHLIST_CARD],
+                " swiss_points, record, kept"
+                f" FROM ({_NEAR_MISS}) JOIN decklists USING (list_id)"
+                + (" WHERE date = ?" if day else "")
+                + " ORDER BY date DESC, placement NULLS LAST, pilot",
+                [*_NEAR_MISS_SCOPE, *([day] if day else [])],
             )
         )
 

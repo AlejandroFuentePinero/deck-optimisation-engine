@@ -3,9 +3,38 @@
 import argparse
 from pathlib import Path
 
-from . import config, flags, meta, reference
+from . import config, ledger, meta, reference
 from .refresh import refresh
 from .store import build, goryos_lists, meta_trend
+
+
+def _breakthrough_line(flag: dict) -> str:
+    """One list that departed from its camp's build and finished, and what the
+    field then did about it.
+
+    The camp named is the one the departure was measured against, which for a
+    hybrid experiment or a near-miss list is the camp it came out nearest to
+    rather than one it was ever registered in. The delta and the mode go beside
+    it because the two modes are not the same claim: five known cards recombined
+    and one card nobody plays are different kinds of news at different bars.
+    """
+    finish = f"#{flag['placement']}" if flag["placement"] else "5-0"
+    where = f"{flag['camp']:<12} {flag['pilot']} {finish}"
+    followed = (
+        f"  {flag['state']}: {len(flag['followers'])} new pilot(s) on {flag['adopted_card']}"
+        if flag["followers"]
+        else f"  {flag['state']}"
+    )
+    # Both directions of the departure print, because the delta counts both: the
+    # cards hardly any of the camp plays and the camp's own staples the list ran
+    # none of. Only the first of them listed, the figure would contradict itself.
+    departed = [f"+{card}" for card, _, _ in flag["novel"]] + [
+        f"-{card}" for card in flag["missing"]
+    ]
+    return (
+        f"{flag['date']}  break   {where:<44}"
+        f" delta {flag['delta']} ({flag['mode']}): {', '.join(departed)}{followed}"
+    )
 
 
 def _flag_line(flag: dict) -> str:
@@ -16,7 +45,27 @@ def _flag_line(flag: dict) -> str:
     unlabelled beside one another they would read as one figure moving, which is
     the blend the two strata are kept apart to prevent.
     """
+    if flag["kind"] == "breakthrough":
+        return _breakthrough_line(flag)
+
     where = f"{flag['camp']:<12} {flag['card']} {flag['main']}/{flag['side']}"
+    if flag["kind"] == "pet-tech":
+        # Whose the configuration is, then what that makes of it. The pilots are
+        # named rather than counted, since a flag whose whole subject is that the
+        # adoption belongs to somebody has to say to whom.
+        # The dissenter's finishes are the ones he took registering this, not his
+        # record: what raises the hypothesis is what the card did for him.
+        dissent = (
+            "  hypothesis candidate: "
+            + ", ".join(f"{pilot} top-16ed x{n} on it" for pilot, n in flag["dissenters"].items())
+            if flag["hypothesis_candidate"]
+            else ""
+        )
+        return (
+            f"{flag['appeared_on']}  pet     {where:<44}"
+            f" {flag['appearances']} list(s) from {', '.join(flag['pilots'])}{dissent}"
+        )
+
     if flag["kind"] == "hype":
         tilt = "" if flag["tilt"] is None else f" tilt {flag['tilt']:+.3f}"
         return (
@@ -114,7 +163,7 @@ def main(argv=None) -> None:
     trend.add_argument("archetype", nargs="?", default=config.META_ARCHETYPE)
     trend.add_argument("--window-days", type=int, default=config.META_WINDOW_DAYS)
 
-    commands.add_parser("flags", help="the hype watchlist and the fringe appearances")
+    commands.add_parser("flags", help="the ledger: hype, fringe, pet tech and breakthroughs")
 
     commands.add_parser("reference", help="audit the reference list against its camp")
 
@@ -141,10 +190,10 @@ def main(argv=None) -> None:
         return
 
     if args.command == "flags":
-        ledger = flags.load()
-        for flag in ledger:
+        recorded = ledger.load()
+        for flag in recorded:
             print(_flag_line(flag))
-        print(f"{len(ledger)} flag(s); run refresh to bring them up to date")
+        print(f"{len(recorded)} flag(s); run refresh to bring them up to date")
         return
 
     if args.command == "reference-capture":

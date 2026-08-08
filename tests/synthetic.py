@@ -45,16 +45,22 @@ FILLER_SIDE = {"Consign to Memory": 4, "Wrath of the Skies": 4, "Mystical Disput
 # which of them a synthetic event is makes no difference to any reading here.
 CHALLENGE_KIND = "challenge-64"
 
-FALLAJI_COPIES = {"fallaji": 4, "non-fallaji": 0}
+FALLAJI_COPIES = {"fallaji": 4, "non-fallaji": 0, "hybrid": 2}
 
 
-def entry(pilot, camp="non-fallaji", cards=None, points=None, placement=None) -> dict:
+def entry(pilot, camp="non-fallaji", cards=None, points=None, placement=None, dropped=()) -> dict:
     """One pilot's registered 75, and how they finished if the event ranked them.
 
     `cards` is what the series is about, as the configuration the domain reads:
     `{"Kavaero, Mind-Bitten": (1, 0)}` mains one copy and sides none.
+
+    `dropped` names signature cards to leave out, which is the only way to write
+    a near-miss list: membership is the four cards in the mainboard, so a list
+    that keeps the namesake and loses one of the rest is what the watchlist is.
     """
     main = SIGNATURE | FILLER_MAIN | FILLER_LANDS
+    for card in dropped:
+        del main[card]
     if FALLAJI_COPIES[camp]:
         main["Fallaji Archaeologist"] = FALLAJI_COPIES[camp]
     side = dict(FILLER_SIDE)
