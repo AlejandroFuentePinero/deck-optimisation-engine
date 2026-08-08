@@ -34,6 +34,9 @@ A single published list: mainboard plus sideboard, with pilot, date, and event a
 **Pilot**:
 The player who registered a decklist.
 
+**Ingest index**:
+The committed record of every published list the raw cache holds, one row each, kept at the list rather than at the event. The cache itself is too large to commit, so without this nothing in the repo says what the analysis history was built from and no run can tell its population from the last one's. The list is the grain because the unsettled days are the ones hardest to speak about: a league dump gains 5-0s through its own day, so a refresh overwrites captures it already held, and a record kept at the event would report those days unchanged while lists appeared inside them. Free of the archetype rule and of every other reading, since what membership makes of a list moves when the rule moves and what the site published does not: which arrivals are Goryo's is asked of the store afterwards, against the index rather than inside it. Withdrawals are reported beside arrivals, lists leaving the history quietly being the same failure as lists arriving quietly.
+
 ### Deck concepts
 
 **Archetype**:

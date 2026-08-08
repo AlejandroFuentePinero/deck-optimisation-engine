@@ -14,9 +14,10 @@ import json
 import shutil
 from pathlib import Path
 
+import duckdb
 import pytest
 
-from deck_engine import config, meta, mtgo, reference, store
+from deck_engine import config, index, meta, mtgo, reference, store
 from deck_engine.classify import camp, classify_cache
 from deck_engine.refresh import refresh
 from tests import synthetic
@@ -1560,6 +1561,99 @@ def test_refresh_refetches_only_the_days_that_can_still_grow(tmp_path):
     # 2026-08-05 is inside the unsettled tail of a run made on 2026-08-06.
     assert {mtgo.slug_day(slug) for slug in site.fetches} == {"2026-08-05"}
     assert len(site.fetches) == 3
+
+
+class GrowingSite(CapturedSite):
+    """The site mid-dump: a league day serving only the trophies it has so far.
+
+    `published` is how many of the day's 5-0s exist when it is asked, so a run
+    can be made against a day still filling and then again once it has filled.
+    """
+
+    def __init__(self, published: int):
+        super().__init__()
+        self.published = published
+
+    def fetch_payload(self, slug):
+        payload = super().fetch_payload(slug)
+        if "league" in slug:
+            payload["decklists"] = payload["decklists"][: self.published]
+        return payload
+
+
+def test_a_run_says_what_a_day_it_already_held_gained(tmp_path):
+    """The reading the ingest could not make before the index was kept.
+
+    A league dump gains 5-0s through its own day, so the unsettled window
+    refetches days the cache already holds and overwrites them in place. A record
+    kept at the event reports such a day as unchanged, and the cache it would
+    have to be checked against is not committed; only a record kept at the list
+    can say that pilots turned up inside a capture that was already there.
+
+    The archetype's arrival is named because that is the answer a session
+    actually wants, and it is read out of the store against the ingest's own
+    keys rather than out of the index, which does not know the rule.
+    """
+    site = GrowingSite(published=23)
+    raw_dir, db = tmp_path / "raw", tmp_path / "engine.duckdb"
+
+    first = refresh("2026-07-01", "2026-08-06", raw_dir, db, source=site, today="2026-08-06")
+    assert "_must_be_nice" not in {row["pilot"] for row in store.goryos_lists(db)}
+
+    site.published = 41
+    grown = refresh("2026-07-01", "2026-08-06", raw_dir, db, source=site, today="2026-08-06")
+
+    assert {row.event_id for row in grown.added} == {"modern-league-2026-08-0510847"}
+    assert len(grown.added) == 18, "the day's trophies published after the first run"
+    assert not grown.withdrawn, "a day that grew has taken nothing back"
+    assert [row["pilot"] for row in store.arrivals(grown.added, db)] == ["_must_be_nice"]
+    # The first run reported the whole cache, an empty index being a first run
+    # and not a claim that the history is new.
+    assert len(first.added) > len(grown.added) and not first.withdrawn
+
+
+def test_a_rebuild_that_changed_nothing_reports_nothing(tmp_path):
+    """The index has to be the same bytes for the same cache, or every run would
+    report the whole history as new and the one that mattered would be lost in
+    it."""
+    site = CapturedSite()
+    raw_dir, db = tmp_path / "raw", tmp_path / "engine.duckdb"
+
+    refresh("2026-07-01", "2026-08-31", raw_dir, db, source=site, today="2026-08-31")
+    again = refresh("2026-07-01", "2026-08-31", raw_dir, db, source=site, today="2026-08-31")
+
+    assert not again.added and not again.withdrawn
+
+
+def test_the_index_holds_every_published_list_and_not_only_the_archetype(tmp_path):
+    """It is the record of what the site published, so the membership rule is
+    not in it: a file carrying the rule restates itself the day the rule moves,
+    and an ingest diff has to be the field's news rather than this engine's."""
+    site = CapturedSite()
+    raw_dir, db = tmp_path / "raw", tmp_path / "engine.duckdb"
+
+    change = refresh("2026-07-01", "2026-08-31", raw_dir, db, source=site, today="2026-08-31")
+
+    with duckdb.connect(db, read_only=True) as con:
+        published = con.execute("SELECT count(*) FROM decklists").fetchone()[0]
+    # A first run's arrivals are the whole file, in the file's own order, which
+    # is what makes the diff of a later one an insertion rather than a shuffle.
+    assert len(change.added) == published > len(store.goryos_lists(db))
+    assert index.read(db) == change.added
+
+
+def test_a_withdrawn_event_leaves_the_history_out_loud(tmp_path):
+    """The site republishes an event under a wrongly dated slug and later takes
+    one down. Lists leaving the history quietly is the same failure as lists
+    arriving quietly, so the run says so."""
+    site = GrowingSite(published=41)
+    raw_dir, db = tmp_path / "raw", tmp_path / "engine.duckdb"
+
+    refresh("2026-07-01", "2026-08-06", raw_dir, db, source=site, today="2026-08-06")
+    site.published = 23
+    shrunk = refresh("2026-07-01", "2026-08-06", raw_dir, db, source=site, today="2026-08-06")
+
+    assert len(shrunk.withdrawn) == 18 and not shrunk.added
 
 
 def test_a_range_running_past_today_still_refetches_the_days_that_can_grow(tmp_path):

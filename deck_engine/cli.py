@@ -3,10 +3,10 @@
 import argparse
 from pathlib import Path
 
-from . import config, hypotheses, ledger, meta, movement, outcome, reference, report
+from . import config, hypotheses, index, ledger, meta, movement, outcome, reference, report
 from .classify import camp as camp_of
 from .refresh import refresh
-from .store import CHALLENGE_CLASS, adoption, build, goryos_lists, meta_trend
+from .store import CHALLENGE_CLASS, adoption, arrivals, build, goryos_lists, meta_trend
 
 
 def _breakthrough_line(flag: dict) -> str:
@@ -228,6 +228,49 @@ def _hypothesis_lines(record: dict) -> list[str]:
     return lines
 
 
+# How many of the archetype's arrivals are named before the rest become a count.
+# A run against a standing index brings in a day or two and never reaches this;
+# the run that does is the first one, whose index was empty and whose arrivals
+# are therefore the whole history. That is not news and must not be printed as
+# though it were, but it is not nothing either, so what was dropped is counted
+# rather than left silent.
+NAMED_ARRIVALS = 20
+
+
+def _ingest_lines(change: index.Change, ours: list[dict]) -> list[str]:
+    """What the run brought in: the field as a count, the archetype by name.
+
+    The count is of lists and not of events, because the days hardest to speak
+    about are the ones already cached: an unsettled league dump gains 5-0s
+    through its own day, so a run reporting events alone would say nothing
+    arrived on exactly the day something did. The event count goes beside it
+    rather than instead of it, a fresh day and a day that grew being different
+    news.
+    """
+    if not change.added and not change.withdrawn:
+        return ["  no list published since the last run"]
+    events = {row.event_id for row in change.added}
+    lines = [
+        f"  {len(change.added)} new list(s) across {len(events)} event(s),"
+        f" {len(ours)} of them Goryo's"
+    ]
+    for row in ours[:NAMED_ARRIVALS]:
+        finish = f"#{row['placement']}" if row["placement"] else "5-0"
+        lines.append(
+            f"    {row['date']}  {row['event']:<26} {finish:<5}"
+            f" {row['camp']:<12} {row['pilot']}"
+        )
+    if len(ours) > NAMED_ARRIVALS:
+        lines.append(f"    and {len(ours) - NAMED_ARRIVALS} more, further back")
+    if change.withdrawn:
+        # Not a gap and not an error: the site republishes an event under a
+        # wrongly dated slug and later takes one of them down. Said out loud
+        # because lists leaving the history quietly is the same failure as
+        # lists arriving quietly, which is what the index exists to stop.
+        lines.append(f"  {len(change.withdrawn)} list(s) the site no longer publishes")
+    return lines
+
+
 def _reference_log() -> None:
     """The change log: what each version of the 75 did to the one before it."""
     for entry in reference.history():
@@ -404,8 +447,10 @@ def main(argv=None) -> None:
 
     args = parser.parse_args(argv)
     if args.command == "refresh":
-        refresh(args.since, args.until)
+        change = refresh(args.since, args.until)
         print(f"since {args.since}: raw cache in {config.RAW_DIR}, store at {config.DB_PATH}")
+        print(f"index at {index.path()}, commit it to keep the run comparable")
+        print("\n".join(_ingest_lines(change, arrivals(change.added))))
         return
 
     if args.command == "meta-ingest":

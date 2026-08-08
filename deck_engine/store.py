@@ -8,7 +8,7 @@ from pathlib import Path
 
 import duckdb
 
-from . import config, meta
+from . import config, index, meta
 from .classify import classify_cache
 
 DECKLISTS_SCHEMA = """
@@ -84,6 +84,12 @@ def build(
     and a card query would answer that nobody plays it rather than fail. The meta
     history is rebuilt with them for the same reason it is kept on disk: what the
     field looked like is evidence a conditional hypothesis reads beside the lists.
+
+    The index is written from the same parse, after the tables land. It is the
+    committed record of what the cache held, and the cache itself is not
+    committed; written from a second read it could come to disagree with the
+    store it is filed beside, and a record that disagrees with the thing it
+    records is worse than none.
     """
     db_path.parent.mkdir(parents=True, exist_ok=True)
     lists = list(enumerate(classify_cache(raw_dir)))
@@ -125,6 +131,7 @@ def build(
             ),
         )
         con.execute("COMMIT")
+    index.write([d for _, d in lists], db_path)
     return db_path
 
 
@@ -236,6 +243,28 @@ def goryos_lists(
         " AND ".join(f"{column} = ?" for column, value in filters.items() if value),
         [value for value in filters.values() if value],
     )
+
+
+def arrivals(added: list[index.Row], db_path: Path = config.DB_PATH) -> list[dict]:
+    """The archetype's lists among what an ingest brought in.
+
+    The index is kept free of the membership rule, so which of the new lists are
+    Goryo's is a question asked here, of the store, against the keys the ingest
+    reported. Filing the answer in the index instead would restate the whole
+    file the day `config.SIGNATURE_CARDS` moved, and an ingest diff has to be
+    the field's news rather than this engine's.
+
+    A pilot can trophy twice in one league dump, and the index files two rows
+    this key cannot tell apart. That over-reports only where such a pilot's day
+    was already cached and has since gained another list, and under-reports
+    never, which is the direction for a report of what is new to be wrong in.
+    """
+    keys = {(row.date, row.event_id, row.pilot) for row in added}
+    return [
+        row
+        for row in goryos_lists(db_path)
+        if (row["date"], row["event_id"], row["pilot"]) in keys
+    ]
 
 
 def meta_trend(
