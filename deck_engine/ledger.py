@@ -9,6 +9,12 @@ field to answer it.
 It is one file for every kind of flag because it is one memory. What raised a
 flag is the detecting module's business, whether the reading is of a time series
 or of who registered what; what has been raised is this one's.
+
+And it is committed, as the meta history and the ingest index are, because like
+them it cannot be fetched again. A rebuild from nothing stamps every flag with
+the day of the rebuild, and a fringe flag whose appearance has since left the
+fresh window is not detected at all, so it would not come back: the memory would
+be exactly as long as the window it exists to outlast.
 """
 
 import json

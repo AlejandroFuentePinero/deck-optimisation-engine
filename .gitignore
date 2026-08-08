@@ -3,5 +3,8 @@
 __pycache__/
 data/raw/
 data/engine.duckdb
-data/flags.*
+# The ledger itself is committed: it is the engine's memory of what it has
+# raised, and a flag whose appearance has left the fresh window is in no cache
+# to rebuild from. Only the write-ahead file is transient.
+data/flags.partial
 reports/

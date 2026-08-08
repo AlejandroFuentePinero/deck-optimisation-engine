@@ -1,0 +1,2833 @@
+[
+ {
+  "kind": "fringe",
+  "camp": "fallaji",
+  "card": "Drannith Magistrate",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-07-27",
+  "pilot": "Felipeleitao",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.07660738714090287,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "fallaji",
+  "card": "Sink into Stupor",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-07-30",
+  "pilot": "zbogames",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.052700922266139656,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "fallaji",
+  "card": "Underground Mortuary",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-08-04",
+  "pilot": "sleightofhand94",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.007380073800738007,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "hybrid",
+  "card": "End of the Hunt",
+  "main": 0,
+  "side": 2,
+  "appeared_on": "2026-07-27",
+  "pilot": "ashame",
+  "event": "Modern Challenge 64",
+  "placement": 26,
+  "historical_adoption": 0.01094391244870041,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "hybrid",
+  "card": "Inquisition of Kozilek",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-07-27",
+  "pilot": "yunyu1234",
+  "event": "Modern Challenge 96",
+  "placement": 8,
+  "historical_adoption": 0.0027359781121751026,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "hybrid",
+  "card": "Otawara, Soaring City",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-07-28",
+  "pilot": "Theo38890",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.006702412868632708,
+  "returning": true,
+  "absent_days": 72,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "hybrid",
+  "card": "Strix Serenade",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-07-31",
+  "pilot": "ilprofetaVDR",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.014360313315926894,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "hybrid",
+  "card": "Subtlety",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-08-01",
+  "pilot": "KingHairy",
+  "event": "Modern Challenge 64",
+  "placement": 4,
+  "historical_adoption": 0.07503234152652005,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "hybrid",
+  "card": "Winternight Stories",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-07-28",
+  "pilot": "Theo38890",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.08981233243967829,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Cephalid Coliseum",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-07-29",
+  "pilot": "Walker735",
+  "event": "Modern Challenge 96",
+  "placement": 32,
+  "historical_adoption": 0.07323568575233022,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Clarion Conqueror",
+  "main": 0,
+  "side": 2,
+  "appeared_on": "2026-07-31",
+  "pilot": "cntrlfreak_ttv",
+  "event": "Modern Challenge 64",
+  "placement": 27,
+  "historical_adoption": 0.0,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Deafening Silence",
+  "main": 0,
+  "side": 2,
+  "appeared_on": "2026-07-30",
+  "pilot": "HealthyEgo",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.017127799736495388,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Drannith Magistrate",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-07-29",
+  "pilot": "surgetemelo",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.0758988015978695,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Elesh Norn, Mother of Machines",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-08-01",
+  "pilot": "DskBayWolf",
+  "event": "Modern Challenge 64",
+  "placement": 19,
+  "historical_adoption": 0.03492884864165589,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "End of the Hunt",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-07-26",
+  "pilot": "Lichard",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.009641873278236915,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Ghost Vacuum",
+  "main": 0,
+  "side": 2,
+  "appeared_on": "2026-08-01",
+  "pilot": "DejoyOfGaming",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.037516170763260026,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Gran-Gran",
+  "main": 4,
+  "side": 0,
+  "appeared_on": "2026-07-29",
+  "pilot": "DB_cntrlfreak_ttv",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.009320905459387484,
+  "returning": true,
+  "absent_days": 99,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Inquisition of Kozilek",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-07-26",
+  "pilot": "Lichard",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.0013774104683195593,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Jace, Vryn's Prodigy",
+  "main": 2,
+  "side": 0,
+  "appeared_on": "2026-08-01",
+  "pilot": "DejoyOfGaming",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.0258732212160414,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Ketramose, the New Dawn",
+  "main": 0,
+  "side": 2,
+  "appeared_on": "2026-08-01",
+  "pilot": "DejoyOfGaming",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.03880983182406209,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Mistrise Village",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-08-01",
+  "pilot": "Sutter",
+  "event": "Modern Challenge 64",
+  "placement": 31,
+  "historical_adoption": 0.0,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Otawara, Soaring City",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-08-01",
+  "pilot": "Sutter",
+  "event": "Modern Challenge 64",
+  "placement": 31,
+  "historical_adoption": 0.007761966364812419,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Picklock Prankster",
+  "main": 3,
+  "side": 0,
+  "appeared_on": "2026-07-27",
+  "pilot": "cntrlfreak_ttv",
+  "event": "Modern Challenge 96",
+  "placement": 25,
+  "historical_adoption": 0.0013679890560875513,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Sink into Stupor",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-07-27",
+  "pilot": "Phryziel",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.0533515731874145,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Spell Pierce",
+  "main": 2,
+  "side": 0,
+  "appeared_on": "2026-07-26",
+  "pilot": "Lichard",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.008264462809917356,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Strix Serenade",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-08-01",
+  "pilot": "Mencius-89",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.015523932729624839,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Subtlety",
+  "main": 2,
+  "side": 0,
+  "appeared_on": "2026-08-06",
+  "pilot": "Gniksigerg",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.07281553398058252,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Ulamog, the Defiler",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-08-01",
+  "pilot": "Sutter",
+  "event": "Modern Challenge 64",
+  "placement": 31,
+  "historical_adoption": 0.08279430789133248,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Vexing Bauble",
+  "main": 0,
+  "side": 2,
+  "appeared_on": "2026-07-26",
+  "pilot": "felider",
+  "event": "Modern Challenge 64",
+  "placement": 19,
+  "historical_adoption": 0.01652892561983471,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Consign to Memory",
+  "main": 2,
+  "side": 2,
+  "raised_on": "2026-07-12",
+  "from_adoption": 0.08823529411764706,
+  "to_adoption": 0.4634146341463415,
+  "population": 41,
+  "origin_pilot": "KingHairy",
+  "origin_event": "Modern Challenge 64",
+  "origin_date": "2026-06-28",
+  "origin_placement": 1,
+  "tilt": -0.006594131223211397,
+  "challenge_before": 0.2222222222222222,
+  "state": "decayed",
+  "league_after": 0.2,
+  "challenge_after": 0.0,
+  "tilt_after": 0.0,
+  "resolved_on": "2026-07-26",
+  "now_adoption": 0.0,
+  "standing": "lapsed",
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Ephemerate",
+  "main": 3,
+  "side": 0,
+  "raised_on": "2026-07-12",
+  "from_adoption": 0.08823529411764706,
+  "to_adoption": 0.4878048780487805,
+  "population": 41,
+  "origin_pilot": "KingHairy",
+  "origin_event": "Modern Challenge 64",
+  "origin_date": "2026-06-28",
+  "origin_placement": 1,
+  "tilt": -0.004698318496538123,
+  "challenge_before": 0.25,
+  "state": "decayed",
+  "league_after": 0.26666666666666666,
+  "challenge_after": 0.0,
+  "tilt_after": 0.0,
+  "resolved_on": "2026-07-26",
+  "now_adoption": 0.034482758620689655,
+  "standing": "lapsed",
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Fatal Push",
+  "main": 0,
+  "side": 1,
+  "raised_on": "2026-07-05",
+  "from_adoption": 0.0625,
+  "to_adoption": 0.30303030303030304,
+  "population": 33,
+  "origin_pilot": "KingHairy",
+  "origin_event": "Modern Challenge 64",
+  "origin_date": "2026-06-28",
+  "origin_placement": 1,
+  "tilt": 0.017099567099567115,
+  "challenge_before": 0.22857142857142856,
+  "state": "decayed",
+  "league_after": 0.28125,
+  "challenge_after": 0.09375,
+  "tilt_after": -0.0015115298087739204,
+  "resolved_on": "2026-07-19",
+  "now_adoption": 0.06896551724137931,
+  "standing": "lapsed",
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Kavaero, Mind-Bitten",
+  "main": 1,
+  "side": 0,
+  "raised_on": "2026-06-21",
+  "from_adoption": 0.07142857142857142,
+  "to_adoption": 0.3333333333333333,
+  "population": 48,
+  "origin_pilot": "MarcoBelacca95",
+  "origin_event": "Modern Challenge 64",
+  "origin_date": "2026-06-21",
+  "origin_placement": 3,
+  "tilt": -0.0036253069816395977,
+  "challenge_before": 0.38235294117647056,
+  "state": "established",
+  "league_after": 0.42424242424242425,
+  "challenge_after": 0.4,
+  "tilt_after": 0.006926406926406836,
+  "resolved_on": "2026-07-05",
+  "now_adoption": 0.3448275862068966,
+  "standing": "holding",
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Pest Control",
+  "main": 0,
+  "side": 1,
+  "raised_on": "2026-07-12",
+  "from_adoption": 0.08823529411764706,
+  "to_adoption": 0.34146341463414637,
+  "population": 41,
+  "origin_pilot": "KingHairy",
+  "origin_event": "Modern Challenge 64",
+  "origin_date": "2026-06-28",
+  "origin_placement": 1,
+  "tilt": -0.010468183316848068,
+  "challenge_before": 0.19444444444444445,
+  "state": "decayed",
+  "league_after": 0.26666666666666666,
+  "challenge_after": 0.07894736842105263,
+  "tilt_after": 0.0029080203920442277,
+  "resolved_on": "2026-07-26",
+  "now_adoption": 0.034482758620689655,
+  "standing": "lapsed",
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Solitude",
+  "main": 3,
+  "side": 0,
+  "raised_on": "2026-07-12",
+  "from_adoption": 0.058823529411764705,
+  "to_adoption": 0.43902439024390244,
+  "population": 41,
+  "origin_pilot": "KingHairy",
+  "origin_event": "Modern Challenge 64",
+  "origin_date": "2026-06-28",
+  "origin_placement": 1,
+  "tilt": 0.00733597098582256,
+  "challenge_before": 0.19444444444444445,
+  "state": "decayed",
+  "league_after": 0.16666666666666666,
+  "challenge_after": 0.05263157894736842,
+  "tilt_after": 0.011683369405779118,
+  "resolved_on": "2026-07-26",
+  "now_adoption": 0.13793103448275862,
+  "standing": "holding",
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Spell Snare",
+  "main": 0,
+  "side": 1,
+  "raised_on": "2026-07-26",
+  "from_adoption": 0.07317073170731707,
+  "to_adoption": 0.36666666666666664,
+  "population": 30,
+  "origin_pilot": "felider",
+  "origin_event": "Modern RC Super Qualifier",
+  "origin_date": "2026-07-19",
+  "origin_placement": 1,
+  "tilt": 0.02505410866867025,
+  "challenge_before": 0.4473684210526316,
+  "state": "decayed",
+  "league_after": 0.35714285714285715,
+  "challenge_after": 0.25,
+  "tilt_after": -0.008784425451092204,
+  "resolved_on": "2026-08-08",
+  "now_adoption": 0.3448275862068966,
+  "standing": "holding",
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Teferi, Time Raveler",
+  "main": 0,
+  "side": 1,
+  "raised_on": "2026-07-26",
+  "from_adoption": 0.04878048780487805,
+  "to_adoption": 0.36666666666666664,
+  "population": 30,
+  "origin_pilot": "jussupinator",
+  "origin_event": "Modern Challenge 64",
+  "origin_date": "2026-07-21",
+  "origin_placement": 2,
+  "tilt": 0.019017530182892428,
+  "challenge_before": 0.42105263157894735,
+  "state": "decayed",
+  "league_after": 0.39285714285714285,
+  "challenge_after": 0.25,
+  "tilt_after": 0.015906932573599153,
+  "resolved_on": "2026-08-08",
+  "now_adoption": 0.41379310344827586,
+  "standing": "holding",
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Winternight Stories",
+  "main": 1,
+  "side": 0,
+  "raised_on": "2026-06-21",
+  "from_adoption": 0.0,
+  "to_adoption": 0.3333333333333333,
+  "population": 48,
+  "origin_pilot": "Aced5",
+  "origin_event": "Modern Challenge 64",
+  "origin_date": "2026-06-08",
+  "origin_placement": 1,
+  "tilt": 0.019763770319260854,
+  "challenge_before": 0.20588235294117646,
+  "state": "established",
+  "league_after": 0.36363636363636365,
+  "challenge_after": 0.2857142857142857,
+  "tilt_after": 0.014069264069264065,
+  "resolved_on": "2026-07-05",
+  "now_adoption": 0.0,
+  "standing": "lapsed",
+  "first_seen": "2026-08-07"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "challenge-class",
+  "pilot": "Aced5",
+  "event": "Modern Challenge 64",
+  "date": "2026-06-08",
+  "placement": 1,
+  "mode": "fringe",
+  "delta": 5,
+  "novel": [
+   [
+    "Engineered Explosives",
+    0,
+    1
+   ],
+   [
+    "Subtlety",
+    0,
+    1
+   ],
+   [
+    "Winternight Stories",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Griselbrand",
+   "Wrath of the Skies"
+  ],
+  "state": "trendsetter",
+  "followers": [
+   "DejoyOfGaming",
+   "KingHairy",
+   "Mortaa",
+   "SoulStrong",
+   "Zeect",
+   "avishai-elma",
+   "jbspec3",
+   "undique",
+   "vinnyrussian123"
+  ],
+  "adopted_card": "Winternight Stories",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "Avignon",
+  "event": "Modern League",
+  "date": "2026-07-21",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 5,
+  "novel": [
+   [
+    "Ashiok, Dream Render",
+    0,
+    1
+   ],
+   [
+    "Preordain",
+    1,
+    0
+   ],
+   [
+    "Sheoldred's Edict",
+    0,
+    1
+   ],
+   [
+    "Spell Pierce",
+    1,
+    0
+   ],
+   [
+    "Subtlety",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "Arcbound_Papi",
+   "KingHairy"
+  ],
+  "adopted_card": "Subtlety",
+  "needed": 5,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "DB_cntrlfreak_ttv",
+  "event": "Modern League",
+  "date": "2026-07-16",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "Jace, Vryn's Prodigy",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Kavaero, Mind-Bitten",
+   "Otherworldly Gaze"
+  ],
+  "state": "breakthrough",
+  "followers": [
+   "EmPython"
+  ],
+  "adopted_card": "Jace, Vryn's Prodigy",
+  "needed": 5,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "DB_cntrlfreak_ttv",
+  "event": "Modern League",
+  "date": "2026-07-29",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Gran-Gran",
+    4,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "watching",
+  "followers": [
+   "Arcbound_Papi",
+   "cntrlfreak_ttv"
+  ],
+  "adopted_card": "Gran-Gran",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "DejoyOfGaming",
+  "event": "Modern League",
+  "date": "2026-06-30",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 4,
+  "novel": [
+   [
+    "Jace, Vryn's Prodigy",
+    3,
+    0
+   ],
+   [
+    "Ketramose, the New Dawn",
+    0,
+    2
+   ],
+   [
+    "Relic of Progenitus",
+    0,
+    1
+   ]
+  ],
+  "missing": [
+   "Mystical Dispute"
+  ],
+  "state": "trendsetter",
+  "followers": [
+   "Chuckles1248",
+   "MikeEgan",
+   "Prim3Time"
+  ],
+  "adopted_card": "Ketramose, the New Dawn",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "Deriu",
+  "event": "Modern League",
+  "date": "2026-06-15",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Hedge Maze",
+    1,
+    0
+   ],
+   [
+    "Suppression Ray",
+    1,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "RealG_MTG"
+  ],
+  "adopted_card": "Hedge Maze",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "challenge-class",
+  "pilot": "DrPP",
+  "event": "Modern Challenge 64",
+  "date": "2026-06-12",
+  "placement": 9,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "River of Tears",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Meticulous Archive"
+  ],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "River of Tears",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "Evelyn_",
+  "event": "Modern League",
+  "date": "2026-07-02",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 10,
+  "novel": [
+   [
+    "Ashiok, Dream Render",
+    0,
+    1
+   ],
+   [
+    "Breeding Pool",
+    1,
+    0
+   ],
+   [
+    "Snow-Covered Island",
+    1,
+    0
+   ],
+   [
+    "Snow-Covered Plains",
+    1,
+    0
+   ],
+   [
+    "Snow-Covered Swamp",
+    1,
+    0
+   ],
+   [
+    "Tainted Indulgence",
+    1,
+    0
+   ],
+   [
+    "Ulamog, the Defiler",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Island",
+   "Plains",
+   "Swamp"
+  ],
+  "state": "breakthrough",
+  "followers": [
+   "Chuckles1248",
+   "HealthyEgo"
+  ],
+  "adopted_card": "Breeding Pool",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "Evelyn_",
+  "event": "Modern League",
+  "date": "2026-07-04",
+  "placement": null,
+  "mode": "in-pool",
+  "delta": 10,
+  "novel": [
+   [
+    "Ashiok, Dream Render",
+    0,
+    1
+   ],
+   [
+    "Celestial Purge",
+    0,
+    1
+   ],
+   [
+    "Snow-Covered Island",
+    1,
+    0
+   ],
+   [
+    "Snow-Covered Plains",
+    1,
+    0
+   ],
+   [
+    "Snow-Covered Swamp",
+    1,
+    0
+   ],
+   [
+    "Tainted Indulgence",
+    1,
+    0
+   ],
+   [
+    "Ulamog, the Defiler",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Island",
+   "Plains",
+   "Swamp"
+  ],
+  "state": "breakthrough",
+  "followers": [
+   "Kvoth3MTG"
+  ],
+  "adopted_card": "Celestial Purge",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "Fatal_Vlad",
+  "event": "Modern League",
+  "date": "2026-06-06",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "Elesh Norn, Mother of Machines",
+    0,
+    1
+   ],
+   [
+    "Jace, Vryn's Prodigy",
+    1,
+    0
+   ],
+   [
+    "Vanishing Verse",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "Lufia",
+   "vinnyrussian123"
+  ],
+  "adopted_card": "Jace, Vryn's Prodigy",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "GabbaAndrewTeam",
+  "event": "Modern League",
+  "date": "2026-07-14",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 8,
+  "novel": [
+   [
+    "Archon of Cruelty",
+    2,
+    0
+   ],
+   [
+    "Ashiok, Dream Render",
+    0,
+    1
+   ],
+   [
+    "Dina's Guidance",
+    3,
+    0
+   ],
+   [
+    "Emeritus of Ideation",
+    2,
+    0
+   ],
+   [
+    "Emperor of Bones",
+    1,
+    0
+   ],
+   [
+    "Overgrown Tomb",
+    1,
+    0
+   ],
+   [
+    "Persist",
+    3,
+    0
+   ]
+  ],
+  "missing": [
+   "Griselbrand"
+  ],
+  "state": "breakthrough",
+  "followers": [
+   "Aced5",
+   "MarcusMPV",
+   "gazmon48",
+   "nedyahiske"
+  ],
+  "adopted_card": "Overgrown Tomb",
+  "needed": 5,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "HealthyEgo",
+  "event": "Modern League",
+  "date": "2026-07-20",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Deafening Silence",
+    0,
+    2
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Deafening Silence",
+  "needed": 5,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "HealthyEgo",
+  "event": "Modern League",
+  "date": "2026-08-07",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Deafening Silence",
+    0,
+    1
+   ],
+   [
+    "Pest Control",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "watching",
+  "followers": [],
+  "adopted_card": "Deafening Silence",
+  "needed": 2,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "challenge-class",
+  "pilot": "House565",
+  "event": "Modern Challenge 32",
+  "date": "2026-06-14",
+  "placement": 12,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Ghost Vacuum",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "Fatal_Vlad"
+  ],
+  "adopted_card": "Ghost Vacuum",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "Ivan_Draw_Go",
+  "event": "Modern League",
+  "date": "2026-07-13",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Winternight Stories",
+    1,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Winternight Stories",
+  "needed": 5,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "James_Zhi",
+  "event": "Modern League",
+  "date": "2026-07-15",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "End of the Hunt",
+    0,
+    2
+   ],
+   [
+    "Fallaji Archaeologist",
+    2,
+    0
+   ],
+   [
+    "Inquisition of Kozilek",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "trendsetter",
+  "followers": [
+   "BaronOfBacon",
+   "Jonii",
+   "MarcusMPV",
+   "duke12",
+   "gazmon48",
+   "nedyahiske"
+  ],
+  "adopted_card": "Fallaji Archaeologist",
+  "needed": 5,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "Jonii",
+  "event": "Modern League",
+  "date": "2026-07-22",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Fallaji Archaeologist",
+    2,
+    0
+   ],
+   [
+    "Strix Serenade",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "trendsetter",
+  "followers": [
+   "FranBenitez91",
+   "KingHairy",
+   "MarcusMPV",
+   "gazmon48"
+  ],
+  "adopted_card": "Fallaji Archaeologist",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "Jonii",
+  "event": "Modern League",
+  "date": "2026-08-06",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Strix Serenade",
+    0,
+    1
+   ]
+  ],
+  "missing": [
+   "Kavaero, Mind-Bitten"
+  ],
+  "state": "watching",
+  "followers": [],
+  "adopted_card": "Strix Serenade",
+  "needed": 2,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "KingChainsaw",
+  "event": "Modern League",
+  "date": "2026-06-06",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Ketramose, the New Dawn",
+    0,
+    2
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Ketramose, the New Dawn",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "KingChainsaw",
+  "event": "Modern League",
+  "date": "2026-06-07",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Ghost Vacuum",
+    0,
+    1
+   ],
+   [
+    "Ketramose, the New Dawn",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "Fatal_Vlad"
+  ],
+  "adopted_card": "Ghost Vacuum",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "Lichard",
+  "event": "Modern League",
+  "date": "2026-07-26",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "End of the Hunt",
+    0,
+    1
+   ],
+   [
+    "Inquisition of Kozilek",
+    1,
+    0
+   ],
+   [
+    "Spell Pierce",
+    2,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "watching",
+  "followers": [
+   "yunyu1234"
+  ],
+  "adopted_card": "Inquisition of Kozilek",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "Luvilon",
+  "event": "Modern League",
+  "date": "2026-07-22",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Strix Serenade",
+    0,
+    1
+   ]
+  ],
+  "missing": [
+   "Teferi, Time Raveler"
+  ],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Strix Serenade",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "Matt_M_H",
+  "event": "Modern League",
+  "date": "2026-06-12",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 4,
+  "novel": [
+   [
+    "Ceremonious Rejection",
+    0,
+    2
+   ],
+   [
+    "Ghost Vacuum",
+    0,
+    1
+   ],
+   [
+    "Orim's Chant",
+    0,
+    2
+   ]
+  ],
+  "missing": [
+   "Thoughtseize"
+  ],
+  "state": "breakthrough",
+  "followers": [
+   "Fatal_Vlad"
+  ],
+  "adopted_card": "Ghost Vacuum",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "challenge-class",
+  "pilot": "MikeEgan",
+  "event": "Modern Challenge 32",
+  "date": "2026-06-08",
+  "placement": 13,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "Fallaji Archaeologist",
+    1,
+    0
+   ],
+   [
+    "Fatal Push",
+    0,
+    1
+   ],
+   [
+    "Stock Up",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "Laplasjan",
+   "RealG_MTG",
+   "klien7"
+  ],
+  "adopted_card": "Fatal Push",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "Mtyrant",
+  "event": "Modern League",
+  "date": "2026-06-11",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 4,
+  "novel": [
+   [
+    "Engineered Explosives",
+    0,
+    1
+   ],
+   [
+    "Ulamog, the Defiler",
+    2,
+    0
+   ]
+  ],
+  "missing": [
+   "Griselbrand",
+   "Wrath of the Skies"
+  ],
+  "state": "breakthrough",
+  "followers": [
+   "RealG_MTG",
+   "klien7"
+  ],
+  "adopted_card": "Ulamog, the Defiler",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "RealG_MTG",
+  "event": "Modern League",
+  "date": "2026-05-29",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Flusterstorm",
+    0,
+    1
+   ],
+   [
+    "Kavaero, Mind-Bitten",
+    1,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "Manuel_Danninger",
+   "jussupinator"
+  ],
+  "adopted_card": "Kavaero, Mind-Bitten",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "Rvng",
+  "event": "Modern League",
+  "date": "2026-06-27",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Cephalid Coliseum",
+    1,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Cephalid Coliseum",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "challenge-class",
+  "pilot": "St1ffler",
+  "event": "Modern Challenge 64",
+  "date": "2026-06-26",
+  "placement": 8,
+  "mode": "in-pool",
+  "delta": 6,
+  "novel": [
+   [
+    "Breeding Pool",
+    1,
+    0
+   ],
+   [
+    "Celestial Purge",
+    0,
+    1
+   ],
+   [
+    "Emperor of Bones",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "March of Otherworldly Light",
+   "Otherworldly Gaze",
+   "Overgrown Tomb"
+  ],
+  "state": "breakthrough",
+  "followers": [
+   "IDontNeedAName",
+   "Kartoffelman"
+  ],
+  "adopted_card": "Breeding Pool",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "Theo38890",
+  "event": "Modern League",
+  "date": "2026-07-28",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 4,
+  "novel": [
+   [
+    "Otawara, Soaring City",
+    1,
+    0
+   ],
+   [
+    "Pest Control",
+    0,
+    1
+   ],
+   [
+    "Winternight Stories",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Mystical Dispute"
+  ],
+  "state": "watching",
+  "followers": [
+   "DejoyOfGaming"
+  ],
+  "adopted_card": "Pest Control",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "Titut",
+  "event": "Modern League",
+  "date": "2026-07-20",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Vexing Bauble",
+    0,
+    2
+   ]
+  ],
+  "missing": [
+   "Teferi, Time Raveler"
+  ],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Vexing Bauble",
+  "needed": 5,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "_epinephrine",
+  "event": "Modern League",
+  "date": "2026-06-21",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 4,
+  "novel": [
+   [
+    "Drannith Magistrate",
+    0,
+    2
+   ],
+   [
+    "Ketramose, the New Dawn",
+    1,
+    0
+   ],
+   [
+    "Unburial Rites",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Thoughtseize"
+  ],
+  "state": "trendsetter",
+  "followers": [
+   "DejoyOfGaming",
+   "MikeEgan",
+   "Prim3Time",
+   "akwz"
+  ],
+  "adopted_card": "Ketramose, the New Dawn",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "akwz",
+  "event": "Modern League",
+  "date": "2026-06-08",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "Sink into Stupor",
+    1,
+    0
+   ],
+   [
+    "Subtlety",
+    0,
+    1
+   ],
+   [
+    "Winternight Stories",
+    1,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "trendsetter",
+  "followers": [
+   "DejoyOfGaming",
+   "KingHairy",
+   "Mortaa",
+   "SoulStrong",
+   "Zeect",
+   "avishai-elma",
+   "jbspec3",
+   "undique",
+   "vinnyrussian123"
+  ],
+  "adopted_card": "Winternight Stories",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "avishai-elma",
+  "event": "Modern League",
+  "date": "2026-05-30",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Vanishing Verse",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Vanishing Verse",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "chapaking8",
+  "event": "Modern League",
+  "date": "2026-07-17",
+  "placement": null,
+  "mode": "in-pool",
+  "delta": 7,
+  "novel": [
+   [
+    "Archon of Cruelty",
+    2,
+    0
+   ],
+   [
+    "Ashiok, Dream Render",
+    0,
+    1
+   ],
+   [
+    "Dina's Guidance",
+    3,
+    0
+   ],
+   [
+    "Emeritus of Ideation",
+    2,
+    0
+   ],
+   [
+    "Overgrown Tomb",
+    1,
+    0
+   ],
+   [
+    "Persist",
+    3,
+    0
+   ]
+  ],
+  "missing": [
+   "Griselbrand"
+  ],
+  "state": "breakthrough",
+  "followers": [
+   "MarcusMPV",
+   "gazmon48",
+   "nedyahiske"
+  ],
+  "adopted_card": "Overgrown Tomb",
+  "needed": 5,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "cntrlfreak_ttv",
+  "event": "Modern League",
+  "date": "2026-07-22",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Fallaji Archaeologist",
+    2,
+    0
+   ],
+   [
+    "Strix Serenade",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "trendsetter",
+  "followers": [
+   "FranBenitez91",
+   "KingHairy",
+   "MarcusMPV",
+   "gazmon48"
+  ],
+  "adopted_card": "Fallaji Archaeologist",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "cntrlfreak_ttv",
+  "event": "Modern League",
+  "date": "2026-07-24",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Picklock Prankster",
+    3,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Picklock Prankster",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "challenge-class",
+  "pilot": "dormitian",
+  "event": "Modern Challenge 64",
+  "date": "2026-06-26",
+  "placement": 10,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "Break the Ice",
+    0,
+    2
+   ],
+   [
+    "Elesh Norn, Mother of Machines",
+    0,
+    1
+   ],
+   [
+    "Ulamog, the Defiler",
+    1,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Break the Ice",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "dormitian",
+  "event": "Modern League",
+  "date": "2026-06-14",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "Break the Ice",
+    0,
+    2
+   ],
+   [
+    "Elesh Norn, Mother of Machines",
+    0,
+    1
+   ],
+   [
+    "Ulamog, the Defiler",
+    1,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "RealG_MTG"
+  ],
+  "adopted_card": "Ulamog, the Defiler",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "ice_mtg",
+  "event": "Modern League",
+  "date": "2026-07-05",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 5,
+  "novel": [
+   [
+    "High Noon",
+    0,
+    2
+   ],
+   [
+    "Orcish Bowmasters",
+    1,
+    2
+   ]
+  ],
+  "missing": [
+   "Force of Negation",
+   "Griselbrand",
+   "Teferi, Time Raveler"
+  ],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "High Noon",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "ilprofetaVDR",
+  "event": "Modern League",
+  "date": "2026-07-31",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "Strix Serenade",
+    0,
+    1
+   ]
+  ],
+  "missing": [
+   "Kavaero, Mind-Bitten",
+   "Teferi, Time Raveler"
+  ],
+  "state": "watching",
+  "followers": [],
+  "adopted_card": "Strix Serenade",
+  "needed": 2,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "nljmtg",
+  "event": "Modern League",
+  "date": "2026-06-14",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "Ghost Vacuum",
+    0,
+    1
+   ],
+   [
+    "Hedge Maze",
+    1,
+    0
+   ],
+   [
+    "Lavinia, Azorius Renegade",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "Fatal_Vlad"
+  ],
+  "adopted_card": "Ghost Vacuum",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "o-TheMi1kman-o",
+  "event": "Modern League",
+  "date": "2026-06-12",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Chalice of the Void",
+    0,
+    1
+   ],
+   [
+    "Subtlety",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Chalice of the Void",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "pentagrampa",
+  "event": "Modern League",
+  "date": "2026-07-03",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 4,
+  "novel": [
+   [
+    "Cephalid Coliseum",
+    1,
+    0
+   ],
+   [
+    "Overgrown Tomb",
+    1,
+    0
+   ],
+   [
+    "Rotting Regisaur",
+    3,
+    0
+   ],
+   [
+    "Ulamog, the Defiler",
+    1,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "Aced5",
+   "chengyiw"
+  ],
+  "adopted_card": "Overgrown Tomb",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "preve94",
+  "event": "Modern League",
+  "date": "2026-06-15",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Footsteps of the Goryo",
+    1,
+    0
+   ],
+   [
+    "Otherworldly Gaze",
+    3,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [
+   "Zeect"
+  ],
+  "adopted_card": "Otherworldly Gaze",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "sleightofhand94",
+  "event": "Modern League",
+  "date": "2026-06-23",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 6,
+  "novel": [
+   [
+    "Fatal Push",
+    4,
+    0
+   ],
+   [
+    "Unburial Rites",
+    1,
+    0
+   ],
+   [
+    "Underground Mortuary",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "March of Otherworldly Light",
+   "Quantum Riddler",
+   "Shadowy Backstreet"
+  ],
+  "state": "trendsetter",
+  "followers": [
+   "Kartoffelman",
+   "KingChainsaw",
+   "KingHairy",
+   "Phryziel"
+  ],
+  "adopted_card": "Fatal Push",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "sleightofhand94",
+  "event": "Modern League",
+  "date": "2026-08-04",
+  "placement": null,
+  "mode": "in-pool",
+  "delta": 6,
+  "novel": [
+   [
+    "Emperor of Bones",
+    2,
+    0
+   ],
+   [
+    "Underground Mortuary",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Kavaero, Mind-Bitten",
+   "March of Otherworldly Light",
+   "Quantum Riddler",
+   "Shadowy Backstreet"
+  ],
+  "state": "watching",
+  "followers": [],
+  "adopted_card": "Emperor of Bones",
+  "needed": 2,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "tA326_",
+  "event": "Modern League",
+  "date": "2026-05-27",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 3,
+  "novel": [
+   [
+    "Cephalid Coliseum",
+    1,
+    0
+   ],
+   [
+    "Orim's Chant",
+    0,
+    2
+   ],
+   [
+    "Underground Mortuary",
+    1,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Cephalid Coliseum",
+  "needed": 2,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "thottie_crippin",
+  "event": "Modern League",
+  "date": "2026-07-02",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 8,
+  "novel": [
+   [
+    "Cephalid Coliseum",
+    1,
+    0
+   ],
+   [
+    "Gemstone Caverns",
+    1,
+    0
+   ],
+   [
+    "High Noon",
+    0,
+    2
+   ],
+   [
+    "Otherworldly Gaze",
+    2,
+    0
+   ],
+   [
+    "Overgrown Tomb",
+    1,
+    0
+   ],
+   [
+    "Supreme Verdict",
+    0,
+    1
+   ],
+   [
+    "Ulamog, the Defiler",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Prismatic Ending"
+  ],
+  "state": "breakthrough",
+  "followers": [
+   "Aced5",
+   "chengyiw"
+  ],
+  "adopted_card": "Otherworldly Gaze",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "thottie_crippin",
+  "event": "Modern League",
+  "date": "2026-07-18",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 10,
+  "novel": [
+   [
+    "Cephalid Coliseum",
+    1,
+    0
+   ],
+   [
+    "Gemstone Caverns",
+    1,
+    0
+   ],
+   [
+    "Hurkyl's Recall",
+    0,
+    2
+   ],
+   [
+    "Iona, Shield of Emeria",
+    0,
+    1
+   ],
+   [
+    "Orim's Chant",
+    0,
+    2
+   ],
+   [
+    "Otherworldly Gaze",
+    2,
+    0
+   ],
+   [
+    "Overgrown Tomb",
+    1,
+    0
+   ],
+   [
+    "Ulamog, the Defiler",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Prismatic Ending",
+   "Teferi, Time Raveler"
+  ],
+  "state": "trendsetter",
+  "followers": [
+   "BaronOfBacon",
+   "KingHairy",
+   "Manuel_Danninger",
+   "MarcusMPV",
+   "Rivrat2007",
+   "duke12",
+   "gazmon48",
+   "nedyahiske"
+  ],
+  "adopted_card": "Otherworldly Gaze",
+  "needed": 5,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "challenge-class",
+  "pilot": "yunyu1234",
+  "event": "Modern Challenge 96",
+  "date": "2026-07-27",
+  "placement": 8,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Fallaji Archaeologist",
+    2,
+    0
+   ],
+   [
+    "Inquisition of Kozilek",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "watching",
+  "followers": [
+   "HealthyEgo",
+   "KingHairy"
+  ],
+  "adopted_card": "Fallaji Archaeologist",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "zbogames",
+  "event": "Modern League",
+  "date": "2026-07-30",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Sink into Stupor",
+    1,
+    0
+   ]
+  ],
+  "missing": [],
+  "state": "watching",
+  "followers": [
+   "Stealthmagician"
+  ],
+  "adopted_card": "Sink into Stupor",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "challenge-class",
+  "pilot": "zveibil",
+  "event": "Modern Challenge 32",
+  "date": "2026-06-21",
+  "placement": 14,
+  "mode": "fringe",
+  "delta": 4,
+  "novel": [
+   [
+    "Ashiok, Dream Render",
+    0,
+    2
+   ],
+   [
+    "Engineered Explosives",
+    0,
+    1
+   ],
+   [
+    "Underground Mortuary",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Griselbrand"
+  ],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Ashiok, Dream Render",
+  "needed": 3,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "zveibil",
+  "event": "Modern League",
+  "date": "2026-06-11",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 4,
+  "novel": [
+   [
+    "Engineered Explosives",
+    0,
+    1
+   ],
+   [
+    "Subtlety",
+    0,
+    1
+   ],
+   [
+    "Underground Mortuary",
+    1,
+    0
+   ]
+  ],
+  "missing": [
+   "Griselbrand"
+  ],
+  "state": "breakthrough",
+  "followers": [],
+  "adopted_card": "Engineered Explosives",
+  "needed": 4,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "fringe",
+  "camp": "hybrid",
+  "card": "Deafening Silence",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-08-07",
+  "pilot": "HealthyEgo",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.016867469879518072,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Soul-Guide Lantern",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-08-07",
+  "pilot": "YABOIJIMJOHN",
+  "event": "Modern Challenge 64",
+  "placement": 31,
+  "historical_adoption": 0.004819277108433735,
+  "returning": true,
+  "absent_days": 82,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "fallaji",
+  "card": "Damping Sphere",
+  "main": 0,
+  "side": 2,
+  "appearances": 7,
+  "pilots": [
+   "AFX",
+   "Laplasjan"
+  ],
+  "appeared_on": "2026-06-22",
+  "dissenters": {
+   "Laplasjan": 2
+  },
+  "hypothesis_candidate": true,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "fallaji",
+  "card": "Faithful Mending",
+  "main": 3,
+  "side": 0,
+  "appearances": 4,
+  "pilots": [
+   "ReanimatorFiend",
+   "chengyiw"
+  ],
+  "appeared_on": "2026-05-23",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "fallaji",
+  "card": "Fatal Push",
+  "main": 4,
+  "side": 0,
+  "appearances": 3,
+  "pilots": [
+   "sleightofhand94"
+  ],
+  "appeared_on": "2026-06-23",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "fallaji",
+  "card": "Force of Negation",
+  "main": 4,
+  "side": 0,
+  "appearances": 3,
+  "pilots": [
+   "sleightofhand94"
+  ],
+  "appeared_on": "2026-06-23",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "fallaji",
+  "card": "Hedge Maze",
+  "main": 1,
+  "side": 0,
+  "appearances": 3,
+  "pilots": [
+   "chengyiw"
+  ],
+  "appeared_on": "2026-05-23",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "fallaji",
+  "card": "Prismatic Ending",
+  "main": 1,
+  "side": 0,
+  "appearances": 4,
+  "pilots": [
+   "littesir095",
+   "sleightofhand94"
+  ],
+  "appeared_on": "2026-06-23",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "fallaji",
+  "card": "Prismatic Ending",
+  "main": 3,
+  "side": 0,
+  "appearances": 4,
+  "pilots": [
+   "St1ffler"
+  ],
+  "appeared_on": "2026-06-26",
+  "dissenters": {
+   "St1ffler": 2
+  },
+  "hypothesis_candidate": true,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "fallaji",
+  "card": "Solitude",
+  "main": 0,
+  "side": 1,
+  "appearances": 3,
+  "pilots": [
+   "sleightofhand94"
+  ],
+  "appeared_on": "2026-06-23",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "fallaji",
+  "card": "Ulamog, the Defiler",
+  "main": 1,
+  "side": 0,
+  "appearances": 3,
+  "pilots": [
+   "BrandonVye",
+   "Evelyn_"
+  ],
+  "appeared_on": "2026-05-23",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "fallaji",
+  "card": "Underground Mortuary",
+  "main": 1,
+  "side": 0,
+  "appearances": 3,
+  "pilots": [
+   "sleightofhand94"
+  ],
+  "appeared_on": "2026-06-23",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "non-fallaji",
+  "card": "Deafening Silence",
+  "main": 0,
+  "side": 2,
+  "appearances": 5,
+  "pilots": [
+   "FrankHolmquist",
+   "HealthyEgo"
+  ],
+  "appeared_on": "2026-05-24",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "non-fallaji",
+  "card": "Jace, Vryn's Prodigy",
+  "main": 0,
+  "side": 1,
+  "appearances": 3,
+  "pilots": [
+   "choccy_milk",
+   "vinnyrussian123"
+  ],
+  "appeared_on": "2026-06-12",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "non-fallaji",
+  "card": "Underground Mortuary",
+  "main": 1,
+  "side": 0,
+  "appearances": 4,
+  "pilots": [
+   "tA326_",
+   "zveibil"
+  ],
+  "appeared_on": "2026-05-27",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "non-fallaji",
+  "card": "Wrath of the Skies",
+  "main": 0,
+  "side": 1,
+  "appearances": 3,
+  "pilots": [
+   "zveibil"
+  ],
+  "appeared_on": "2026-06-11",
+  "dissenters": {},
+  "hypothesis_candidate": false,
+  "first_seen": "2026-08-08"
+ }
+]
