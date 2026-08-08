@@ -1,9 +1,9 @@
 # Two Wrath of the Skies and one Pest Control is the wrong sweeper package
 
-status: open
 origin: pilot-experience
 subject: Wrath of the Skies
 subject: Pest Control
+status: open
 
 ## Evidence sought
 
@@ -34,3 +34,7 @@ Pest Control 0/2: 2% of the camp, delta +0.03
 Pest Control 1/1: 2% of the camp, delta -0.07
 hype flag on Pest Control 0/1 (decayed), raised 2026-08-07: adoption density, not card quality.
 pet-tech flag on Wrath of the Skies 0/1, raised 2026-08-08.
+
+### 2026-08-08 judgment
+
+Pest Control is a wrath effect. Sweeper density is read over Wrath of the Skies and Pest Control copies summed, wherever boarded; the package question is count and mix of the class, not of Wrath alone.

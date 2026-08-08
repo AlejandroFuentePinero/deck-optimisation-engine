@@ -157,7 +157,7 @@ def test_the_report_ranks_the_75s_slots_in_the_order_playtesting_should_reach_th
     it, so the section names its terms: the camp, the stratum and how many lists
     the share was taken over. Against the captured challenges the non-Fallaji
     camp fields three fresh lists, twenty of the 75's slots are the camp's core
-    and the twelve flex ones queue least backed first.
+    and the eleven flex ones queue least backed first.
 
     A core slot the pilot is with his camp on is not in the queue at all: it is
     not where the optimisation happens.
@@ -166,7 +166,7 @@ def test_the_report_ranks_the_75s_slots_in_the_order_playtesting_should_reach_th
 
     audit = _section(document, "audit")
     assert "non-fallaji" in audit and "challenge-class" in audit and "3 list" in audit
-    assert "20 core" in audit and "12 flex" in audit
+    assert "20 core" in audit and "11 flex" in audit
 
     # Least backed first: four slots nobody in the camp registered, then the
     # three a third of it did.
