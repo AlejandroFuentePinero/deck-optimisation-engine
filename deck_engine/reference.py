@@ -224,6 +224,57 @@ def capture(source: Path, reference_dir: Path = config.REFERENCE_DIR) -> Referen
     return read(path)
 
 
+def _by_card(registered: dict) -> tuple[dict[str, float], dict[str, dict]]:
+    """The camp's reading rolled up from configurations to cards: how much of it
+    plays each card at all, and which count the largest bloc of it went to.
+
+    Both readings that compare the 75 to its camp need this and they need it to
+    agree. A card the camp is unanimous about and split three ways on the count
+    reads as three minority configurations, which is the opposite of what it is,
+    and the slot the pilot took has to carry that alongside his own share or the
+    audit reports a staple he is a copy light on as an eccentricity.
+    """
+    playing: dict[str, float] = {}
+    leading: dict[str, dict] = {}
+    for (card, _, _), row in sorted(registered.items()):
+        playing[card] = playing.get(card, 0.0) + row["fresh_adoption"]
+        if row["fresh_adoption"] > leading.get(card, {}).get("fresh_adoption", 0.0):
+            leading[card] = row
+    return playing, leading
+
+
+def _boundary(share: float, population: int, core: bool) -> str | None:
+    """The bar this slot's verdict turns on, where it sits within a list or two
+    of one, and nothing where the verdict is not close.
+
+    A bucket is a categorical claim taken off a share of forty-odd lists, and at
+    that population the bars are a couple of registrations apart from the slots
+    around them: a camp of forty puts core at thirty-six, so a slot at
+    thirty-five is one pilot from being filed as settled and dropped out of the
+    playtest queue. The share alone hides that, since a reader sees 88% and takes
+    it for a fact rather than for a verdict one list could reverse.
+
+    Read in lists rather than in share, because that is what a reader can check
+    against the population printed beside it.
+    """
+    if not population:
+        return None
+    held = share * population
+    bars = {
+        "core": config.CORE_ADOPTION,
+        "consensus": config.CONSENSUS_ADOPTION,
+        "supported-minority": config.SUPPORTED_MINORITY,
+    }
+    # A slot the pilot annotated `core:` is filed by his word and not by a share,
+    # so no bar decides it and none is worth marking.
+    near = [
+        name
+        for name, bar in bars.items()
+        if abs(held - bar * population) <= config.BOUNDARY_LISTS
+    ]
+    return near[0] if near and not (core and share < config.CORE_ADOPTION) else None
+
+
 def _bucket(share: float, note: str | None) -> str:
     """Where a flex slot stands against the camp that could have registered it.
 
@@ -326,12 +377,7 @@ def missing_core(
     # the card at, and which of those counts the largest bloc of it went to. What
     # is left is the share on no copies, which is the configuration the reference
     # list is being read at here.
-    playing: dict[str, float] = {}
-    leading: dict[str, dict] = {}
-    for (card, _, _), row in sorted(registered.items()):
-        playing[card] = playing.get(card, 0.0) + row["fresh_adoption"]
-        if row["fresh_adoption"] > leading.get(card, {}).get("fresh_adoption", 0.0):
-            leading[card] = row
+    playing, leading = _by_card(registered)
 
     return [
         {
@@ -345,6 +391,8 @@ def missing_core(
             # can carry the sum a hair past, and a confidence below none would
             # sort a slot ahead of slots nobody at all is on.
             "confidence": max(0.0, 1.0 - playing[card]),
+            "lists": round(max(0.0, 1.0 - playing[card]) * population),
+            "boundary": None,
             "tilt": None,
             "delta": None,
             "core": False,
@@ -386,6 +434,7 @@ def slots(
     reading: the camp published lists, and none of them went there.
     """
     belongs, registered, population = _camp_reading(captured, db_path, stratum)
+    playing, leading = _by_card(registered)
 
     audited = []
     for card, (main, side) in sorted(captured.configurations().items()):
@@ -394,6 +443,12 @@ def slots(
         override = captured.overrides.get(card)
         core = override == "core" if override else share >= config.CORE_ADOPTION
         note = captured.notes.get(card)
+        # What the camp did about the card, beside what it did about the
+        # pilot's count of it. A slot at 8% of the camp is two opposite findings
+        # depending on this: a card the camp barely plays, or a card it is
+        # unanimous on where the pilot is one copy light. Filed under one share
+        # they are indistinguishable, and the second is the actionable one.
+        stands = leading.get(card)
         audited.append(
             {
                 "camp": belongs,
@@ -403,12 +458,21 @@ def slots(
                 "side": side,
                 "population": population,
                 "confidence": share,
+                # The share as the count a reader can check it against, since a
+                # verdict off forty lists is one a couple of them could reverse.
+                "lists": round(share * population),
+                "boundary": _boundary(share, population, core),
                 "tilt": reading["fresh_tilt"] if reading else None,
                 "delta": reading["delta"] if reading else None,
                 "core": core,
                 "bucket": None if core else _bucket(share, note),
                 "note": note,
                 "missing": False,
+                "camp_playing": playing.get(card, 0.0),
+                "camp_main": stands["main"] if stands else None,
+                "camp_side": stands["side"] if stands else None,
+                "camp_adoption": stands["fresh_adoption"] if stands else None,
+                "camp_delta": stands["delta"] if stands else None,
             }
         )
     return audited

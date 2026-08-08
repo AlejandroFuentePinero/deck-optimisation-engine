@@ -34,10 +34,20 @@ HISTORY_START = "2026-02-01"
 REGIME_BOUNDARY = "2026-05-18"
 
 # The fresh window: how far back a published list still speaks for the archetype
-# as it stands. The baseline is what is left of the regime behind it, which is
-# why only this length is named. Nothing to do with META_WINDOW_DAYS, which is
-# the window MTGGoldfish took a reading over.
+# as it stands. Nothing to do with META_WINDOW_DAYS, which is the window
+# MTGGoldfish took a reading over.
 FRESH_WINDOW_DAYS = 14
+
+# The baseline window: how far back the comparison reaches behind the fresh one.
+# Fixed rather than running to the regime boundary, so a delta means the same
+# thing on every run. Left open, the baseline lengthens by a day per day and a
+# configuration that has not moved reports a shrinking delta as its denominator
+# grows; two runs a fortnight apart would then disagree about a slot nothing
+# happened to. It is also a comparison against the camp rather than against the
+# format: a card adopted mid-regime is diluted across the weeks before it
+# existed, so a long baseline reports a settled configuration as still climbing.
+# The regime boundary still bounds it, since a window may never cross one.
+BASELINE_WINDOW_DAYS = 28
 
 # How long an event's publication can still change. A league dump gains 5-0s
 # through its own day, and the site publishes on US time while we run on
@@ -137,10 +147,18 @@ BREAKTHROUGH_MIN_LISTS = 8
 
 # Trendsetter rule: how many pilots the card was new to have to take up one of a
 # breakthrough's own, and how long they have to do it in, for the departure to
-# have set the trend rather than merely been one. Two, which puts three pilots
-# on the card and past the bar at which it would still read as one pilot's pet.
-# A fortnight, which is how long the field takes to answer a finish.
+# have set the trend rather than merely been one. Two is the floor, which puts
+# three pilots on the card and past the bar at which it would still read as one
+# pilot's pet. A fortnight, which is how long the field takes to answer a finish.
+#
+# The floor alone measures the format's throughput rather than the idea's spread:
+# a league dump publishes tens of lists a day, so two pilots reaching for a
+# playable card inside a fortnight is close to certain. So the bar is also a
+# share of the pilots who published at all in that window, and the higher of the
+# two has to be cleared. A twentieth of the field is a real move; two names out
+# of a hundred is the turnover.
 TRENDSETTER_FOLLOWERS = 2
+TRENDSETTER_SHARE = 0.05
 TRENDSETTER_WINDOW_DAYS = 14
 
 # Watchlist rule: a non-member mainboarding this one is a near-miss, and what it
@@ -177,3 +195,31 @@ CORE_ADOPTION = 0.90
 # deviation, examined or not.
 CONSENSUS_ADOPTION = 0.50
 SUPPORTED_MINORITY = 0.10
+
+# Unplayed rule: how much of his own camp has to play a card the reference list
+# registers none of before it is worth the pilot's attention, and how many such
+# cards a reading serves. The slot audit reads the slots he took and the missing
+# core reading starts at near-unanimity, so everything between the two is a
+# decision a real part of the camp made that nothing surfaces. A quarter of the
+# camp is the bar: below it the reading fills up with the pool, and at the core
+# bar it would miss a card a third of them play. The cap is on how much of the
+# tail is worth reading rather than on what qualifies, and what it dropped is
+# reported rather than left silent.
+UNPLAYED_FLOOR = 0.25
+UNPLAYED_LIMIT = 10
+
+# Boundary rule: how close to the bar a slot's share has to sit before the audit
+# says the verdict turns on one or two pilots. Read in lists rather than in
+# share, since that is what a reader can check: a camp of forty puts the core bar
+# at thirty-six, and a slot at thirty-five is one registration from being filed
+# the other way.
+BOUNDARY_LISTS = 2
+
+# Tilt rule: how large a performance tilt has to be before it is worth printing.
+# Every published list already finished, so the Swiss points a camp's fortnight
+# spreads over are bunched: across the configurations this archetype registers,
+# the median tilt is under half a point and the largest is four. A column of
+# figures that small reads as a performance lens and is noise, so below this the
+# reading prints as nothing rather than as a number a reader would weigh. The
+# figure stays on the row; what is suppressed is the display of it.
+TILT_FLOOR = 0.05

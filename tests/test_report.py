@@ -114,10 +114,11 @@ def test_the_report_names_the_windows_it_was_read_over_and_how_stale_they_are(tm
     document = _rendered(tmp_path)
 
     run = _section(document, "run")
-    # The fresh fortnight ends on the last published day, and the baseline is
-    # what is left of the regime behind it: disjoint, so a delta is movement.
+    # The fresh fortnight ends on the last published day and the baseline is the
+    # fixed span behind it: disjoint, so a delta is movement, and the same span
+    # every run, so a delta means the same thing twice.
     assert "2026-07-23 to 2026-08-05" in run
-    assert "2026-05-18 to 2026-07-22" in run
+    assert "2026-06-25 to 2026-07-22" in run
     # Two days of clock have run since the last list was published.
     assert "2026-08-05" in run and "2 day" in run
     assert config.SUBMISSION_DATE in run and "20 day" in run
@@ -199,7 +200,7 @@ def test_a_camp_staple_the_75_never_registered_queues_beside_the_slots_it_did(tm
     # four buckets are verdicts on slots the pilot took and this is one he never
     # had. His own configuration is no copies, which nobody in the camp shares.
     griselbrand = re.search(r"Griselbrand[^|]*", audit).group()
-    assert "100% of the camp plays it" in griselbrand
+    assert "100% play it" in griselbrand
     assert "1/0" in griselbrand
 
 
@@ -260,7 +261,7 @@ def test_the_report_reports_a_departure_that_performed_and_what_the_field_did_ne
     """
     document = _rendered(tmp_path, [BREAKTHROUGH])
 
-    findings = _section(document, "breakthrough")
+    findings = _section(document, "lineage")
     row = re.search(r"KingHairy[^|]*", findings).group()
     assert "+Cephalid Coliseum" in row and "-Nihil Spellbomb" in row
     assert "1 (fringe)" in row
@@ -415,7 +416,7 @@ def test_a_flag_that_cannot_be_answered_before_submission_day_says_so(tmp_path):
     # clock runs on it: what the followers so far say is not the verdict, and a
     # row that reported them instead of the clock would drop the caveat exactly
     # where the flag looks most like it is going somewhere.
-    departures = _section(document, "breakthrough")
+    departures = _section(document, "lineage")
     row = re.search(r"KingHairy[^|]*", departures).group()
     assert "Kollslaw" in row
     assert "2026-09-03" in row and "pilot judgment" in row

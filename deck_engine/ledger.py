@@ -21,6 +21,11 @@ from . import config, flags, pilots
 # store's memory, and a run reading one has to be reading the other.
 LEDGER = "flags.json"
 
+# The kinds this module joins by name. Drawn once, so the identity rule and the
+# lineage reading cannot come to disagree about what a flag is.
+HYPE = "hype"
+BREAKTHROUGH = "breakthrough"
+
 
 def detect(db_path: Path = config.DB_PATH) -> list[dict]:
     """Every flag the store holds right now, time-series readings first."""
@@ -54,12 +59,12 @@ def _identity(flag: dict) -> tuple:
     trophying twice in a single league dump on two builds of the same idea is
     the one case this collapses, and those two lists are the one piece of news.
     """
-    if flag["kind"] == "hype":
+    if flag["kind"] == HYPE:
         return (flag["kind"], flag["camp"], flag["card"], flag["main"], flag["side"],
                 flag["raised_on"])
     if flag["kind"] == "pet-tech":
         return (flag["kind"], flag["camp"], flag["card"], flag["main"], flag["side"])
-    if flag["kind"] == "breakthrough":
+    if flag["kind"] == BREAKTHROUGH:
         return (flag["kind"], flag["pilot"], flag["event"], flag["date"])
     return (flag["kind"], flag["camp"], flag["card"])
 
@@ -68,6 +73,72 @@ def load(db_path: Path = config.DB_PATH) -> list[dict]:
     """The ledger as it stands, or nothing where no run has written one yet."""
     path = db_path.with_name(LEDGER)
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else []
+
+
+def lineage(db_path: Path = config.DB_PATH, camp: str | None = None) -> list[dict]:
+    """Departures traced through to what the field finally did with them.
+
+    A breakthrough is a list that left its camp's build behind. Whether the
+    change was any good is a question no single flag answers, and the engine
+    already holds every part of the answer in a different place: the departure
+    says somebody changed something, the follow-through says the field picked it
+    up, and the hype resolution says whether it survived the weekend that judges
+    a copied list. Read apart, the first is an anecdote and the third is a
+    fortnight's share; read together they are the field's verdict on an idea,
+    taken over hundreds of pilots, which is the highest-powered instrument this
+    data has.
+
+    The join is on the card, in the camp, after the departure. On the card
+    because what spreads is the idea rather than the 75 around it, which is the
+    same reason follow-through is counted there. After the departure because a
+    spike the list came second to is the list following a trend rather than
+    setting one.
+
+    A departure with no episode behind it is still a row: most of them have none,
+    and that is the answer rather than a gap. What it lacks is the field having
+    piled in, which is exactly what did not happen.
+    """
+    recorded = load(db_path)
+    episodes = [flag for flag in recorded if flag["kind"] == HYPE]
+    traced = []
+    for flag in recorded:
+        if flag["kind"] != BREAKTHROUGH or (camp and flag["camp"] != camp):
+            continue
+        followed = [
+            episode
+            for card, _, _ in flag["novel"]
+            for episode in episodes
+            if episode["card"] == card
+            and episode["camp"] == flag["camp"]
+            and episode["raised_on"] >= flag["date"]
+        ]
+        # The earliest episode is the one this departure could have started. A
+        # later spike on the same card is the field returning to it, and reading
+        # the departure against that would credit it with somebody else's news.
+        episode = min(followed, key=lambda e: e["raised_on"], default=None)
+        traced.append(
+            {
+                "camp": flag["camp"],
+                "stratum": flag.get("stratum"),
+                "pilot": flag["pilot"],
+                "event": flag["event"],
+                "date": flag["date"],
+                "placement": flag["placement"],
+                "mode": flag["mode"],
+                "delta": flag["delta"],
+                "novel": flag["novel"],
+                "missing": flag["missing"],
+                "followed": flag["state"],
+                "followers": flag["followers"],
+                "needed": flag.get("needed"),
+                "adopted_card": flag["adopted_card"],
+                "spread_card": episode["card"] if episode else None,
+                "spiked_on": episode["raised_on"] if episode else None,
+                "resolved": episode["state"] if episode else None,
+                "standing": episode.get("standing") if episode else None,
+            }
+        )
+    return sorted(traced, key=lambda row: row["date"], reverse=True)
 
 
 def record(db_path: Path = config.DB_PATH, today: str | None = None) -> list[dict]:

@@ -3,9 +3,10 @@
 import argparse
 from pathlib import Path
 
-from . import config, hypotheses, ledger, meta, reference, report
+from . import config, hypotheses, ledger, meta, movement, outcome, reference, report
+from .classify import camp as camp_of
 from .refresh import refresh
-from .store import build, goryos_lists, meta_trend
+from .store import CHALLENGE_CLASS, adoption, build, goryos_lists, meta_trend
 
 
 def _breakthrough_line(flag: dict) -> str:
@@ -174,6 +175,100 @@ def _reference_log() -> None:
             )
 
 
+# The two boards, under the names the store's columns carry rather than the
+# names a capture's headings do: this narrows an outcome arm to a column.
+BOARDS = ("main", "side")
+
+
+def _share(value) -> str:
+    """A share as the page prints one, or a dash where no population reported it."""
+    return "-" if value is None else f"{value:.0%}"
+
+
+def _signed(value) -> str:
+    return "-" if value is None else f"{value:+.2f}"
+
+
+def _card_lines(card: str, camp: str, main, side, board) -> list[str]:
+    """Everything the engine knows about one card in one camp, in one place.
+
+    The question this answers is the one asked most and served worst: a pilot has
+    a reason to play something and wants what the field did about it. Four
+    readings bear on that and they live in four modules, so a reader assembling
+    them by hand gets a share here, a flag there, and no way to see that the two
+    are about the same fortnight. They are printed together and each says which
+    reading it is.
+    """
+    lines = [f"{card}, {camp} camp"]
+
+    configured = [
+        row
+        for row in adoption()
+        if row["card"] == card
+        and row["camp"] == camp
+        and row["stratum"] == CHALLENGE_CLASS
+        and (row["fresh_lists"] or row["baseline_lists"])
+    ]
+    if not configured:
+        return lines + ["  the camp has registered no copies of it in either window"]
+
+    lines.append("  what the camp registered, challenge-class:")
+    for row in sorted(configured, key=lambda row: -(row["fresh_adoption"] or 0)):
+        lines.append(
+            f"    {row['main']}/{row['side']}  fresh {row['fresh_lists']:>3}"
+            f"/{row['fresh_population']} ({_share(row['fresh_adoption'])})"
+            f"  baseline {row['baseline_lists']:>3}/{row['baseline_population']}"
+            f" ({_share(row['baseline_adoption'])})  delta {_signed(row['delta'])}"
+        )
+
+    moved = movement.migration(card, camp=camp)
+    if moved and moved["shift"] is not None:
+        lines.append(
+            f"  boards: {moved['baseline']['main_copies']} main /"
+            f" {moved['baseline']['side_copies']} side"
+            f" -> {moved['fresh']['main_copies']} main / {moved['fresh']['side_copies']} side,"
+            f" {moved['shift']:+.0%} of copies, {moved['direction']}"
+        )
+
+    raised = [
+        flag
+        for flag in ledger.load()
+        if flag.get("card") == card and flag.get("camp") == camp
+    ]
+    for flag in raised:
+        state = f" {flag['state']}" if flag.get("state") else ""
+        standing = f", now {flag['standing']}" if flag.get("standing") else ""
+        lines.append(
+            f"  {flag['kind']} flag on {flag['main']}/{flag['side']}{state}{standing},"
+            f" first seen {flag['first_seen']}"
+        )
+
+    read = outcome.contrast(card, main, side, board, camp=camp)
+    if read["difference"] is None:
+        lines.append(f"  outcome ({read['configuration']}): one arm is empty, no contrast to take")
+    else:
+        lines.append(
+            f"  outcome ({read['configuration']}), post-regime challenge-class:"
+            f" {read['with_made_band']}/{read['with_lists']}"
+            f" ({_share(read['with_rate'])}) top-{read['band']} with it,"
+            f" {read['without_made_band']}/{read['without_lists']}"
+            f" ({_share(read['without_rate'])}) without"
+        )
+        # The floor is not decoration. A null under a floor this wide says the
+        # camp did not separate by that much, never that the card is neutral.
+        lines.append(
+            f"    difference {read['difference']:+.1%}, p={read['p']:.3f},"
+            f" {read['state']} below a floor of {_share(read['floor'])}"
+        )
+    conversion = read["conversion"]
+    if conversion["gap"] is not None:
+        lines.append(
+            f"    league conversion gap {conversion['gap']:+.1%}"
+            f" (uncapped {conversion['uncapped']:+.1%}, the cap {conversion['cap_effect']})"
+        )
+    return lines
+
+
 def main(argv=None) -> None:
     parser = argparse.ArgumentParser(prog="deck-engine", description=__doc__)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -218,6 +313,28 @@ def main(argv=None) -> None:
     ruled.add_argument("hypothesis", help="the record's id")
     ruled.add_argument("--status", choices=hypotheses.STATUSES, required=True)
     ruled.add_argument("--verdict", required=True, help="what the 75 does about it")
+
+    # The camp every one of these reads against defaults to the reference list's,
+    # since a share belongs to one camp and this pilot is in one of them.
+    def camped(name, help_text):
+        added = commands.add_parser(name, help=help_text)
+        added.add_argument("--camp", default=None, help="defaults to the reference list's camp")
+        return added
+
+    asked = camped("card", "everything the engine knows about one card in one camp")
+    asked.add_argument("card", help="the card, under the name the archetype publishes it")
+    asked.add_argument("--main", type=int, help="narrow the outcome arm to one configuration")
+    asked.add_argument("--side", type=int)
+    asked.add_argument("--board", choices=BOARDS, help="or to a board, for a migration question")
+
+    traded = camped("substitution", "what the camp's lists that went elsewhere played instead")
+    traded.add_argument("card")
+    traded.add_argument("--main", type=int, required=True)
+    traded.add_argument("--side", type=int, required=True)
+
+    camped("climbing", "the cards new to the pool the camp is still taking up")
+    camped("lineage", "departures traced through to what the field did with them")
+    commands.add_parser("unplayed", help="what a real part of the camp plays that the 75 does not")
 
     args = parser.parse_args(argv)
     if args.command == "refresh":
@@ -275,6 +392,77 @@ def main(argv=None) -> None:
     if args.command == "hypothesis-rule":
         ruled = hypotheses.rule(args.hypothesis, args.status, args.verdict)
         print("\n".join(_hypothesis_lines(ruled)))
+        return
+
+    if args.command in ("card", "substitution", "climbing", "lineage"):
+        camp = args.camp or camp_of(reference.current().mainboard)
+
+    if args.command == "card":
+        print("\n".join(_card_lines(args.card, camp, args.main, args.side, args.board)))
+        return
+
+    if args.command == "substitution":
+        rows = movement.substitution(args.card, args.main, args.side, camp=camp)
+        if not rows:
+            print(f"{args.card} {args.main}/{args.side}: the camp is all on one side of it")
+            return
+        first = rows[0]
+        print(
+            f"{args.card} {args.main}/{args.side}, {camp} camp: {first['on_it_lists']} list(s)"
+            f" on it, {first['elsewhere_lists']} elsewhere, fresh window"
+        )
+        # Both ends, because a trade has two: what the lists that went elsewhere
+        # reached for, and what they gave up to do it.
+        for label, ordered in (("instead", rows[:8]), ("gave up", rows[-8:][::-1])):
+            print(f"  {label}:")
+            for row in ordered:
+                print(
+                    f"    {row['card']:<34} {_share(row['on_it'])} on it,"
+                    f" {_share(row['elsewhere'])} elsewhere  {row['difference']:+.0%}"
+                )
+        return
+
+    if args.command == "climbing":
+        rows = movement.climbing(camp=camp)
+        for row in rows:
+            print(
+                f"{row['card']:<34} {row['main']}/{row['side']}"
+                f"  {_share(row['adoption'])} of {row['population']} list(s)"
+                f"  delta {row['delta']:+.2f}"
+            )
+        print(f"{len(rows)} card(s) new to the pool and still climbing in the {camp} camp")
+        return
+
+    if args.command == "unplayed":
+        captured = reference.current()
+        rows = movement.unplayed(captured.configurations())
+        for row in rows:
+            print(
+                f"{row['card']:<34} {_share(row['camp_playing'])} of the camp play it,"
+                f" {_share(row['camp_adoption'])} on {row['camp_main']}/{row['camp_side']},"
+                f" delta {_signed(row['camp_delta'])}"
+            )
+        dropped = rows[0]["dropped"] if rows else 0
+        print(
+            f"{len(rows)} card(s) at or above {config.UNPLAYED_FLOOR:.0%} of the"
+            f" {rows[0]['camp'] if rows else 'reference'} camp that v{captured.version} runs none of"
+            + (f"; {dropped} more below these" if dropped else "")
+        )
+        return
+
+    if args.command == "lineage":
+        for row in ledger.lineage(camp=camp):
+            spread = (
+                f" -> {row['spread_card']} spiked {row['spiked_on']},"
+                f" {row['resolved']}, now {row['standing']}"
+                if row["spiked_on"]
+                else " -> the field never piled in"
+            )
+            print(
+                f"{row['date']}  {row['pilot']:<18} {row['stratum']:<15}"
+                f" delta {row['delta']} ({row['mode']}), {row['followed']}"
+                f" {len(row['followers'])}/{row['needed']}{spread}"
+            )
         return
 
     if args.command == "reference":
