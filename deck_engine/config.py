@@ -151,6 +151,10 @@ WATCHLIST_CARD = "Goryo's Vengeance"
 # appended and never edited, so the change log is derived from them.
 REFERENCE_DIR = REPO_ROOT / "reference"
 
+# The rendered runs, one file per day. Derived from the cache, the captures and
+# the records, and so rebuildable: kept out of the repository like the store.
+REPORT_DIR = REPO_ROOT / "reports"
+
 # The tracked hypotheses, one record per file. Written by the pilot and appended
 # to by the engine, so they are committed beside the 75 they argue about.
 HYPOTHESES_DIR = REPO_ROOT / "hypotheses"

@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 
-from . import config, hypotheses, ledger, meta, reference
+from . import config, hypotheses, ledger, meta, reference, report
 from .refresh import refresh
 from .store import build, goryos_lists, meta_trend
 
@@ -200,6 +200,9 @@ def main(argv=None) -> None:
 
     commands.add_parser("reference", help="audit the reference list against its camp")
 
+    rendered = commands.add_parser("report", help="render the run as one self-contained HTML file")
+    rendered.add_argument("--on", help="YYYY-MM-DD the run is dated, defaults to today")
+
     filed = commands.add_parser("reference-capture", help="file an export as the next version")
     filed.add_argument("source", type=Path, help="the exported 75, in the published format")
 
@@ -240,6 +243,11 @@ def main(argv=None) -> None:
         for flag in recorded:
             print(_flag_line(flag))
         print(f"{len(recorded)} flag(s); run refresh to bring them up to date")
+        return
+
+    if args.command == "report":
+        landed = report.write(today=args.on)
+        print(f"report at {landed}")
         return
 
     if args.command == "reference-capture":
