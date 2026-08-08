@@ -257,10 +257,13 @@ def arrivals(added: list[index.Row], db_path: Path = config.DB_PATH) -> list[dic
     file the day `config.SIGNATURE_CARDS` moved, and an ingest diff has to be
     the field's news rather than this engine's.
 
-    A pilot can trophy twice in one league dump, and the index files two rows
-    this key cannot tell apart. That over-reports only where such a pilot's day
-    was already cached and has since gained another list, and under-reports
-    never, which is the direction for a report of what is new to be wrong in.
+    In the challenge stratum this key is exact: an event is one entry per player,
+    so a pilot appears in its standings once and his list is his whole showing.
+    A league is continuous and can trophy the same pilot twice in a day, so the
+    index files two rows there that this key cannot tell apart. The ambiguity is
+    the league stratum's alone, and it over-reports only where such a pilot's day
+    was already cached and has since gained another list. It under-reports never,
+    which is the direction for a report of what is new to be wrong in.
     """
     keys = {(row.date, row.event_id, row.pilot) for row in added}
     return [

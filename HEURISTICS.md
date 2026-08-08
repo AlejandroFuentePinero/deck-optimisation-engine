@@ -12,6 +12,20 @@ dedicated pilots play. Frequency thresholds must stay modest.
 *Applies*: proven pilot = 2+ challenge top-16 Goryo's finishes in the baseline
 window, not more.
 
+**One deck per pilot in a challenge; a league day can trophy the same pilot
+twice** (2026-08-08):
+A challenge-class event is one entry per player, so a pilot appears in its
+standings once and his list is his whole showing. A league is continuous: a
+pilot can run it repeatedly in a day and publish a 5-0 each time, so a league
+dump can carry several lists from one name, and they may not be the same 75.
+*Applies*: in the challenge stratum (event, pilot) identifies a list, so counting
+lists is counting pilots and no de-duplication is owed. In the league stratum it
+does not, so anything counting lists there is counting a grinder's session: keep
+the per-pilot cap on league readings, and read a league share as lists published
+rather than pilots holding a configuration. It is also why the ingest index
+diffs as a multiset: two identical league rows are two lists, not one filed
+twice.
+
 **A lone dissenting regular beats herd convergence as evidence** (2026-08-07):
 Mass adoption of a winner's 75 inflates belief in it (goldfish copying). A
 single pilot who goes against the hype with a different configuration and does
