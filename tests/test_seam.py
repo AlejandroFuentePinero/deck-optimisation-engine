@@ -529,7 +529,9 @@ def test_adoption_is_read_per_camp_per_stratum_and_per_window(tmp_path):
     assert moved[(2, 2)]["delta"] == pytest.approx(-1 / 2)
 
 
-def test_a_main_to_side_migration_at_a_constant_total_is_a_configuration_change(tmp_path):
+def test_a_main_to_side_migration_at_a_constant_total_is_a_configuration_change(
+    tmp_path, monkeypatch
+):
     """The reading the configuration unit exists for.
 
     Zeect trophied twice in the same league dump having moved a Solitude to the
@@ -543,9 +545,15 @@ def test_a_main_to_side_migration_at_a_constant_total_is_a_configuration_change(
     Fallaji league population: one pilot changing his mind between runs, which
     the row says by carrying a population of two lists. The Consign half is
     three pilots at three seats, and there the split is the camp's.
+
+    Zeect's dump is twenty-eight days behind the fresh window's cut, a day past
+    the baseline's own reach, so the span is opened by one to take it in: the
+    reading here is about where copies went and not about how far back the
+    comparison looks.
     """
     db = tmp_path / "engine.duckdb"
     store.build(FIXTURE_ADOPTION, db)
+    monkeypatch.setattr(config, "BASELINE_WINDOW_DAYS", 29)
 
     rows = store.adoption(db)
 
@@ -691,11 +699,16 @@ def test_both_windows_are_configuration_values_and_the_baseline_stops_at_the_reg
 ):
     """How far back the archetype is read is a decision, and it is held in one place.
 
-    The fresh window is a length in days and the baseline is what is left of the
-    regime behind it, so the pair moves with `FRESH_WINDOW_DAYS` and
-    `REGIME_BOUNDARY` and with nothing else. Lengthening the fresh window pulls
-    the older challenges into it; moving the boundary back is what it takes to
-    reach a list from the era before it.
+    Three configuration values draw the pair and nothing else does: the fresh
+    window is a length in days, the baseline is a length behind it, and the
+    regime boundary caps how far that length may reach. The tighter of the two
+    limits is what the baseline gets, so widening the span alone cannot reach
+    past the boundary and moving the boundary alone cannot reach past the span.
+
+    The baseline is a fixed span rather than the rest of the regime because a
+    delta has to mean the same thing on every run. Left open it would lengthen
+    by a day per day, and a configuration nothing happened to would report a
+    shrinking delta as its denominator grew.
 
     The 2026-03-21 showcase is in the fixture and in no window: its three lists
     are the archetype as it was built before the B&R change, and averaging them
@@ -718,8 +731,19 @@ def test_both_windows_are_configuration_values_and_the_baseline_stops_at_the_reg
     monkeypatch.setattr(config, "FRESH_WINDOW_DAYS", 40)
     assert population("fresh", "non-fallaji", "challenge-class") == 7
 
+    # A span opened past the boundary reaches only as far as the boundary: the
+    # pre-regime showcase stays out however long the comparison is asked for.
     monkeypatch.undo()
+    monkeypatch.setattr(config, "BASELINE_WINDOW_DAYS", 300)
+    assert population("baseline", "non-fallaji", "challenge-class") == 4
+
+    # And the boundary moved back reaches only as far as the span allows, so it
+    # takes both to read a list from the era before the B&R change.
+    monkeypatch.setattr(config, "BASELINE_WINDOW_DAYS", 28)
     monkeypatch.setattr(config, "REGIME_BOUNDARY", "2026-01-01")
+    assert population("baseline", "non-fallaji", "challenge-class") == 4
+
+    monkeypatch.setattr(config, "BASELINE_WINDOW_DAYS", 300)
     assert population("baseline", "non-fallaji", "challenge-class") == 6
 
 

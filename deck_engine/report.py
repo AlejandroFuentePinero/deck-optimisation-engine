@@ -16,7 +16,8 @@ from datetime import date, timedelta
 from html import escape
 from pathlib import Path
 
-from . import config, flags, hypotheses, ledger, reference, store
+from . import config, flags, hypotheses, ledger, movement, reference, store
+from .classify import camp as camp_of
 
 
 def _days_between(first: str, second: str) -> int:
@@ -159,36 +160,65 @@ def _table(headers: tuple[str, ...], rows: list[tuple[str, ...]]) -> str:
     )
 
 
+def _backing(slot: dict) -> str:
+    """How much of the camp is on the pilot's exact configuration, as the count a
+    reader can check and the share it comes to, with the bar it turns on.
+
+    The count is there because a verdict taken off forty lists is one a couple of
+    them could reverse, and a bare percentage reads as a fact. The bar is there
+    for the slots where that is not hypothetical: a camp of forty puts core at
+    thirty-six, so a slot at thirty-five is one registration from being filed as
+    settled and dropping out of the queue entirely.
+    """
+    read = f"{slot['lists']}/{slot['population']} ({_share(slot['confidence'])})"
+    return f"{read} turns on {slot['boundary']}" if slot["boundary"] else read
+
+
+def _stands(slot: dict) -> str:
+    """What the camp did about the card, beside what it did about the count.
+
+    The reading the exact-configuration share cannot carry. A slot at 8% is two
+    opposite findings and only this tells them apart: a card the camp barely
+    plays, or a card it is unanimous on where the pilot is a copy light. The
+    second is the actionable one and the share alone buries it.
+    """
+    if slot["camp_main"] is None:
+        return "the camp registered none of it"
+    return (
+        f"{_share(slot['camp_playing'])} play it,"
+        f" {_share(slot['camp_adoption'])} on {slot['camp_main']}/{slot['camp_side']}"
+    )
+
+
 def _slot_row(slot: dict) -> tuple[str, ...]:
     """One slot of the queue: what the pilot registered, and what backs it.
 
     A missing core slot rides in the same row as the slots the pilot took, since
-    it is one piece of work and not two, and says the two things that are
-    different about it. It has no bucket, because the four are verdicts on a
-    slot the pilot took and a fifth word there would make this the fifth of
-    them; what the camp does instead stands in that column. And its delta and
-    tilt are the camp's leading configuration's rather than the pilot's, whose
-    no copies is a configuration adoption never reported and so has neither.
+    it is one piece of work and not two. It has no bucket, because the four are
+    verdicts on a slot the pilot took and a fifth word there would make this the
+    fifth of them; and its delta is the camp's leading configuration's rather
+    than the pilot's, whose no copies is a configuration adoption never reported.
+
+    No tilt column. Every published list already finished, so the points a
+    fortnight spreads over are bunched and the tilt across this archetype's
+    configurations runs to a point or two: a column of those reads as a
+    performance lens and is noise. It survives where it clears the floor.
     """
     if slot["missing"]:
-        stands = (
-            f"{_share(slot['camp_playing'])} of the camp plays it,"
-            f" {_share(slot['camp_adoption'])} on {slot['camp_main']}/{slot['camp_side']}"
-        )
         return (
-            _share(slot["confidence"]),
+            _backing(slot),
             f"{slot['card']} -",
-            stands,
+            "",
+            _stands(slot),
             _signed(slot["camp_delta"]),
-            _signed(slot["camp_tilt"]),
             slot["note"] or "",
         )
     return (
-        _share(slot["confidence"]),
+        _backing(slot),
         f"{slot['card']} {slot['main']}/{slot['side']}",
         slot["bucket"],
+        _stands(slot),
         _signed(slot["delta"]),
-        _signed(slot["tilt"]),
         slot["note"] or "",
     )
 
@@ -212,10 +242,74 @@ def _audit(db_path: Path, reference_dir: Path) -> str:
         f"The {audited[0]['camp']} camp, {audited[0]['stratum']},"
         f" {audited[0]['population']} list(s) in the fresh window."
         f" {cores} core, {len(audited) - cores} flex,"
-        f" {len(missing)} missing core slot(s), least backed first.",
+        f" {len(missing)} missing core slot(s), least backed first."
+        " A slot marked as turning on a bar is one a list or two would refile.",
         _table(
-            ("Confidence", "Slot", "Where the camp is", "Delta", "Tilt", "The pilot's note"),
+            ("Backing", "Slot", "Verdict", "Where the camp is", "Delta", "The pilot's note"),
             [_slot_row(slot) for slot in queue],
+        ),
+    )
+
+
+def _unplayed(db_path: Path, reference_dir: Path) -> str:
+    """What a real part of the pilot's camp plays that his 75 registers none of.
+
+    The blind spot between the two readings that look at the reference list. The
+    slot audit reads the slots he took, so it speaks only about cards he plays;
+    the missing-core reading starts at near-unanimity. A card a third of the camp
+    made a decision about sits between the two and no other surface mentions it.
+    """
+    captured = reference.current(reference_dir)
+    rows = movement.unplayed(captured.configurations(), db_path)
+    dropped = rows[0]["dropped"] if rows else 0
+    return _section(
+        "unplayed",
+        "Played by the camp, not by the 75",
+        f"Cards at or above {config.UNPLAYED_FLOOR:.0%} of the"
+        f" {rows[0]['camp'] if rows else 'reference'} camp's fresh challenge lists that"
+        f" v{captured.version} runs no copies of, most played first."
+        + (f" {dropped} more sit below these." if dropped else ""),
+        _table(
+            ("Card", "Plays it", "Mostly at", "Delta", "The 75 is alone with"),
+            [
+                (
+                    row["card"],
+                    f"{_share(row['camp_playing'])} of {row['population']}",
+                    f"{_share(row['camp_adoption'])} on {row['camp_main']}/{row['camp_side']}",
+                    _signed(row["camp_delta"]),
+                    _share(row["confidence"]),
+                )
+                for row in rows
+            ],
+        ),
+    )
+
+
+def _climbing(db_path: Path, camp: str) -> str:
+    """The cards new to the pool the camp is still taking up.
+
+    Two readings that mean something only together. Novelty says the card is
+    innovation-grade rather than a staple the fortnight happened to move; the
+    delta says the camp is going towards it rather than the card having turned up
+    once. Either alone is the thing it is constantly mistaken for.
+    """
+    rows = movement.climbing(db_path, camp)
+    return _section(
+        "climbing",
+        "New and climbing",
+        f"{len(rows)} card(s) fringe to the archetype's history that the {camp} camp's"
+        " challenge lists are still taking up, steepest first.",
+        _table(
+            ("Card", "Mostly at", "Fresh adoption", "Delta"),
+            [
+                (
+                    row["card"],
+                    f"{row['main']}/{row['side']}",
+                    f"{_share(row['adoption'])} of {row['population']}",
+                    _signed(row["delta"]),
+                )
+                for row in rows
+            ],
         ),
     )
 
@@ -310,7 +404,7 @@ def _clock(flag: dict) -> str:
     return f"; answerable {answerable}"
 
 
-def _hype(recorded: list[dict]) -> str:
+def _hype(recorded: list[dict], camp: str) -> str:
     """The hype watchlist: what the field copied, and what the challenges said.
 
     Every share on the row says which stratum it came from. The spike is the
@@ -320,12 +414,16 @@ def _hype(recorded: list[dict]) -> str:
     apart to prevent. The finish is the third reading, since a configuration
     that climbed after nothing visible is drift rather than an episode.
     """
-    episodes = [flag for flag in recorded if flag["kind"] == "hype"]
+    episodes = [
+        flag for flag in recorded if flag["kind"] == "hype" and flag["camp"] == camp
+    ]
     return _section(
         "hype",
         "Hype watchlist",
-        f"{len(episodes)} episode(s), newest spike first. The spike is read in the league"
-        " stratum, the state is the challenge stratum's verdict on it.",
+        f"{len(episodes)} episode(s) in the {camp} camp, newest spike first. The spike is read"
+        " in the league stratum, the state is the challenge stratum's verdict on it, and the"
+        " standing is where the configuration sits now: an episode is dated and does not"
+        " come back, but what the camp plays moves on.",
         _table(
             (
                 "Spiked",
@@ -333,7 +431,7 @@ def _hype(recorded: list[dict]) -> str:
                 "Camp",
                 "League share",
                 "Challenge says",
-                "Tilt while climbing",
+                "Where it stands now",
                 "The finish it followed",
             ),
             [
@@ -344,7 +442,7 @@ def _hype(recorded: list[dict]) -> str:
                     f"{_share(flag['from_adoption'])} -> {_share(flag['to_adoption'])}"
                     f" of {flag['population']} list(s)",
                     flag["state"] + _clock(flag),
-                    _signed(flag["tilt"]),
+                    f"{_share(flag.get('now_adoption'))} {flag.get('standing') or ''}".strip(),
                     f"{flag['origin_pilot']} #{flag['origin_placement']}"
                     f", {flag['origin_event']} {flag['origin_date']}",
                 )
@@ -354,49 +452,75 @@ def _hype(recorded: list[dict]) -> str:
     )
 
 
-def _breakthrough(recorded: list[dict]) -> str:
-    """The lists that left their camp's build behind and finished.
+def _lineage(db_path: Path, camp: str) -> str:
+    """Departures traced through to what the field finally did with them.
 
-    Both directions of the departure print, because the delta counts both: the
-    cards hardly any of the camp registered that this list did, and the camp's
-    near-unanimous cards it ran none of. Listing only the first, the figure
-    beside it would contradict itself.
+    A departure on its own is one pilot's anecdote and a spike on its own is a
+    fortnight's share. Together they are the field's verdict on an idea, taken
+    over hundreds of pilots, which is the highest-powered instrument this data
+    holds: far more than the placements of the handful of lists that carried the
+    change on the day.
 
-    The camp named is the one the departure was measured against, which for a
-    hybrid or a near-miss is the camp it came out nearest to rather than one it
-    was ever registered in. What the field did next is a later and separate
-    reading, so it rides beside the departure rather than inside it.
+    The stratum is on the row rather than folded into the word, because "and
+    performed" means two different things across the two. A league 5-0 is novelty
+    in the wild, the stratum where pilots test first; a challenge-class top-16 is
+    novelty that also finished where standings are kept. Pooled under one word,
+    the second would be swamped by the first, which publishes an order of
+    magnitude more lists.
+
+    The follower bar rides beside the count, since it is drawn off the fortnight's
+    own field: two pilots is a verdict in a quiet window and turnover in a busy one.
     """
-    departures = [flag for flag in recorded if flag["kind"] == "breakthrough"]
+    traced = ledger.lineage(db_path, camp)
     return _section(
-        "breakthrough",
-        "Breakthroughs",
-        f"{len(departures)} departure(s) that performed, newest first. A watched flag is one"
-        " the field has not had its fortnight to answer yet.",
+        "lineage",
+        "Departures and what became of them",
+        f"{len(traced)} list(s) in the {camp} camp that left its build behind, newest first."
+        " Watched means the field has not had its fortnight to answer yet;"
+        " a departure with no episode behind it is one nobody piled into.",
         _table(
-            ("Published", "Pilot", "Camp read against", "Finish", "Delta", "Departure", "Since"),
+            ("Published", "Pilot", "Stratum", "Finish", "Delta", "Departure", "The field said"),
             [
                 (
-                    flag["date"],
-                    f"{flag['pilot']}, {flag['event']}",
-                    flag["camp"],
-                    _finish(flag),
-                    f"{flag['delta']} ({flag['mode']})",
+                    row["date"],
+                    f"{row['pilot']}, {row['event']}",
+                    row["stratum"] or "",
+                    _finish(row),
+                    f"{row['delta']} ({row['mode']})",
                     ", ".join(
-                        [f"+{card}" for card, _, _ in flag["novel"]]
-                        + [f"-{card}" for card in flag["missing"]]
+                        [f"+{card}" for card, _, _ in row["novel"]]
+                        + [f"-{card}" for card in row["missing"]]
                     ),
-                    (
-                        f"{flag['state']}: {', '.join(flag['followers'])} on"
-                        f" {flag['adopted_card']}"
-                        if flag["followers"]
-                        else flag["state"]
-                    )
-                    + _clock(flag),
+                    _became(row),
                 )
-                for flag in sorted(departures, key=lambda flag: flag["date"], reverse=True)
+                for row in traced
             ],
         ),
+    )
+
+
+def _became(row: dict) -> str:
+    """What the field did with one departure, in the order it happened.
+
+    Took it up or did not, then whether the copying survived the weekend that
+    judges a copied list, then whether it still stands today. The followers are
+    named rather than counted beside the bar they had to clear, since two pilots
+    is a verdict in a quiet fortnight and the field's turnover in a busy one.
+
+    A departure still inside its fortnight carries the clock, and says whether
+    the 75 will be registered before the answer lands: without that the state
+    reads as a verdict on its way, and the pilot waits out a window that closes
+    after submission day.
+    """
+    followed = f"{row['followed']} {len(row['followers'])}/{row['needed']}"
+    if row["followers"]:
+        followed += f": {', '.join(row['followers'])} on {row['adopted_card']}"
+    followed += _clock({"kind": "breakthrough", "state": row["followed"], "date": row["date"]})
+    if not row["spiked_on"]:
+        return followed
+    return (
+        f"{followed}; {row['spread_card']} spiked {row['spiked_on']},"
+        f" {row['resolved']}, now {row['standing']}"
     )
 
 
@@ -494,12 +618,17 @@ def render(
     if read is None:
         raise ValueError(f"{db_path} holds no published list: there is no run to report")
     recorded = ledger.load(db_path)
+    # Every camp-scoped section reads against the 75's own camp: a share of the
+    # other one is a reading of a population this list was never in.
+    camp = camp_of(reference.current(reference_dir).mainboard)
     body = (
         _run(read, today)
         + _hypotheses(hypotheses_dir, today)
         + _audit(db_path, reference_dir)
-        + _breakthrough(recorded)
-        + _hype(recorded)
+        + _unplayed(db_path, reference_dir)
+        + _lineage(db_path, camp)
+        + _climbing(db_path, camp)
+        + _hype(recorded, camp)
         + _near_miss(db_path)
         + _camps(db_path)
         + _meta(db_path)

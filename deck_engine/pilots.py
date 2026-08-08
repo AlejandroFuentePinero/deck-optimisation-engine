@@ -307,6 +307,13 @@ def _candidate(row: dict, standing: dict, fringe: dict[str, dict]) -> dict | Non
     return {
         "kind": "breakthrough",
         "camp": camp,
+        # Which stratum published it, because "and performs" means different
+        # things in the two and the word cannot carry both. A league 5-0 is
+        # novelty in the wild, the stratum where pilots test first; a
+        # challenge-class top-16 is novelty that also finished where standings
+        # are kept. Pooled under one word the second would be diluted by the
+        # first, which publishes an order of magnitude more lists.
+        "stratum": row["stratum"],
         "pilot": row["pilot"],
         "event": row["event"],
         "date": row["date"],
@@ -318,8 +325,29 @@ def _candidate(row: dict, standing: dict, fringe: dict[str, dict]) -> dict | Non
     }
 
 
+def _needed(published: list[tuple[str, str]], window: tuple[str, str]) -> int:
+    """How many followers this window's field has to produce for a departure to
+    have set the trend.
+
+    A count alone measures the format's throughput. A league dump publishes tens
+    of lists a day, so two pilots reaching for a playable card inside a fortnight
+    is nearly certain, and a bar drawn there would graduate almost every
+    departure that was not actively bad. So the bar is also a share of the pilots
+    who published at all in the window, and the higher of the two stands: a
+    fortnight the archetype barely showed up in cannot demand more names than it
+    has, and a busy one cannot graduate an idea on the turnover.
+    """
+    start, end = window
+    field = {pilot for day, pilot in published if start < day <= end}
+    return max(config.TRENDSETTER_FOLLOWERS, round(config.TRENDSETTER_SHARE * len(field)))
+
+
 def _followed(
-    flag: dict, adopters: dict[str, list[tuple[str, str]]], debut: dict[str, str], last: str
+    flag: dict,
+    adopters: dict[str, list[tuple[str, str]]],
+    debut: dict[str, str],
+    last: str,
+    published: list[tuple[str, str]],
 ) -> dict:
     """What the field did with the list's own configurations in the fortnight
     after it, and whether that was enough to have set the trend.
@@ -374,11 +402,15 @@ def _followed(
         taken_up.append((card, followers))
 
     card, followers = max(taken_up, key=lambda taken: len(taken[1]), default=(None, []))
-    if len(followers) >= config.TRENDSETTER_FOLLOWERS:
+    needed = _needed(published, (flag["date"], closes))
+    if len(followers) >= needed:
         state = "trendsetter"
     else:
         state = "watching" if closes > last else "breakthrough"
-    return {"state": state, "followers": followers, "adopted_card": card}
+    # The bar rides on the row, since it is drawn off the fortnight's own field:
+    # two followers is a verdict in a quiet window and noise in a busy one, and a
+    # reader given the count alone cannot tell which of them this was.
+    return {"state": state, "followers": followers, "adopted_card": card, "needed": needed}
 
 
 def breakthroughs(db_path: Path = config.DB_PATH) -> list[dict]:
@@ -439,5 +471,8 @@ def breakthroughs(db_path: Path = config.DB_PATH) -> list[dict]:
         debut[row["pilot"]] = min(debut.get(row["pilot"], row["date"]), row["date"])
         for card, _, _ in row["configurations"]:
             adopters.setdefault(card, []).append((row["date"], row["pilot"]))
+    # Who published at all, which is what the follower bar is drawn as a share
+    # of: an idea spreads through the field that was there to take it up.
+    field = [(row["date"], row["pilot"]) for row in history]
     last = max(row["date"] for row in history)
-    return [flag | _followed(flag, adopters, debut, last) for flag in raised]
+    return [flag | _followed(flag, adopters, debut, last, field) for flag in raised]

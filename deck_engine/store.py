@@ -148,10 +148,10 @@ _WEIGHTED = """
 
 # The archetype's lists inside the two windows, each carrying what an adoption
 # figure is taken over: the camp that registered it, the stratum that published
-# it, which of the windows it fell in, and what its finish is worth. The
-# baseline is the rest of the regime behind the fresh window, so a list from the
-# era before the boundary is in neither: it belongs to a different archetype in
-# all but name.
+# it, which of the windows it fell in, and what its finish is worth. The scope
+# opens at the baseline's own start, so a list older than the comparison span is
+# in neither window, as is one from the era before the boundary: that one belongs
+# to a different archetype in all but name.
 _SCOPED = f"""
     SELECT list_id, camp, {_STRATUM} AS stratum, weight, lands,
            -- `window` is SQL's own word, so the domain's one is quoted.
@@ -417,9 +417,16 @@ def windows(db_path: Path = config.DB_PATH) -> dict | None:
     """The two windows the archetype is read over, and the day they hang off.
 
     The fresh window is the last `config.FRESH_WINDOW_DAYS` of published lists
-    and the baseline is the rest of the regime behind it. The two are disjoint,
-    so a delta is movement rather than a fortnight compared against a period
-    containing it, and their bounds are the inclusive days a list falls between.
+    and the baseline is the `config.BASELINE_WINDOW_DAYS` behind it, cut short
+    where the regime boundary falls inside it. The two are disjoint, so a delta
+    is movement rather than a fortnight compared against a period containing it,
+    and their bounds are the inclusive days a list falls between.
+
+    The baseline is a fixed span rather than the whole regime, so a delta means
+    the same thing from one run to the next: left open it would lengthen daily,
+    and a configuration nothing happened to would report a shrinking delta as
+    its denominator grew. The boundary still caps it, a window never crossing
+    into a format the lists answered to differently.
 
     They are anchored on the last day the store holds a list for and not on the
     clock, so a quiet week shortens no window: what is fresh is the most recent
@@ -435,11 +442,12 @@ def windows(db_path: Path = config.DB_PATH) -> dict | None:
     if as_of is None:
         return None
     cut = date.fromisoformat(as_of) - timedelta(days=config.FRESH_WINDOW_DAYS)
+    reach = cut - timedelta(days=config.BASELINE_WINDOW_DAYS - 1)
     return {
         "as_of": as_of,
         "fresh_start": (cut + timedelta(days=1)).isoformat(),
         "fresh_end": as_of,
-        "baseline_start": config.REGIME_BOUNDARY,
+        "baseline_start": max(config.REGIME_BOUNDARY, reach.isoformat()),
         "baseline_end": cut.isoformat(),
     }
 
@@ -457,7 +465,7 @@ def _adoption_table(db_path: Path, keys: tuple[str, ...], join: str = "") -> lis
     if read is None:
         return []
     with duckdb.connect(db_path, read_only=True) as con:
-        bounds = [read["baseline_end"], config.ARCHETYPE, config.REGIME_BOUNDARY, read["as_of"]]
+        bounds = [read["baseline_end"], config.ARCHETYPE, read["baseline_start"], read["as_of"]]
 
         def grouped(columns: str, joined: str = "") -> list[dict]:
             """The scoped lists tallied by camp, stratum and window, and by

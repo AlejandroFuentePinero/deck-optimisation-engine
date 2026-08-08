@@ -312,6 +312,37 @@ def _resolve(published: list[dict], key: tuple, window: tuple[str, str], before:
     }
 
 
+HOLDING, LAPSED = "holding", "lapsed"
+
+
+def _standing(published: list[dict], key: tuple, last: str) -> dict:
+    """Where the configuration stands now, whatever the episode resolved to.
+
+    A hype state is a verdict on a fortnight, and it is dated: the episode
+    happened and the reading of it does not change. What does change is the
+    configuration, and an episode that established months ago and has since gone
+    to nothing would otherwise sit in the ledger carrying a verdict the camp has
+    reversed. So the standing is read fresh on every run and kept beside the
+    state rather than overwriting it.
+
+    Read in the league stratum, because that is where the spike was read: a
+    configuration is only lapsed against the population that was seen to take it
+    up. Lapsed at the floor the spike had to start under, which is the share the
+    domain calls too little of the camp to be a position.
+    """
+    fresh = (
+        date.fromisoformat(last) - timedelta(days=config.FRESH_WINDOW_DAYS - 1)
+    ).isoformat()
+    population, taken = _tally(published, (fresh, last))
+    now = _adoption(population, taken, key)
+    return {
+        "now_adoption": now,
+        # No population is not a lapse: the camp published nothing in the
+        # stratum this fortnight, which says nothing about the configuration.
+        "standing": None if now is None else (LAPSED if now < config.HYPE_FLOOR else HOLDING),
+    }
+
+
 def _verdict(before: float | None, after: float) -> str:
     """Established where the herd's move held in the stratum that judges it.
 
@@ -412,6 +443,7 @@ def hype(db_path: Path = config.DB_PATH) -> list[dict]:
                         if _matured(published, judged)
                         else unresolved
                     ),
+                    **_standing(published, key, last),
                 }
             )
     return raised

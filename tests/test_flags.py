@@ -127,8 +127,41 @@ def test_a_configuration_spiking_behind_a_visible_finish_is_raised_as_hype(tmp_p
             "challenge_after": None,
             "tilt_after": None,
             "resolved_on": None,
+            # Where the configuration stands as the run reads it, which is beside
+            # the episode's own verdict and never instead of it. The spike is the
+            # freshest thing this series holds, so it is still up.
+            "now_adoption": pytest.approx(2 / 3),
+            "standing": "holding",
         }
     ]
+
+
+def test_an_episode_the_camp_has_since_abandoned_reads_as_lapsed(tmp_path):
+    """A hype state is a verdict on a fortnight, and the fortnight does not come back.
+
+    The episode happened and the reading of it stands: this configuration was
+    copied and it held through the weekend that judges a copied list. What the
+    camp is doing now is a different question, and one the frozen verdict cannot
+    answer. Left alone the ledger would carry `established` on a configuration
+    the camp went on to abandon entirely, which is the engine asserting something
+    the data has since reversed.
+
+    So the standing is read fresh on every run, in the stratum the spike was read
+    in, and kept beside the state rather than overwriting it. A reader gets both:
+    what the field decided then, and whether it still holds.
+    """
+    # The camp keeps publishing a month on, and none of it registers the card.
+    abandoned = [
+        league(f"2026-08-{day:02d}", [entry(f"drifter{seat}", CAMP) for seat in range(12)])
+        for day in (1, 2, 3)
+    ]
+    db = _built(tmp_path, _resolution_series([*HELD_UP, *abandoned]))
+
+    raised = _flag(db)
+
+    assert raised["state"] == "established", "the episode held through its own weekend"
+    assert raised["now_adoption"] == 0, "and the camp has since stopped registering it"
+    assert raised["standing"] == "lapsed"
 
 
 def _weekend_challenge(taken, event_id, points):
