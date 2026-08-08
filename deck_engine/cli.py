@@ -3,7 +3,7 @@
 import argparse
 from pathlib import Path
 
-from . import config, ledger, meta, reference
+from . import config, hypotheses, ledger, meta, reference
 from .refresh import refresh
 from .store import build, goryos_lists, meta_trend
 
@@ -130,6 +130,39 @@ def _missing_line(slot: dict) -> str:
     return f"  {slot['confidence']:>4.0%}  {where:<40} {'':<20}{camp}{delta}{tilt}{note}"
 
 
+def _hypothesis_lines(record: dict) -> list[str]:
+    """One record as its claim, where the argument stands, and the log so far.
+
+    The days remaining print beside the status because that is what makes an
+    unresolved record a piece of work rather than a note: the 75 is handed in on
+    a date, and a claim nobody has ruled on by then is a slot decided by
+    default. A decided one has no clock left to run.
+
+    The verdict prints wherever there is one, and not only where the record is
+    closed. The two answers are separate: the status is how the evidence came
+    out and the verdict is what the 75 does, so a claim the data supported and
+    the pilot has already acted on would otherwise sit here saying only that it
+    was supported.
+    """
+    standing = (
+        hypotheses.DECIDED
+        if record["status"] == hypotheses.DECIDED
+        else f"{record['status']}, {record['days_remaining']}d to submission"
+    )
+    lines = [f"{record['id']:<24} {standing}", f"  {record['claim']}"]
+    if record["verdict"]:
+        lines.append(f"  the 75: {record['verdict']}")
+    if record["conditional_on"]:
+        lines.append(f"  conditional on the {record['conditional_on']}")
+    # The log's own lines, indented under the day and the source they came from,
+    # since a share and a playtest result are only comparable when the reader
+    # can see which is which.
+    for entry in record["evidence"]:
+        lines.append(f"  {entry['on']}  {entry['source']}")
+        lines += [f"    {line}" for line in entry["lines"]]
+    return lines
+
+
 def _reference_log() -> None:
     """The change log: what each version of the 75 did to the one before it."""
     for entry in reference.history():
@@ -170,6 +203,19 @@ def main(argv=None) -> None:
     filed = commands.add_parser("reference-capture", help="file an export as the next version")
     filed.add_argument("source", type=Path, help="the exported 75, in the published format")
 
+    commands.add_parser("hypotheses", help="the tracked claims, their evidence and their clock")
+
+    logged = commands.add_parser("hypothesis-evidence", help="append an entry to a record's log")
+    logged.add_argument("hypothesis", help="the record's id")
+    logged.add_argument("--source", choices=hypotheses.SOURCES, required=True)
+    logged.add_argument("--note", help="what the pilot found; a data entry takes its own reading")
+    logged.add_argument("--on", help="YYYY-MM-DD the entry is dated, defaults to today")
+
+    ruled = commands.add_parser("hypothesis-rule", help="close a record with a decision for the 75")
+    ruled.add_argument("hypothesis", help="the record's id")
+    ruled.add_argument("--status", choices=hypotheses.STATUSES, required=True)
+    ruled.add_argument("--verdict", required=True, help="what the 75 does about it")
+
     args = parser.parse_args(argv)
     if args.command == "refresh":
         refresh(args.since, args.until)
@@ -200,6 +246,27 @@ def main(argv=None) -> None:
         captured = reference.capture(args.source)
         print(f"reference list v{captured.version} at {captured.path}")
         _reference_log()
+        return
+
+    if args.command == "hypotheses":
+        records = hypotheses.standing()
+        for record in records:
+            print("\n".join(_hypothesis_lines(record)))
+        unresolved = [r for r in records if r["status"] != hypotheses.DECIDED]
+        print(
+            f"{len(unresolved)} of {len(records)} hypothesis(es) unresolved,"
+            f" {config.SUBMISSION_DATE} to submit"
+        )
+        return
+
+    if args.command == "hypothesis-evidence":
+        hypotheses.evidence(args.hypothesis, args.source, note=args.note, on=args.on)
+        print("\n".join(_hypothesis_lines(hypotheses.read(hypotheses.record_path(args.hypothesis)))))
+        return
+
+    if args.command == "hypothesis-rule":
+        ruled = hypotheses.rule(args.hypothesis, args.status, args.verdict)
+        print("\n".join(_hypothesis_lines(ruled)))
         return
 
     if args.command == "reference":
