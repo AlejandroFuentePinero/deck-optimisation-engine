@@ -28,3 +28,7 @@ Nihil Spellbomb 0/1: 82% of the camp, delta +0.20
 Nihil Spellbomb 0/2: 15% of the camp, delta -0.02
 Surgical Extraction 0/1: 72% of the camp, delta +0.14
 Surgical Extraction 0/2: 5% of the camp, delta -0.01
+
+### 2026-08-11 judgment
+
+The second Nihil Spellbomb comes out. With two Spell Snare the mirror should already be better, since most reanimator spells are answered by Snare, so there is less need for the marginal graveyard hate piece. Graveyard hate is not premium in this meta; Spell Snare is.

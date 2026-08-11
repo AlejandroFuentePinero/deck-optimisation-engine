@@ -25,3 +25,11 @@ Teferi, Time Raveler 0/1: 22% of the camp, delta -0.07
 Teferi, Time Raveler 2/0: 15% of the camp, delta +0.14
 Teferi, Time Raveler 0/2: 8% of the camp, delta -0.36
 hype flag on Teferi, Time Raveler 0/1 (decayed), raised 2026-08-07: adoption density, not card quality.
+
+### 2026-08-11 playtest
+
+The maindeck Teferi plays a better midrange game and protects the combo. Taken in v4. Still unsure whether the maindeck slot is better spent on Teferi or on the first Consign to Memory; that comparison is what is currently under test.
+
+### 2026-08-11 playtest
+
+A further reason for the maindeck copy and the second copy: Teferi is good against Esper Blink. That matchup is the fastest riser in the format, 3.8% to 6.0% over the three 14-day snapshots, now the third deck behind the mirror and Boros Energy.

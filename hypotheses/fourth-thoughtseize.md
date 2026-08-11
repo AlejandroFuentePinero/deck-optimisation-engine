@@ -32,3 +32,7 @@ Thoughtseize 4/0: 5% of the camp, delta -0.12
 Force of Negation 2/0: 75% of the camp, delta +0.26
 Force of Negation 3/0: 18% of the camp, delta -0.16
 Force of Negation 2/1: 8% of the camp, delta -0.11
+
+### 2026-08-11 playtest
+
+Thoughtseize proved important in almost every matchup in testing. The fourth copy is going in the sideboard rather than the mainboard, on the reasoning that postboard is where opponents bring more hate and the extra disruption is worth most. Under test in v4.

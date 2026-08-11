@@ -29,3 +29,7 @@ playtesting question, not an adoption one.
 non-fallaji camp, challenge-class, 40 list(s) in the fresh window.
 Breeding Pool 1/0: 90% of the camp, delta +0.08
 Hedge Maze 1/0: 8% of the camp, delta -0.09
+
+### 2026-08-11 judgment
+
+Breeding Pool is better than Hedge Maze unless the pilot is very mindful about fetching. Fetching the seventh land untapped for Atraxa is the decisive case, and Hedge Maze forces the turns to be planned several ahead, which is often not feasible in practice.
