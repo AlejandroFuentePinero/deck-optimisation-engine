@@ -124,6 +124,13 @@ A camp moving a card's copies between the boards, measured in copies rather than
 **Slot substitution**:
 What the camp's lists that went elsewhere on a slot registered in its place. A slot decision is a trade and adoption cannot see one: it reports the share holding a configuration and never what the share that does not holds instead. Taken by splitting the camp's fresh lists on the configuration and reading every other card in both halves.
 
+**Build cluster**:
+A camp holding two packages rather than one settled build, which every reading taken slot by slot looks straight through. The slot audit buckets each flex slot against the whole camp, so a divided camp reports each of its builds at a share of its own size, and a 75 assembled from the leading configuration of every slot is a list neither build ever registered. The division is a fact about the population and never a fifth bucket.
+
+Read by cross-tabulating the camp's fresh lists on a pair of cards, not by reading either share alone: a pair the camp is divided on puts nearly all of it on one diagonal or the other, where a slot the camp is merely arguing about spreads across all four cells. Slot substitution is what nominates the pair, a card overrepresented among the lists that went elsewhere being a card of the other build. Cards that sit in both builds at similar rates are neutral, and a slot decision on one of those commits the 75 to nothing.
+
+The reading that matters is not which build holds the larger share: it is that a 75 belongs to one of them. Moving a slot toward the other build's configuration without moving the rest lands in the few percent of the camp that plays neither package whole.
+
 **Departure lineage**:
 A breakthrough traced through to what the field finally did with it: the departure, then the follow-through, then whether the copying survived the weekend that judges a copied list, then whether it still stands. Read apart, the first is one pilot's anecdote and the third is a fortnight's share. Together they are the field's verdict on an idea taken over every pilot who saw it, which is the highest-powered instrument this data holds, and far stronger than the placements of the handful of lists that carried the change on the day. Joined on the card, in the camp, and only forward: an episode that preceded the list is the list following a trend rather than setting one.
 
