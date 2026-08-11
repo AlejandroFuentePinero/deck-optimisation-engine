@@ -19,7 +19,7 @@ from pathlib import Path
 
 import pytest
 
-from deck_engine import config, report, store
+from deck_engine import config, hypotheses, report, store
 
 FIXTURE_ADOPTION = Path(__file__).parent / "fixtures" / "adoption"
 # The frozen 14-day snapshot of 2026-08-07. The committed history grows as the
@@ -135,19 +135,23 @@ def test_the_report_carries_every_tracked_claim_with_the_clock_it_is_running(tmp
     unresolved record with no days beside it is a note rather than a piece of
     work, which is the whole of why the submission date is tracked at all.
 
-    The eight standing records are the pilot's own, entered before any run, and
-    none of them has been ruled on.
+    The standing records are the pilot's own and the committed set grows as he
+    writes them, so the counts are read off the directory rather than frozen
+    here: a hardcoded eight is a fact about how many records exist today, not
+    about what the page carries.
     """
     document = _rendered(tmp_path)
+    records = hypotheses.standing(HYPOTHESES_DIR, TODAY)
+    unresolved = [record for record in records if record["status"] != "decided"]
 
     tracked = _section(document, "hypotheses")
-    assert "8 of 8 record(s) unresolved" in tracked
+    assert f"{len(unresolved)} of {len(records)} record(s) unresolved" in tracked
     for record in ("consign-mainboard", "land-count", "wrath-density"):
         assert record in tracked
     assert "The twenty-second land should come out for a spell" in tracked
-    # Every one of them open, and every one of them 20 days from being decided
-    # by default: the status and the clock are one reading and never printed apart.
-    assert tracked.count("open, 20 day") == 8
+    # Every open one 20 days from being decided by default: the status and the
+    # clock are one reading and never printed apart.
+    assert tracked.count("open, 20 day") == sum(1 for r in records if r["status"] == "open")
 
 
 def test_the_report_ranks_the_75s_slots_in_the_order_playtesting_should_reach_them(tmp_path):
