@@ -98,8 +98,12 @@ def snapshot_rows(meta_dir: Path | None = None) -> list[tuple]:
     skipped: the directory is the history, so something else in it is a mistake
     worth hearing about, and quietly passing over one would be quietly dropping
     a reading if the file were a snapshot after all.
+
+    The rows leave typed as the store's columns are typed, since a window read
+    as text sorts and groups by its digits wherever it is handled before the
+    store's cast reaches it.
     """
-    merged: dict[tuple[str, str, str], list] = {}
+    merged: dict[tuple[str, int, str], list] = {}
     for path in sorted((meta_dir or config.META_DIR).glob("*.csv")):
         with path.open(newline="", encoding="utf-8") as handle:
             if csv.DictReader(handle).fieldnames != list(FIELDS):
@@ -107,7 +111,7 @@ def snapshot_rows(meta_dir: Path | None = None) -> list[tuple]:
             handle.seek(0)
             for row in csv.DictReader(handle):
                 archetype = config.META_ARCHETYPE_ALIASES.get(row["archetype"], row["archetype"])
-                key = (row["captured_on"], row["window_days"], archetype)
+                key = (row["captured_on"], int(row["window_days"]), archetype)
                 reading = merged.setdefault(key, [0.0, 0])
                 reading[0] += float(row["meta_pct"]) / 100
                 reading[1] += int(row["deck_count"])

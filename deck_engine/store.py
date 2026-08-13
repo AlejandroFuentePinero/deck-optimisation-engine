@@ -41,7 +41,8 @@ CREATE OR REPLACE TABLE configurations (
 """
 
 # The meta history, keyed by the two terms a reading is taken on. Archetypes
-# here are MTGGoldfish's own names for the whole field, and are nothing to do
+# here name decks of the whole field, MTGGoldfish's own names except where two
+# of its rows are one deck and merge under the pilot's, and are nothing to do
 # with `decklists.archetype`, this engine's membership rule over the one deck.
 META_SNAPSHOTS_SCHEMA = """
 CREATE OR REPLACE TABLE meta_snapshots (
