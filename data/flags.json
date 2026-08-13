@@ -140,11 +140,11 @@
   "card": "Cephalid Coliseum",
   "main": 1,
   "side": 0,
-  "appeared_on": "2026-07-29",
-  "pilot": "Walker735",
-  "event": "Modern Challenge 96",
-  "placement": 32,
-  "historical_adoption": 0.07323568575233022,
+  "appeared_on": "2026-08-11",
+  "pilot": "tA326_",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.06526806526806526,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-07"
@@ -184,12 +184,12 @@
   "camp": "non-fallaji",
   "card": "Drannith Magistrate",
   "main": 0,
-  "side": 1,
-  "appeared_on": "2026-07-29",
-  "pilot": "surgetemelo",
-  "event": "Modern League",
-  "placement": null,
-  "historical_adoption": 0.0758988015978695,
+  "side": 2,
+  "appeared_on": "2026-08-01",
+  "pilot": "Sutter",
+  "event": "Modern Challenge 64",
+  "placement": 31,
+  "historical_adoption": 0.07632600258732213,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-07"
@@ -245,13 +245,13 @@
   "card": "Gran-Gran",
   "main": 4,
   "side": 0,
-  "appeared_on": "2026-07-29",
-  "pilot": "DB_cntrlfreak_ttv",
-  "event": "Modern League",
-  "placement": null,
-  "historical_adoption": 0.009320905459387484,
-  "returning": true,
-  "absent_days": 99,
+  "appeared_on": "2026-07-31",
+  "pilot": "cntrlfreak_ttv",
+  "event": "Modern Challenge 64",
+  "placement": 27,
+  "historical_adoption": 0.010443864229765013,
+  "returning": false,
+  "absent_days": null,
   "first_seen": "2026-08-07"
  },
  {
@@ -505,7 +505,7 @@
   "challenge_after": 0.09375,
   "tilt_after": -0.0015115298087739204,
   "resolved_on": "2026-07-19",
-  "now_adoption": 0.10344827586206896,
+  "now_adoption": 0.1724137931034483,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -530,7 +530,7 @@
   "challenge_after": 0.4,
   "tilt_after": 0.006926406926406836,
   "resolved_on": "2026-07-05",
-  "now_adoption": 0.3103448275862069,
+  "now_adoption": 0.2413793103448276,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -605,7 +605,7 @@
   "challenge_after": 0.2619047619047619,
   "tilt_after": -0.006602967451254715,
   "resolved_on": "2026-08-09",
-  "now_adoption": 0.2413793103448276,
+  "now_adoption": 0.27586206896551724,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -630,7 +630,7 @@
   "challenge_after": 0.2857142857142857,
   "tilt_after": 0.015264507107900116,
   "resolved_on": "2026-08-09",
-  "now_adoption": 0.3448275862068966,
+  "now_adoption": 0.2413793103448276,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -655,7 +655,7 @@
   "challenge_after": 0.2857142857142857,
   "tilt_after": 0.014069264069264065,
   "resolved_on": "2026-07-05",
-  "now_adoption": 0.0,
+  "now_adoption": 0.034482758620689655,
   "standing": "lapsed",
   "first_seen": "2026-08-07"
  },
@@ -800,7 +800,7 @@
    ]
   ],
   "missing": [],
-  "state": "watching",
+  "state": "breakthrough",
   "followers": [
    "Arcbound_Papi",
    "cntrlfreak_ttv"
@@ -2501,12 +2501,12 @@
    ]
   ],
   "missing": [],
-  "state": "watching",
+  "state": "breakthrough",
   "followers": [
    "Stealthmagician"
   ],
   "adopted_card": "Sink into Stupor",
-  "needed": 3,
+  "needed": 4,
   "first_seen": "2026-08-08"
  },
  {
@@ -2855,8 +2855,12 @@
    ]
   ],
   "missing": [],
-  "state": "watching",
-  "followers": [],
+  "state": "trendsetter",
+  "followers": [
+   "Acecalna",
+   "SoulStrong",
+   "liuyuchen"
+  ],
   "adopted_card": "Clarion Conqueror",
   "needed": 2,
   "first_seen": "2026-08-11"
@@ -3078,7 +3082,7 @@
   "challenge_after": null,
   "tilt_after": null,
   "resolved_on": null,
-  "now_adoption": 0.2857142857142857,
+  "now_adoption": 0.2,
   "standing": "holding",
   "first_seen": "2026-08-11"
  },
@@ -3103,7 +3107,7 @@
   "challenge_after": null,
   "tilt_after": null,
   "resolved_on": null,
-  "now_adoption": 0.5862068965517241,
+  "now_adoption": 0.6896551724137931,
   "standing": "holding",
   "first_seen": "2026-08-11"
  },
@@ -3128,8 +3132,94 @@
   "challenge_after": null,
   "tilt_after": null,
   "resolved_on": null,
-  "now_adoption": 0.3448275862068966,
+  "now_adoption": 0.3103448275862069,
   "standing": "holding",
   "first_seen": "2026-08-11"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "DskBayWolf",
+  "event": "Modern League",
+  "date": "2026-08-11",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Clarion Conqueror",
+    0,
+    3
+   ]
+  ],
+  "missing": [],
+  "state": "trendsetter",
+  "followers": [
+   "Acecalna",
+   "SoulStrong",
+   "liuyuchen"
+  ],
+  "adopted_card": "Clarion Conqueror",
+  "needed": 2,
+  "first_seen": "2026-08-12"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "challenge-class",
+  "pilot": "Rvng",
+  "event": "Modern Challenge 64",
+  "date": "2026-08-11",
+  "placement": 2,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Clarion Conqueror",
+    0,
+    2
+   ]
+  ],
+  "missing": [],
+  "state": "trendsetter",
+  "followers": [
+   "Acecalna",
+   "SoulStrong",
+   "liuyuchen"
+  ],
+  "adopted_card": "Clarion Conqueror",
+  "needed": 2,
+  "first_seen": "2026-08-12"
+ },
+ {
+  "kind": "fringe",
+  "camp": "fallaji",
+  "card": "Clarion Conqueror",
+  "main": 0,
+  "side": 2,
+  "appeared_on": "2026-08-11",
+  "pilot": "Rvng",
+  "event": "Modern Challenge 64",
+  "placement": 2,
+  "historical_adoption": 0.004662004662004662,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-12"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Winternight Stories",
+  "main": 1,
+  "side": 0,
+  "appeared_on": "2026-08-13",
+  "pilot": "CNewman",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.07789232531500573,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-13"
  }
 ]
