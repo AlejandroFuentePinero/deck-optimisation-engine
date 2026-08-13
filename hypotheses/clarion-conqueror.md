@@ -62,3 +62,10 @@ The field followed through, and the card still is not this 75's. Registrations w
 non-fallaji camp, challenge-class, 44 list(s) in the fresh window.
 Clarion Conqueror 0/2: 11% of the camp, delta +0.11
 fringe flag on Clarion Conqueror 0/2, raised 2026-08-07.
+
+### 2026-08-14 data
+
+The combo density this slot is bought against was understated by the site's own archetype split, and the correction roughly doubles it. MTGGoldfish tables the Broodscale deck twice, as Eldrazi and as Gruul Basking Broodscale Combo; the pilot checked the cards and they are one deck, so the engine now merges the two rows across the whole snapshot history. Read that way, Broodscale is 7.4, 7.7, 8.2, 7.7, 7.5 percent over the five 14-day snapshots, not the 2.3 to 3.0 the earlier entries quote, and it is the field's second deck behind the mirror on every one of them. Combo density for this record, Devoted Combo plus Broodscale, is therefore 13.5 percent as of 2026-08-14 (6.0 and 7.5) against the 8.4 percent the 08-12 entries carried, and it has been above 13 on every snapshot since 08-11. That is more of the field than the mirror. The premise the slot is bought on is stronger than any prior entry recorded, and it is the only thing this entry moves: every performance instrument here is still blind at five to eleven registrations, and the 08-12 finding that the card travels with a build v4 is not in stands unchanged.
+non-fallaji camp, challenge-class, 48 list(s) in the fresh window.
+Clarion Conqueror 0/2: 17% of the camp, delta +0.17
+fringe flag on Clarion Conqueror 0/2, raised 2026-08-07.

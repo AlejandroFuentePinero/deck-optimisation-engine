@@ -78,3 +78,14 @@ Pest Control 0/2: 2% of the camp, delta +0.02
 Pest Control 1/1: 2% of the camp, delta -0.07
 hype flag on Pest Control 0/1 (decayed), raised 2026-08-07: adoption density, not card quality.
 pet-tech flag on Wrath of the Skies 0/1, raised 2026-08-08.
+
+### 2026-08-14 data
+
+The population this record settled on was read off a split archetype table, and correcting it argues harder against cutting a sweeper. MTGGoldfish tables the Broodscale deck twice, as Eldrazi and as Gruul Basking Broodscale Combo, and the pilot checked the cards: one deck. The engine now merges the rows across the whole snapshot history, so the figures the 08-11 entries quote for Broodscale were the smaller half of it. Affinity plus Broodscale, the pairing the third Wrath is bought for, reads 11.9, 12.5, 12.4, 12.2, 12.1 percent over the five 14-day snapshots, not the 6.8 to 7.4 to 7.2 on record: it is flat, and it is nearly twice the size that entry credited. The Eldrazi family altogether is 16.7 to 15.5 rather than 14.4 to 13.5. The superseding union of aggro plus Affinity plus Broodscale rises by exactly the Eldrazi row that went unread, so if it counted only the smaller Broodscale row, as its wording says, its three snapshots are 38.7, 38.3 and 34.6 rather than 33.6, 33.2 and 29.4: still falling, all of the fall still from aggro, but now well over a third of the field rather than under it. Nothing here reaches the open half of the record, which is a question about the third copy's redundancy in hand that only the match logs hold. What it does is remove the meta argument for two: the field the sweepers answer is larger than every prior entry recorded, and the camp has gone on consolidating, 85 percent now on 0/3 off 48 fresh lists.
+non-fallaji camp, challenge-class, 48 list(s) in the fresh window.
+Wrath of the Skies 0/3: 85% of the camp, delta +0.13
+Wrath of the Skies 0/2: 15% of the camp, delta -0.02
+Pest Control 1/0: 17% of the camp, delta -0.05
+Pest Control 0/2: 2% of the camp, delta +0.02
+hype flag on Pest Control 0/1 (decayed), raised 2026-08-07: adoption density, not card quality.
+pet-tech flag on Wrath of the Skies 0/1, raised 2026-08-08.
