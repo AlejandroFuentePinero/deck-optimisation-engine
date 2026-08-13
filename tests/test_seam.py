@@ -1881,6 +1881,44 @@ def test_the_trend_reads_one_archetypes_share_across_the_whole_history(tmp_path)
     ]
 
 
+def test_a_deck_the_site_tables_twice_reads_as_one_across_the_whole_history(tmp_path):
+    """One deck under two of the site's names is one deck's density.
+
+    MTGGoldfish tables the Broodscale build as Eldrazi and again as Gruul
+    Basking Broodscale Combo; the pilot checked the cards and they are the same
+    seventy-five. Read as published, the deck reports at two shares and anything
+    weighing the field against it sees whichever half it asked for.
+
+    Merged on the way out of the transcriptions rather than on the way in, so
+    the fix reaches every snapshot already taken and not only the ones ingested
+    after it. The transcriptions themselves stay what the screenshots showed.
+    """
+    meta_dir, db = tmp_path / "meta", tmp_path / "engine.duckdb"
+    history = [
+        ("2026-07-24", [("Eldrazi", 4.0, 44), ("Gruul Basking Broodscale Combo", 2.0, 22)]),
+        ("2026-08-07", [("Eldrazi", 5.1, 61), ("Gruul Basking Broodscale Combo", 2.3, 27)]),
+    ]
+    for captured_on, table in history:
+        meta.ingest(_transcribe(tmp_path / "goldfish.csv", table), captured_on, 14, meta_dir)
+    store.build(FIXTURE_RAW, db, meta_dir)
+
+    assert [
+        (row["captured_on"], row["share"], row["deck_count"])
+        for row in store.meta_trend("Broodscale", db)
+    ] == [
+        ("2026-07-24", pytest.approx(0.060), 66),
+        ("2026-08-07", pytest.approx(0.074), 88),
+    ]
+    # And neither of the site's names holds anything of its own, since a deck
+    # left at both would be counted twice by anything summing the field.
+    assert store.meta_trend("Eldrazi", db) == []
+    assert store.meta_trend("Gruul Basking Broodscale Combo", db) == []
+    # The committed capture is still what the screenshot showed: the merge is a
+    # reading of the history, and the history is a record of what was published.
+    published = (meta_dir / "2026-08-07_14d.csv").read_text(encoding="utf-8")
+    assert "Gruul Basking Broodscale Combo,2.3,27" in published
+
+
 def test_ingesting_the_same_snapshot_twice_leaves_the_history_one_entry_long(tmp_path):
     """The history is a record of readings, and a reading happened once.
 
@@ -1963,7 +2001,9 @@ def test_the_history_opens_with_the_14_day_reading_of_2026_08_07(tmp_path):
         "share": pytest.approx(0.100),
         "deck_count": 118,
     }
-    assert len(opening) == 28, "the field as the screenshot showed it"
+    # Twenty-eight rows on the screenshot, twenty-seven decks in the reading:
+    # the site tables the Gruul Eldrazi build under two names and they merge.
+    assert len(opening) == 27, "the field as the screenshot showed it, decks not rows"
 
     # Boros Energy, the field's other pillar, is the deck the rest is aimed at.
     assert {

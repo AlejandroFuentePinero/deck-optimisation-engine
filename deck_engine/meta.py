@@ -81,25 +81,34 @@ def snapshot_rows(meta_dir: Path | None = None) -> list[tuple]:
     other one of which is a fraction of its population, so the reading is
     converted once, here, on the way into the derived layer.
 
+    Decks the site tables under two names are summed here for the same reason
+    printings of one card are summed at the point names first become counts: a
+    deck read at two shares is one deck's density split down the middle, and
+    every reading behind this one would report both halves as smaller than the
+    field they are. Done on the way out and not on the way in, so the committed
+    transcription stays what the screenshot showed, exactly as the cache stays
+    what the site served (see ADR 0001). The whole history passes through here,
+    so a merge decided today applies to every snapshot already taken.
+
+    The site rounds each share to a tenth before publishing it, so a summed
+    share carries both roundings and can sit a tenth off what the site would
+    have printed for the merged deck. The deck counts are exact.
+
     A file here that the ingest did not write is refused by name rather than
     skipped: the directory is the history, so something else in it is a mistake
     worth hearing about, and quietly passing over one would be quietly dropping
     a reading if the file were a snapshot after all.
     """
-    rows = []
+    merged: dict[tuple[str, str, str], list] = {}
     for path in sorted((meta_dir or config.META_DIR).glob("*.csv")):
         with path.open(newline="", encoding="utf-8") as handle:
             if csv.DictReader(handle).fieldnames != list(FIELDS):
                 raise ValueError(f"{path} is no snapshot; ingest a transcription, do not file it")
             handle.seek(0)
-            rows += [
-                (
-                    row["captured_on"],
-                    row["window_days"],
-                    row["archetype"],
-                    float(row["meta_pct"]) / 100,
-                    row["deck_count"],
-                )
-                for row in csv.DictReader(handle)
-            ]
-    return rows
+            for row in csv.DictReader(handle):
+                archetype = config.META_ARCHETYPE_ALIASES.get(row["archetype"], row["archetype"])
+                key = (row["captured_on"], row["window_days"], archetype)
+                reading = merged.setdefault(key, [0.0, 0])
+                reading[0] += float(row["meta_pct"]) / 100
+                reading[1] += int(row["deck_count"])
+    return [(*key, *reading) for key, reading in merged.items()]
