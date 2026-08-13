@@ -85,6 +85,21 @@ anything counts a configuration. Eight lists in the history register both, and
 without the merge each reads as two separate one-ofs rather than the two-of it
 is, splitting one card's adoption history down the middle.
 
+**MTGGoldfish's Eldrazi and Gruul Basking Broodscale rows are one deck**
+(2026-08-14):
+The site's Eldrazi row is the Gruul build, and Gruul Basking Broodscale Combo is
+the same 75 tabled a second time; Alejandro checked the cards. The site's own
+split reports one deck at two shares, so the field's second-largest deck reads
+as two mid-sized ones. Mono-Green Eldrazi, Eldrazi Tron and Eldrazi Ramp are
+different shells that share a creature suite and stay their own rows.
+*Applies*: the two names merge into one archetype, `Broodscale`, on the way out
+of the transcriptions and across the whole snapshot history, so every reading
+already taken is corrected too. Neither of the site's names survives the merge,
+since a deck left at both would be counted twice by anything summing the field.
+The committed transcriptions stay exactly what the screenshots showed. The
+merged share sums two figures the site rounded to a tenth each, so it can sit a
+tenth off; the deck counts are exact.
+
 **Hype corrects in about a week, and the weekend is the judge** (2026-08-07):
 One week of play is usually enough for reality to hit misconfigured or
 suboptimal hyped lists, but the heaviest tournament density is on weekends, so

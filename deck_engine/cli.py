@@ -475,10 +475,15 @@ def main(argv=None) -> None:
         return
 
     if args.command == "meta-trend":
-        snapshots = meta_trend(args.archetype, window_days=args.window_days)
+        # Under the name the store holds the deck by, for the reason `_resolved`
+        # gives about printings: the site tables one deck as two archetypes, and
+        # asked for under the other name the trend comes back empty rather than
+        # wrong, which reads as the field never having played it.
+        archetype = config.META_ARCHETYPE_ALIASES.get(args.archetype, args.archetype)
+        snapshots = meta_trend(archetype, window_days=args.window_days)
         for row in snapshots:
             print(f"{row['captured_on']}  {row['share']:>6.1%}  {row['deck_count']:>4} decks")
-        print(f"{len(snapshots)} {args.window_days}-day snapshot(s) of {args.archetype}")
+        print(f"{len(snapshots)} {args.window_days}-day snapshot(s) of {archetype}")
         return
 
     if args.command == "flags":

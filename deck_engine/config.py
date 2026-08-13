@@ -33,6 +33,23 @@ FORMAT = "modern"
 # history is already published under.
 CARD_ALIASES = {"Superior Spider-Man": "Kavaero, Mind-Bitten"}
 
+# Decks MTGGoldfish tables as separate archetypes that are one deck. Its Eldrazi
+# row is the Gruul build, and Gruul Basking Broodscale Combo is the same seventy-
+# five under a second name: the pilot checked the cards. The site's split reports
+# one deck at two shares, so anything the field's density is read for, mirror
+# volume aside, is understating it by whichever half went unread.
+#
+# Neither of the site's names is the canonical one here, which is where this
+# parts company with the printings above. Eldrazi names a creature suite three
+# other rows also field, so the merged deck under that name reads as the family
+# rather than as the build, and the pilot calls the deck Broodscale after the
+# card the combo is. Mono-Green Eldrazi, Eldrazi Tron and Eldrazi Ramp are those
+# other shells and stay their own rows.
+META_ARCHETYPE_ALIASES = {
+    "Eldrazi": "Broodscale",
+    "Gruul Basking Broodscale Combo": "Broodscale",
+}
+
 # How far back the analysis history reaches: two regimes' worth of events.
 HISTORY_START = "2026-02-01"
 
