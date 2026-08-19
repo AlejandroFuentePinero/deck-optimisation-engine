@@ -12,3 +12,7 @@ data/flags.partial
 data/gamelogs/
 data/matches.jsonl
 reports/
+.pytest_cache/
+*.egg-info/
+dist/
+build/

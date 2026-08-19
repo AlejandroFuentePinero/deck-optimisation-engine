@@ -2,7 +2,17 @@
 name = "deck-optimisation-engine"
 version = "0.1.0"
 description = "Mines published MTGO decklists to inform Goryo's deckbuilding decisions"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Alejandro de la Fuente" }]
 requires-python = ">=3.12"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Games/Entertainment :: Board Games",
+]
 dependencies = [
     "duckdb>=1.1",
     "requests>=2.32",
@@ -10,6 +20,10 @@ dependencies = [
 
 [project.scripts]
 deck-engine = "deck_engine.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/AlejandroFuentePinero/deck-optimisation-engine"
+Issues = "https://github.com/AlejandroFuentePinero/deck-optimisation-engine/issues"
 
 [dependency-groups]
 dev = ["pytest>=8.3"]
