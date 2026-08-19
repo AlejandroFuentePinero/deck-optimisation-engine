@@ -123,4 +123,29 @@ section is adopted knowledge and nothing here may steer an analysis. Each entry
 cites the evidence that raised it and counts the sessions it has been put to
 him in. See `.claude/skills/mtg-heuristics/SKILL.md`.
 
-_(none open)_
+**A card can spread challenge-first, and league-only hype detection is blind to
+it** (raised 2026-08-19, surfaced 0×):
+Hype is read in the league stratum on the premise that copying shows there
+first and hardest. Clarion Conqueror did the opposite in the camp that matters
+to this 75: it saturated the challenge stratum while the league share stayed
+under the bar, so the reading that exists to catch a copied configuration never
+saw the largest one this regime has produced.
+*Evidence*: non-fallaji challenge-class adoption of Clarion Conqueror 0/2 went
+1/80 (1%) in the baseline window to 20/40 (50%) fresh, delta +0.49, the largest
+single-configuration move in the post-regime history. In the same camp's league
+stratum the fortnight ending 2026-08-16 reads 24% off 25 lists, against 0% in
+every fortnight before it: under `HYPE_CEILING` of 30%, so no hype flag was
+raised in non-fallaji at all. The fallaji camp cleared the bar on 8 league lists,
+exactly `HYPE_MIN_LISTS`, 0% to 37.5%, flag raised 2026-08-16 off eswaff #1
+Modern Challenge 64 2026-08-13. The consequence lands on lineage, which joins a
+departure to a hype episode on the same card in the same camp: Rvng's 2026-08-11
+Clarion departure in fallaji reads "Clarion Conqueror spiked 2026-08-16, raised,
+now holding", while Ivan_Draw_Go's and DskBayWolf's same-day, same-card
+departures in non-fallaji both read "the field never piled in", each on a
+trendsetter flag counting 17 new pilots. The camp at 50% reports the non-event;
+the camp at 65% off a thinner base reports the episode.
+*Applies if adopted*: a spike is read in whichever stratum the configuration
+moved in, not in the league stratum by rule, and lineage joins a departure to an
+episode in either. Until then a challenge-first climb has to be caught by hand
+off the adoption delta, and a lineage row saying the field never piled in is not
+evidence that it did not.
