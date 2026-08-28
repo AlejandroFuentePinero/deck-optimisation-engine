@@ -140,11 +140,11 @@
   "card": "Cephalid Coliseum",
   "main": 1,
   "side": 0,
-  "appeared_on": "2026-08-11",
-  "pilot": "tA326_",
-  "event": "Modern League",
-  "placement": null,
-  "historical_adoption": 0.06526806526806526,
+  "appeared_on": "2026-08-21",
+  "pilot": "Habitante_do_Escuro",
+  "event": "Modern Challenge 64",
+  "placement": 13,
+  "historical_adoption": 0.06038135593220339,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-07"
@@ -155,11 +155,11 @@
   "card": "Clarion Conqueror",
   "main": 0,
   "side": 2,
-  "appeared_on": "2026-08-09",
-  "pilot": "Kollslaw",
+  "appeared_on": "2026-08-15",
+  "pilot": "DskBayWolf",
   "event": "Modern Challenge 64",
-  "placement": 8,
-  "historical_adoption": 0.0011862396204033216,
+  "placement": 1,
+  "historical_adoption": 0.024774774774774775,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-07"
@@ -200,11 +200,11 @@
   "card": "Elesh Norn, Mother of Machines",
   "main": 0,
   "side": 1,
-  "appeared_on": "2026-08-01",
+  "appeared_on": "2026-08-23",
   "pilot": "DskBayWolf",
   "event": "Modern Challenge 64",
-  "placement": 19,
-  "historical_adoption": 0.03492884864165589,
+  "placement": 5,
+  "historical_adoption": 0.029958677685950414,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-07"
@@ -215,11 +215,11 @@
   "card": "End of the Hunt",
   "main": 0,
   "side": 1,
-  "appeared_on": "2026-08-10",
+  "appeared_on": "2026-08-25",
   "pilot": "NicolasP",
   "event": "Modern League",
   "placement": null,
-  "historical_adoption": 0.010575793184488837,
+  "historical_adoption": 0.013224821973550356,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-07"
@@ -380,11 +380,11 @@
   "card": "Strix Serenade",
   "main": 0,
   "side": 1,
-  "appeared_on": "2026-08-09",
-  "pilot": "C_S_W____",
-  "event": "Modern Challenge 64",
-  "placement": 16,
-  "historical_adoption": 0.018979833926453145,
+  "appeared_on": "2026-08-17",
+  "pilot": "EpicWalrus",
+  "event": "Modern Challenge 96",
+  "placement": 8,
+  "historical_adoption": 0.018599562363238512,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-07"
@@ -410,11 +410,11 @@
   "card": "Ulamog, the Defiler",
   "main": 1,
   "side": 0,
-  "appeared_on": "2026-08-01",
-  "pilot": "Sutter",
-  "event": "Modern Challenge 64",
-  "placement": 31,
-  "historical_adoption": 0.08279430789133248,
+  "appeared_on": "2026-08-24",
+  "pilot": "AHubbard",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.06659836065573771,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-07"
@@ -503,9 +503,9 @@
   "state": "decayed",
   "league_after": 0.28125,
   "challenge_after": 0.09375,
-  "tilt_after": -0.0015115298087739065,
+  "tilt_after": -0.0015115298087739204,
   "resolved_on": "2026-07-19",
-  "now_adoption": 0.42857142857142855,
+  "now_adoption": 0.375,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -530,7 +530,7 @@
   "challenge_after": 0.4,
   "tilt_after": 0.006926406926406836,
   "resolved_on": "2026-07-05",
-  "now_adoption": 0.17857142857142858,
+  "now_adoption": 0.20833333333333334,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -555,7 +555,7 @@
   "challenge_after": 0.07894736842105263,
   "tilt_after": 0.0029080203920442277,
   "resolved_on": "2026-07-26",
-  "now_adoption": 0.07142857142857142,
+  "now_adoption": 0.08333333333333333,
   "standing": "lapsed",
   "first_seen": "2026-08-07"
  },
@@ -580,7 +580,7 @@
   "challenge_after": 0.05263157894736842,
   "tilt_after": 0.011683369405779104,
   "resolved_on": "2026-07-26",
-  "now_adoption": 0.03571428571428571,
+  "now_adoption": 0.0,
   "standing": "lapsed",
   "first_seen": "2026-08-07"
  },
@@ -605,7 +605,7 @@
   "challenge_after": 0.2619047619047619,
   "tilt_after": -0.006602967451254715,
   "resolved_on": "2026-08-09",
-  "now_adoption": 0.17857142857142858,
+  "now_adoption": 0.20833333333333334,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -630,7 +630,7 @@
   "challenge_after": 0.2857142857142857,
   "tilt_after": 0.015264507107900116,
   "resolved_on": "2026-08-09",
-  "now_adoption": 0.32142857142857145,
+  "now_adoption": 0.2916666666666667,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -655,7 +655,7 @@
   "challenge_after": 0.2857142857142857,
   "tilt_after": 0.014069264069264065,
   "resolved_on": "2026-07-05",
-  "now_adoption": 0.03571428571428571,
+  "now_adoption": 0.0,
   "standing": "lapsed",
   "first_seen": "2026-08-07"
  },
@@ -2859,11 +2859,14 @@
   "state": "trendsetter",
   "followers": [
    "Acecalna",
+   "Arkmaru",
    "BaronOfBacon",
    "FranBenitez91",
    "Martin_Dominguez",
    "Mortaa",
+   "NicolasP",
    "PesE",
+   "Rivrat2007",
    "Sifui",
    "SoulStrong",
    "Urthstrype",
@@ -2908,7 +2911,7 @@
   "missing": [
    "Griselbrand"
   ],
-  "state": "watching",
+  "state": "breakthrough",
   "followers": [],
   "adopted_card": "End of the Hunt",
   "needed": 4,
@@ -2939,7 +2942,7 @@
   "missing": [
    "Kavaero, Mind-Bitten"
   ],
-  "state": "watching",
+  "state": "breakthrough",
   "followers": [
    "Mortaa"
   ],
@@ -2985,7 +2988,7 @@
    ]
   ],
   "missing": [],
-  "state": "watching",
+  "state": "breakthrough",
   "followers": [
    "ZKG",
    "bcs8995"
@@ -3029,12 +3032,12 @@
   "camp": "non-fallaji",
   "card": "Damping Sphere",
   "main": 0,
-  "side": 2,
-  "appeared_on": "2026-08-11",
-  "pilot": "tA326_",
-  "event": "Modern League",
-  "placement": null,
-  "historical_adoption": 0.09324009324009325,
+  "side": 1,
+  "appeared_on": "2026-08-15",
+  "pilot": "ZKG",
+  "event": "Modern Challenge 64",
+  "placement": 25,
+  "historical_adoption": 0.09121621621621621,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-11"
@@ -3045,13 +3048,13 @@
   "card": "Tamiyo, Inquisitive Student",
   "main": 0,
   "side": 2,
-  "appeared_on": "2026-08-10",
+  "appeared_on": "2026-08-25",
   "pilot": "NicolasP",
   "event": "Modern League",
   "placement": null,
-  "historical_adoption": 0.0011750881316098707,
-  "returning": true,
-  "absent_days": 87,
+  "historical_adoption": 0.003051881993896236,
+  "returning": false,
+  "absent_days": null,
   "first_seen": "2026-08-11"
  },
  {
@@ -3102,10 +3105,10 @@
   "challenge_before": 0.2,
   "state": "established",
   "league_after": 0.7857142857142857,
-  "challenge_after": 0.84,
-  "tilt_after": -0.015405147759771198,
-  "resolved_on": "2026-08-22",
-  "now_adoption": 0.7857142857142857,
+  "challenge_after": 0.8214285714285714,
+  "tilt_after": -0.02327886579358418,
+  "resolved_on": "2026-08-23",
+  "now_adoption": 0.7647058823529411,
   "standing": "holding",
   "first_seen": "2026-08-11"
  },
@@ -3127,10 +3130,10 @@
   "challenge_before": 0.5238095238095238,
   "state": "established",
   "league_after": 0.5185185185185185,
-  "challenge_after": 0.42857142857142855,
-  "tilt_after": -0.02318764392281447,
-  "resolved_on": "2026-08-22",
-  "now_adoption": 0.5,
+  "challenge_after": 0.4,
+  "tilt_after": -0.02602855983174046,
+  "resolved_on": "2026-08-23",
+  "now_adoption": 0.2916666666666667,
   "standing": "holding",
   "first_seen": "2026-08-11"
  },
@@ -3152,10 +3155,10 @@
   "challenge_before": 0.30952380952380953,
   "state": "decayed",
   "league_after": 0.037037037037037035,
-  "challenge_after": 0.09523809523809523,
-  "tilt_after": 0.012757584934697835,
-  "resolved_on": "2026-08-22",
-  "now_adoption": 0.03571428571428571,
+  "challenge_after": 0.08888888888888889,
+  "tilt_after": 0.010738431136202431,
+  "resolved_on": "2026-08-23",
+  "now_adoption": 0.0,
   "standing": "lapsed",
   "first_seen": "2026-08-11"
  },
@@ -3180,11 +3183,14 @@
   "state": "trendsetter",
   "followers": [
    "Acecalna",
+   "Arkmaru",
    "BaronOfBacon",
    "FranBenitez91",
    "Martin_Dominguez",
    "Mortaa",
+   "NicolasP",
    "PesE",
+   "Rivrat2007",
    "Sifui",
    "SoulStrong",
    "Urthstrype",
@@ -3225,11 +3231,14 @@
   "state": "trendsetter",
   "followers": [
    "Acecalna",
+   "Arkmaru",
    "BaronOfBacon",
    "FranBenitez91",
    "Martin_Dominguez",
    "Mortaa",
+   "NicolasP",
    "PesE",
+   "Rivrat2007",
    "Sifui",
    "SoulStrong",
    "Urthstrype",
@@ -3255,11 +3264,11 @@
   "card": "Clarion Conqueror",
   "main": 0,
   "side": 2,
-  "appeared_on": "2026-08-11",
-  "pilot": "Rvng",
-  "event": "Modern Challenge 64",
-  "placement": 2,
-  "historical_adoption": 0.004662004662004662,
+  "appeared_on": "2026-08-15",
+  "pilot": "FranBenitez91",
+  "event": "Modern RC Super Qualifier",
+  "placement": 16,
+  "historical_adoption": 0.024774774774774775,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-12"
@@ -3270,11 +3279,11 @@
   "card": "Winternight Stories",
   "main": 1,
   "side": 0,
-  "appeared_on": "2026-08-13",
-  "pilot": "CNewman",
-  "event": "Modern League",
-  "placement": null,
-  "historical_adoption": 0.07789232531500573,
+  "appeared_on": "2026-08-15",
+  "pilot": "Ryan_39",
+  "event": "Modern RC Super Qualifier",
+  "placement": 19,
+  "historical_adoption": 0.0777027027027027,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-13"
@@ -3319,10 +3328,12 @@
   "followers": [
    "Mortaa",
    "Richie727",
-   "lunaloveee"
+   "jussupinator",
+   "lunaloveee",
+   "slaxx"
   ],
   "adopted_card": "Hedge Maze",
-  "needed": 3,
+  "needed": 4,
   "first_seen": "2026-08-19"
  },
  {
@@ -3354,14 +3365,17 @@
   ],
   "state": "trendsetter",
   "followers": [
+   "Arkmaru",
    "BaronOfBacon",
    "Mortaa",
+   "NicolasP",
    "PesE",
+   "Rivrat2007",
    "Sifui",
    "nedyahiske"
   ],
   "adopted_card": "Clarion Conqueror",
-  "needed": 3,
+  "needed": 4,
   "first_seen": "2026-08-19"
  },
  {
@@ -3384,10 +3398,13 @@
   "missing": [],
   "state": "trendsetter",
   "followers": [
+   "Arkmaru",
    "BaronOfBacon",
    "FranBenitez91",
    "Mortaa",
+   "NicolasP",
    "PesE",
+   "Rivrat2007",
    "Sifui",
    "Urthstrype",
    "VampireDiaries",
@@ -3398,7 +3415,7 @@
    "surgetemelo"
   ],
   "adopted_card": "Clarion Conqueror",
-  "needed": 3,
+  "needed": 4,
   "first_seen": "2026-08-19"
  },
  {
@@ -3463,11 +3480,11 @@
   "tilt": 0.014144130683798939,
   "challenge_before": 0.5555555555555556,
   "state": "established",
-  "league_after": 0.7777777777777778,
-  "challenge_after": 0.7692307692307693,
-  "tilt_after": -0.021082621082620934,
-  "resolved_on": "2026-08-22",
-  "now_adoption": 0.7142857142857143,
+  "league_after": 0.7857142857142857,
+  "challenge_after": 0.7,
+  "tilt_after": -0.020126782884310468,
+  "resolved_on": "2026-08-28",
+  "now_adoption": 0.7647058823529411,
   "standing": "holding",
   "first_seen": "2026-08-19"
  },
@@ -3488,11 +3505,11 @@
   "tilt": 0.021813835350366073,
   "challenge_before": 0.6666666666666666,
   "state": "established",
-  "league_after": 0.5555555555555556,
-  "challenge_after": 0.7692307692307693,
-  "tilt_after": -0.0062678062678060975,
-  "resolved_on": "2026-08-22",
-  "now_adoption": 0.6428571428571429,
+  "league_after": 0.5,
+  "challenge_after": 0.65,
+  "tilt_after": -0.01608557844690961,
+  "resolved_on": "2026-08-28",
+  "now_adoption": 0.5294117647058824,
   "standing": "holding",
   "first_seen": "2026-08-19"
  },
@@ -3565,9 +3582,12 @@
   "missing": [
    "Kavaero, Mind-Bitten"
   ],
-  "state": "watching",
-  "followers": [],
-  "adopted_card": "Breeding Pool",
+  "state": "trendsetter",
+  "followers": [
+   "Fransadness",
+   "GigaChadSigmaMale"
+  ],
+  "adopted_card": "Cling to Dust",
   "needed": 2,
   "first_seen": "2026-08-23"
  },
@@ -3589,12 +3609,14 @@
    ]
   ],
   "missing": [],
-  "state": "watching",
+  "state": "trendsetter",
   "followers": [
-   "PesE"
+   "Arkmaru",
+   "PesE",
+   "Rivrat2007"
   ],
   "adopted_card": "Cursed Totem",
-  "needed": 2,
+  "needed": 3,
   "first_seen": "2026-08-23"
  },
  {
@@ -3622,9 +3644,12 @@
   "missing": [
    "Kavaero, Mind-Bitten"
   ],
-  "state": "watching",
-  "followers": [],
-  "adopted_card": "Breeding Pool",
+  "state": "trendsetter",
+  "followers": [
+   "Fransadness",
+   "GigaChadSigmaMale"
+  ],
+  "adopted_card": "Cling to Dust",
   "needed": 2,
   "first_seen": "2026-08-23"
  },
@@ -3658,8 +3683,11 @@
   "missing": [],
   "state": "trendsetter",
   "followers": [
+   "Arkmaru",
    "Mortaa",
+   "NicolasP",
    "PesE",
+   "Rivrat2007",
    "connormc02"
   ],
   "adopted_card": "Clarion Conqueror",
@@ -3691,8 +3719,11 @@
   "missing": [],
   "state": "trendsetter",
   "followers": [
+   "Arkmaru",
    "Mortaa",
+   "NicolasP",
    "PesE",
+   "Rivrat2007",
    "connormc02"
   ],
   "adopted_card": "Clarion Conqueror",
@@ -3731,12 +3762,15 @@
   ],
   "state": "trendsetter",
   "followers": [
+   "Arkmaru",
    "Mortaa",
+   "NicolasP",
    "PesE",
+   "Rivrat2007",
    "Tetsubou"
   ],
   "adopted_card": "Clarion Conqueror",
-  "needed": 2,
+  "needed": 3,
   "first_seen": "2026-08-23"
  },
  {
@@ -3851,7 +3885,7 @@
   "card": "Emperor of Bones",
   "main": 0,
   "side": 2,
-  "appearances": 3,
+  "appearances": 4,
   "pilots": [
    "BLJ",
    "Kollslaw"
@@ -3862,5 +3896,258 @@
   },
   "hypothesis_candidate": false,
   "first_seen": "2026-08-23"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "KingHairy",
+  "event": "Modern League",
+  "date": "2026-08-24",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Cling to Dust",
+    0,
+    1
+   ]
+  ],
+  "missing": [
+   "Kavaero, Mind-Bitten"
+  ],
+  "state": "watching",
+  "followers": [],
+  "adopted_card": "Cling to Dust",
+  "needed": 2,
+  "first_seen": "2026-08-28"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "Leovoldo",
+  "event": "Modern League",
+  "date": "2026-08-24",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "White Orchid Phantom",
+    0,
+    3
+   ]
+  ],
+  "missing": [
+   "Teferi, Time Raveler"
+  ],
+  "state": "watching",
+  "followers": [],
+  "adopted_card": "White Orchid Phantom",
+  "needed": 2,
+  "first_seen": "2026-08-28"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "NicolasP",
+  "event": "Modern League",
+  "date": "2026-08-25",
+  "placement": null,
+  "mode": "in-pool",
+  "delta": 5,
+  "novel": [
+   [
+    "Clarion Conqueror",
+    0,
+    2
+   ],
+   [
+    "End of the Hunt",
+    0,
+    1
+   ],
+   [
+    "Tamiyo, Inquisitive Student",
+    0,
+    2
+   ]
+  ],
+  "missing": [
+   "Griselbrand",
+   "Teferi, Time Raveler"
+  ],
+  "state": "watching",
+  "followers": [],
+  "adopted_card": "Clarion Conqueror",
+  "needed": 2,
+  "first_seen": "2026-08-28"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "league",
+  "pilot": "Takayama",
+  "event": "Modern League",
+  "date": "2026-08-25",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 2,
+  "novel": [
+   [
+    "Cling to Dust",
+    0,
+    1
+   ]
+  ],
+  "missing": [
+   "Kavaero, Mind-Bitten"
+  ],
+  "state": "watching",
+  "followers": [],
+  "adopted_card": "Cling to Dust",
+  "needed": 2,
+  "first_seen": "2026-08-28"
+ },
+ {
+  "kind": "fringe",
+  "camp": "fallaji",
+  "card": "White Orchid Phantom",
+  "main": 0,
+  "side": 3,
+  "appeared_on": "2026-08-24",
+  "pilot": "Leovoldo",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.0020491803278688526,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-28"
+ },
+ {
+  "kind": "fringe",
+  "camp": "hybrid",
+  "card": "Cling to Dust",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-08-23",
+  "pilot": "GigaChadSigmaMale",
+  "event": "Modern Challenge 64",
+  "placement": 16,
+  "historical_adoption": 0.002066115702479339,
+  "returning": false,
+  "absent_days": null,
+  "first_seen": "2026-08-28"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Ceremonious Rejection",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-08-26",
+  "pilot": "ElPuerco",
+  "event": "Modern Challenge 96",
+  "placement": 30,
+  "historical_adoption": 0.007042253521126761,
+  "returning": true,
+  "absent_days": 75,
+  "first_seen": "2026-08-28"
+ },
+ {
+  "kind": "hype",
+  "camp": "fallaji",
+  "card": "Solitude",
+  "main": 4,
+  "side": 0,
+  "raised_on": "2026-08-23",
+  "from_adoption": 0.0,
+  "to_adoption": 0.6428571428571429,
+  "population": 14,
+  "origin_pilot": "eswaff",
+  "origin_event": "Modern Challenge 64",
+  "origin_date": "2026-08-13",
+  "origin_placement": 1,
+  "tilt": -0.004385437943049464,
+  "challenge_before": 0.7857142857142857,
+  "state": "raised",
+  "league_after": null,
+  "challenge_after": null,
+  "tilt_after": null,
+  "resolved_on": null,
+  "now_adoption": 0.6470588235294118,
+  "standing": "holding",
+  "first_seen": "2026-08-28"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Clarion Conqueror",
+  "main": 0,
+  "side": 2,
+  "raised_on": "2026-08-23",
+  "from_adoption": 0.0,
+  "to_adoption": 0.4074074074074074,
+  "population": 27,
+  "origin_pilot": "DskBayWolf",
+  "origin_event": "Modern Challenge 64",
+  "origin_date": "2026-08-15",
+  "origin_placement": 1,
+  "tilt": -0.01277115645589133,
+  "challenge_before": 0.5555555555555556,
+  "state": "raised",
+  "league_after": null,
+  "challenge_after": null,
+  "tilt_after": null,
+  "resolved_on": null,
+  "now_adoption": 0.4166666666666667,
+  "standing": "holding",
+  "first_seen": "2026-08-28"
+ },
+ {
+  "kind": "hype",
+  "camp": "non-fallaji",
+  "card": "Fatal Push",
+  "main": 0,
+  "side": 1,
+  "raised_on": "2026-08-23",
+  "from_adoption": 0.06666666666666667,
+  "to_adoption": 0.4444444444444444,
+  "population": 27,
+  "origin_pilot": "Kollslaw",
+  "origin_event": "Modern Challenge 32",
+  "origin_date": "2026-08-12",
+  "origin_placement": 3,
+  "tilt": -0.024386963990668642,
+  "challenge_before": 0.35555555555555557,
+  "state": "raised",
+  "league_after": null,
+  "challenge_after": null,
+  "tilt_after": null,
+  "resolved_on": null,
+  "now_adoption": 0.375,
+  "standing": "holding",
+  "first_seen": "2026-08-28"
+ },
+ {
+  "kind": "pet-tech",
+  "camp": "non-fallaji",
+  "card": "Spell Pierce",
+  "main": 0,
+  "side": 1,
+  "appearances": 3,
+  "pilots": [
+   "SimoCr",
+   "sebmoncle"
+  ],
+  "appeared_on": "2026-05-30",
+  "dissenters": {
+   "SimoCr": 2
+  },
+  "hypothesis_candidate": true,
+  "first_seen": "2026-08-28"
  }
 ]
