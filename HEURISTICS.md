@@ -124,7 +124,7 @@ cites the evidence that raised it and counts the sessions it has been put to
 him in. See `.claude/skills/mtg-heuristics/SKILL.md`.
 
 **A card can spread challenge-first, and league-only hype detection is blind to
-it** (raised 2026-08-19, surfaced 1×):
+it** (raised 2026-08-19, surfaced 2×):
 Hype is read in the league stratum on the premise that copying shows there
 first and hardest. Clarion Conqueror did the opposite in the camp that matters
 to this 75: it saturated the challenge stratum while the league share stayed
