@@ -13,18 +13,20 @@ dedicated pilots play. Frequency thresholds must stay modest.
 window, not more.
 
 **One deck per pilot in a challenge; a league day can trophy the same pilot
-twice** (2026-08-08):
+twice** (2026-09-11):
 A challenge-class event is one entry per player, so a pilot appears in its
 standings once and his list is his whole showing. A league is continuous: a
 pilot can run it repeatedly in a day and publish a 5-0 each time, so a league
 dump can carry several lists from one name, and they may not be the same 75.
 *Applies*: in the challenge stratum (event, pilot) identifies a list, so counting
 lists is counting pilots and no de-duplication is owed. In the league stratum it
-does not, so anything counting lists there is counting a grinder's session: keep
-the per-pilot cap on league readings, and read a league share as lists published
-rather than pilots holding a configuration. It is also why the ingest index
-diffs as a multiset: two identical league rows are two lists, not one filed
-twice.
+does not, so a rate reading there is counting a grinder's session: keep the
+per-pilot cap on the conversion gap and on any share read as pilots holding a
+configuration. Raw trophy volume per week is the deliberate exception and is
+never capped, since what it measures is how much of the league stratum the deck
+occupies and a grinder's repeat trophies are part of that occupancy. It is also
+why the ingest index diffs as a multiset: two identical league rows are two
+lists, not one filed twice.
 
 **A lone dissenting regular beats herd convergence as evidence** (2026-08-07):
 Mass adoption of a winner's 75 inflates belief in it (goldfish copying). A
@@ -100,6 +102,18 @@ The committed transcriptions stay exactly what the screenshots showed. The
 merged share sums two figures the site rounded to a tenth each, so it can sit a
 tenth off; the deck counts are exact.
 
+**A card can spread challenge-first, and league-only hype detection is blind to
+it** (2026-09-10):
+Copying usually shows in the league stratum first and hardest, which is why hype
+is read there. It does not always. Clarion Conqueror saturated the challenge
+stratum in the non-Fallaji camp while its league share stayed under the bar, so
+the reading that exists to catch a copied configuration never saw the largest
+one this regime has produced.
+*Applies*: a spike is read in whichever stratum the configuration actually moved
+in, not in the league stratum by rule, and lineage joins a departure to a hype
+episode in either. A lineage row saying the field never piled in is not evidence
+that it did not until the challenge stratum has been checked too.
+
 **Hype corrects in about a week, and the weekend is the judge** (2026-08-07):
 One week of play is usually enough for reality to hit misconfigured or
 suboptimal hyped lists, but the heaviest tournament density is on weekends, so
@@ -122,30 +136,3 @@ Heuristic candidates, held here until Alejandro rules on them. Nothing in this
 section is adopted knowledge and nothing here may steer an analysis. Each entry
 cites the evidence that raised it and counts the sessions it has been put to
 him in. See `.claude/skills/mtg-heuristics/SKILL.md`.
-
-**A card can spread challenge-first, and league-only hype detection is blind to
-it** (raised 2026-08-19, surfaced 2×):
-Hype is read in the league stratum on the premise that copying shows there
-first and hardest. Clarion Conqueror did the opposite in the camp that matters
-to this 75: it saturated the challenge stratum while the league share stayed
-under the bar, so the reading that exists to catch a copied configuration never
-saw the largest one this regime has produced.
-*Evidence*: non-fallaji challenge-class adoption of Clarion Conqueror 0/2 went
-1/80 (1%) in the baseline window to 20/40 (50%) fresh, delta +0.49, the largest
-single-configuration move in the post-regime history. In the same camp's league
-stratum the fortnight ending 2026-08-16 reads 24% off 25 lists, against 0% in
-every fortnight before it: under `HYPE_CEILING` of 30%, so no hype flag was
-raised in non-fallaji at all. The fallaji camp cleared the bar on 8 league lists,
-exactly `HYPE_MIN_LISTS`, 0% to 37.5%, flag raised 2026-08-16 off eswaff #1
-Modern Challenge 64 2026-08-13. The consequence lands on lineage, which joins a
-departure to a hype episode on the same card in the same camp: Rvng's 2026-08-11
-Clarion departure in fallaji reads "Clarion Conqueror spiked 2026-08-16, raised,
-now holding", while Ivan_Draw_Go's and DskBayWolf's same-day, same-card
-departures in non-fallaji both read "the field never piled in", each on a
-trendsetter flag counting 17 new pilots. The camp at 50% reports the non-event;
-the camp at 65% off a thinner base reports the episode.
-*Applies if adopted*: a spike is read in whichever stratum the configuration
-moved in, not in the league stratum by rule, and lineage joins a departure to an
-episode in either. Until then a challenge-first climb has to be caught by hand
-off the adoption delta, and a lineage row saying the field never piled in is not
-evidence that it did not.
