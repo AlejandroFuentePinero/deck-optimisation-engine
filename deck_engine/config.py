@@ -31,7 +31,15 @@ FORMAT = "modern"
 # published under whichever printing its pilot registered, and a pilot may
 # register both. The Magic name is the canonical one, being what most of the
 # history is already published under.
-CARD_ALIASES = {"Superior Spider-Man": "Kavaero, Mind-Bitten"}
+# Elesh Norn is the same card again: the site publishes the March of the
+# Machine legend under its full name almost everywhere and under the bare one
+# twice, and the pilot confirmed they are one card. Left unmerged it reads as a
+# card the archetype had never played, which is exactly the finding a returning-
+# card reading exists to make and exactly the wrong one.
+CARD_ALIASES = {
+    "Superior Spider-Man": "Kavaero, Mind-Bitten",
+    "Elesh Norn": "Elesh Norn, Mother of Machines",
+}
 
 # Decks MTGGoldfish tables as separate archetypes that are one deck. Its Eldrazi
 # row is the Gruul build, and Gruul Basking Broodscale Combo is the same seventy-
@@ -100,6 +108,117 @@ SIGNATURE_CARDS = (
 DIVERGENCE_CARD = "Fallaji Archaeologist"
 CAMPS = {"fallaji": (3, 4), "non-fallaji": (0,)}
 HYBRID_CAMP = "hybrid"
+
+# Tracked decks: archetypes the engine classifies and reports on but never
+# optimises. Goryo's above is the optimised one and every reading in this
+# project answers to it; these have no reference list, no hypotheses and no slot
+# audit, only the weekly report. The optimised rule is tested first and these in
+# turn, so a list takes the first name that claims it and is never two decks.
+TRACKED_DECKS = {
+    "blink": {
+        # The four together are the deck. Phelia alone is not enough: a white
+        # energy build and a Boros build both play her, and the Ephemerate pool
+        # on its own is half Goryo's.
+        "signature": (
+            "Phelia, Exuberant Shepherd",
+            "Flickerwisp",
+            "Overlord of the Balemurk",
+            "Witch Enchanter",
+        ),
+        # The deck is Esper or Orzhov and nothing else. A Mardu build shares all
+        # four signature cards and is a different deck, so a mainboard source
+        # that actually produces red or green puts a list outside the archetype.
+        # Fetchlands are not colour evidence here: most of the Orzhov half
+        # fetches with Flooded Strand, which produces neither.
+        "off_colour": (
+            "Sacred Foundry",
+            "Blood Crypt",
+            "Raucous Theater",
+            "Elegant Parlor",
+            "Mountain",
+            "Snow-Covered Mountain",
+            "Arena of Glory",
+            "Overgrown Tomb",
+            "Temple Garden",
+            "Lush Portico",
+        ),
+        # Variant rule: the blue half against the two-colour half. Mainboard
+        # Watery Grave partitions the archetype exactly, with no list between
+        # the two, where a rule drawn on blue sources throws away the Orzhov
+        # lists that fetch and a rule drawn on blue spells drops any Esper list
+        # that cut Teferi. Presence and not a count: a variant here is which
+        # colours the deck is, which one copy settles.
+        "variant_card": "Watery Grave",
+        "variant_with": "esper",
+        "variant_without": "orzhov",
+        # The cards the deck argues about the number of. Named rather than
+        # found by a scan, so the drift plot carries the same lines every week
+        # and a line arriving is a decision somebody made. All three sit at
+        # near-total adoption, which is why no adoption reading sees them: the
+        # whole of the disagreement is how many, and it has moved about a copy
+        # since mid-June while every other slot held.
+        "copy_drift": ("Flickerwisp", "Emperor of Bones", "Witch Enchanter"),
+    }
+}
+
+# Tracking rule: what counts as a change worth a timeline row, read over a
+# fortnight rather than a week. A week of this deck runs from nine lists to
+# sixty-four, a seven-fold swing, so a threshold set as a share is measuring the
+# sample size and not the deckbuilding: across every bar from five points to
+# twenty-five, a weekly reading reverses in the next bin about two times in
+# five, and no threshold escapes it. Over a fortnight the same bars reverse
+# between fifteen and twenty-two percent of the time and fall as the bar rises,
+# which is what a threshold is supposed to do. The plots stay weekly; only the
+# detection is binned.
+TRACK_BIN_DAYS = 14
+
+# And the bar itself, in both units. The share is what makes a move large; the
+# list count is what makes it evidence. The count does the real work, being a
+# fifty-six percent swing in the thinnest fortnight and eight percent in the
+# fattest, which is the right behaviour when the denominator moves that far: it
+# holds the evidence constant rather than the effect size.
+TRACK_ADOPTION_DELTA = 0.20
+TRACK_MIN_LISTS = 5
+
+# How far a card's mean copy count has to move to be the camp changing its mind
+# rather than the week's lists differing. Read on the mean and never the mode:
+# the modal count of the cards that actually move oscillates every other week
+# and every oscillation reverses, because the mode is held by a plurality one
+# pilot can flip.
+TRACK_COPY_DELTA = 0.4
+
+# Returning-card gates, per zone. A sideboard churns about seven times harder
+# than a mainboard, so one gate cannot serve both: two thirds of the sideboard
+# names this deck has ever registered appear in two weeks or fewer, and they
+# carry four percent of the volume. Both sit on RETURN_ABSENCE_DAYS above, which
+# a fortnight is too short for: a staple running at three to six lists a week
+# misses two thin weeks on chance alone and reads as a return.
+TRACK_RETURN_MAIN_LISTS = 2
+TRACK_RETURN_SIDE_LISTS = 3
+
+# A return also has to be bigger than the card has ever been, which is what
+# separates a card the field has turned to from a card that was always a
+# one-off and is a one-off again. Without it the gates admit both and the
+# timeline cannot tell the reader which it is looking at.
+TRACK_RETURN_BEATS_PEAK = True
+
+# Spike rule: how far this week's volume has to clear the post-regime median
+# before the summary says so. A deck at several times its own baseline is being
+# copied, and every performance figure taken over the spike measures adoption
+# density rather than the deck. The report has to say that in the week it
+# happens, not in the retrospective.
+TRACK_SPIKE_MULTIPLE = 2.0
+
+# The dated events a plot marks and the timeline names, one per line as
+# `date,label`. Committed and hand-maintained: what counts as a major event is
+# the pilot's call, and no feed serves it.
+EVENTS_PATH = REPO_ROOT / "data" / "events.csv"
+
+# What the weekly report is built from and cannot rebuild: the frozen weekly
+# figures, the frozen timeline rows, and the summary written over them. Committed
+# for the reason the ingest index is, one directory per tracked deck. The
+# rendered page itself is derived and stays out, like every other report.
+TRACKING_DIR = REPO_ROOT / "data" / "tracking"
 
 # Conversion gap rule: how much of the uncapped figure counting each pilot once
 # has to leave standing before the gap is the camp's rather than a grinder's.

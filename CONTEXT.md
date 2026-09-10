@@ -71,6 +71,40 @@ Core is the near-universal part of the camp's 75 (default: configurations at 90%
 **Near-miss list**:
 A list with mainboard Goryo's Vengeance that fails full membership. Surfaced as potential variant innovation, excluded from archetype metrics.
 
+### Tracked decks
+
+**Tracked deck**:
+A deck the engine classifies and reports on weekly without optimising. It has no reference list, no hypotheses, no slot audit and no playtest queue: what it has is a fixed set of weekly figures and a change timeline, computed the same way every week for a team meeting to read. The tier is the point of the word. Goryo's answers to a pilot who plays it and to a submission date; a tracked deck answers to neither, and reading one with the other's instruments would put an engine's guesses where a pilot's knowledge belongs.
+_Avoid_: archetype on its own (Goryo's is one too, and the difference between them is the whole distinction)
+
+**Blink**:
+The tracked Modern archetype: a mainboard holding Phelia, Exuberant Shepherd, Flickerwisp, Overlord of the Balemurk and Witch Enchanter, all four, and no source that produces red or green. The four are required together because no smaller set is the deck: Phelia alone admits a white energy build and a Boros build, and Ephemerate alone is half Goryo's. Membership is tested after Goryo's, so a list holding both signatures takes one name and it is the optimised one.
+
+**Off-colour exclusion**:
+The colour half of Blink's membership rule. A Mardu build shares all four signature cards and is a different deck, so a mainboard source that actually produces red or green puts a list outside the archetype rather than into a third variant. Read on sources and never on fetchlands, most of the Orzhov half fetching with Flooded Strand, which produces neither. The rule is a hand-written list of card names and is the one part of membership that can go stale silently, so the count it turned away is printed every week: a red build on a source nobody listed would otherwise read as a member and nothing would say so.
+
+**Esper Blink / Orzhov Blink**:
+Blink's two variants, split on mainboard Watery Grave. Presence and not a count, a variant here being which colours the deck is, which one copy settles. The card partitions the archetype exactly, where a rule drawn on blue sources throws away the Orzhov lists that fetch and one drawn on blue spells drops any Esper list that cut Teferi. Every reading in the weekly report is the Esper variant alone; Orzhov is carried as bare numbers in the summary, its challenge-class population being single figures over the whole post-regime history, which is enough to say it exists and nowhere near enough to read a build or a conversion rate off.
+
+**Detection bin**:
+The fortnight a change is read over, anchored at the regime boundary and never overlapping. A week of this deck runs from nine published lists to sixty-four, so a threshold set as a share of a week measures the sample size: at every bar from five points to twenty-five a weekly reading reverses in the next week about two times in five, and raising the bar loses findings without buying purity. Over a fortnight the same bars reverse between fifteen and twenty-two percent of the time and the rate falls as the bar rises. The plots stay weekly; only the detection is binned. Anchored rather than trailing, so the bin a date falls in never moves and a row written six weeks ago still describes the same fortnight.
+
+**Returning card**:
+A card appearing in a bin having been out of the deck for `RETURN_ABSENCE_DAYS`, at a share larger than it has ever held. Three conditions and each drops a different false one. The absence is a month rather than a fortnight because a staple running at a few lists a week misses a fortnight on chance alone: Orcish Bowmasters, a card of ninety-eight lifetime appearances, reads as a return at the shorter window. The gate is per zone because a sideboard churns far harder than a mainboard. And the share has to beat the card's own peak, which is what separates a card the field turned to from one that was always a one-off and is a one-off again. Read against the whole store rather than the post-regime window, since how long a card has been gone is a fact about the deck and not about the regime; a window starting at the boundary calls every card of the opening fortnight new.
+_Avoid_: fringe card (the archetype-level reading, which is a share of a whole history rather than an absence)
+
+**Board migration, as a timeline row**:
+A returning card that was in the other zone the bin before. Read one zone at a time it is new to the mainboard, which is true and reads as novelty, so the row says which it is: a sideboard staple being promoted is a decision about what the card is for, not the deck discovering it.
+
+**Copy drift**:
+The mean copies of a named card, over the lists that register it, week by week. The reading for the slots the deck argues about the number of rather than the presence of, which no adoption share can see because those cards sit at near-total adoption. Read on the mean and never the mode: on this deck's cards the modal count oscillates every other week and every oscillation reverses, a plurality one pilot can flip holding it. The cards are named in config rather than found by a scan, so the plot carries the same lines every week and a line arriving is a decision somebody made.
+
+**Stability**:
+The share of a week's lists whose mainboard is identical to the previous week's most-played mainboard. The direct reading of whether a deck is still being built, where every other reading answers it only by absence: a week nothing moved in looks the same whether the field settled or the field was quiet. High is neither good nor bad, it is settled. It is also the warning that such a week is not the sample its list count claims, the evidence in it being closer to its distinct builds than to its lists. Mainboards only, the sideboard being the part of a copied list a pilot changes first.
+
+**Frozen row**:
+A week's figures or a fortnight's findings, written once and never edited. The store is rebuilt from the cache on every run and a past week can genuinely move, a league dump gaining trophies through its own day being the usual reason, so the report renders what was reported rather than what the store now says. Appended and never rewritten, for the reason reference list versions are: a history that can be rebuilt is a history that can come to disagree with itself, and a timeline nobody can cite is not a timeline.
+
 ### Optimisation concepts
 
 **Hypothesis**:

@@ -41,9 +41,20 @@ FILLER_LANDS = {
 }
 FILLER_SIDE = {"Consign to Memory": 4, "Wrath of the Skies": 4, "Mystical Dispute": 4}
 
+# The tracked deck's own signature and shell, taken from its rule for the reason
+# the archetype's is. Its lands are its own because the archetype's filler mains
+# Watery Grave and Island, and Watery Grave is exactly what tells this deck's two
+# variants apart: built on the shared block, every synthetic list would be Esper
+# and the variant rule would have nothing to read.
+BLINK_SIGNATURE = {card: 2 for card in config.TRACKED_DECKS["blink"]["signature"]}
+BLINK_LANDS = {"Marsh Flats": 4, "Godless Shrine": 2, "Plains": 2, "Swamp": 2}
+BLINK_VARIANT_LANDS = {"esper": {"Watery Grave": 2}, "orzhov": {}}
+
 # One challenge class throughout: every class but league is challenge-class, so
 # which of them a synthetic event is makes no difference to any reading here.
 CHALLENGE_KIND = "challenge-64"
+
+_LANDS = FILLER_LANDS | BLINK_LANDS | {"Watery Grave": 2, "Sacred Foundry": 2, "Mountain": 2}
 
 FALLAJI_COPIES = {"fallaji": 4, "non-fallaji": 0, "hybrid": 2}
 
@@ -72,6 +83,34 @@ def entry(pilot, camp="non-fallaji", cards=None, points=None, placement=None, dr
     return {"pilot": pilot, "points": points, "placement": placement, "main": main, "side": side}
 
 
+def blink(
+    pilot: str,
+    variant: str = "esper",
+    cards: dict | None = None,
+    points: int | None = None,
+    placement: int | None = None,
+    off_colour: str | None = None,
+) -> dict:
+    """One list of the tracked deck, in one of its variants.
+
+    `off_colour` names a source outside the deck's two colours, which is the
+    only way to write the build that holds every signature card and is a
+    different deck for it.
+    """
+    main = BLINK_SIGNATURE | FILLER_MAIN | BLINK_LANDS | BLINK_VARIANT_LANDS[variant]
+    if off_colour:
+        main[off_colour] = 2
+    side = dict(FILLER_SIDE)
+    for card, (in_main, in_side) in (cards or {}).items():
+        if in_main:
+            main[card] = in_main
+        else:
+            main.pop(card, None)
+        if in_side:
+            side[card] = in_side
+    return {"pilot": pilot, "points": points, "placement": placement, "main": main, "side": side}
+
+
 def _card_rows(cards: dict[str, int]) -> list[dict]:
     """Cards as the payload publishes them, typed so the land count can be read."""
     return [
@@ -79,7 +118,7 @@ def _card_rows(cards: dict[str, int]) -> list[dict]:
             "qty": str(qty),
             "card_attributes": {
                 "card_name": name,
-                "card_type": "LAND" if name in FILLER_LANDS else "CREATURE",
+                "card_type": "LAND" if name in _LANDS else "CREATURE",
             },
         }
         for name, qty in cards.items()

@@ -39,7 +39,10 @@ confirm that something helps.
 
 ## Install
 
-Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/).
+Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/). The weekly
+tracked-deck report renders its figures with matplotlib, which `uv sync`
+installs. `scripts/weekly_copies.py` is separate and shells out to `Rscript`
+with ggplot2, which is not installed by anything here.
 
 ```bash
 git clone https://github.com/AlejandroFuentePinero/deck-optimisation-engine.git
@@ -110,6 +113,23 @@ reported, and the engine will not print one.
 | `report [--on D]` | Render the whole run as one self-contained HTML file |
 
 `--camp` defaults to the reference list's camp on every command that takes it.
+
+### Reading a tracked deck
+
+A tracked deck is one the engine classifies and reports on weekly without
+optimising: no reference list, no hypotheses, no slot audit. Esper Blink is the
+only one, and `CONTEXT.md` has the vocabulary.
+
+| Command | What it does |
+| --- | --- |
+| `weekly [--deck D] [--variant V] [--week D]` | Freeze the closed weeks, then render the week's report |
+
+Run it on a Monday for the week that closed on Sunday, which is what it defaults
+to. It prints the numbers, where they landed as JSON, and where the HTML landed.
+The summary at the top of that HTML is written by hand into
+`data/tracking/<deck>/summary/<week>.md`; see `.claude/skills/weekly-report/`
+for the clause order it goes in. Everything under `data/tracking/` is committed
+and append-only, because the report's own history cannot be rebuilt from a cache.
 
 ## Documentation
 

@@ -3,7 +3,19 @@
 import argparse
 from pathlib import Path
 
-from . import config, gamelogs, hypotheses, index, ledger, meta, movement, outcome, reference, report
+from . import (
+    config,
+    gamelogs,
+    hypotheses,
+    index,
+    ledger,
+    meta,
+    movement,
+    outcome,
+    reference,
+    report,
+    weekly,
+)
 from .classify import camp as camp_of
 from .refresh import refresh
 from .store import CHALLENGE_CLASS, adoption, arrivals, build, goryos_lists, meta_trend
@@ -447,7 +459,36 @@ def main(argv=None) -> None:
 
     commands.add_parser("gamelogs", help="parse the pilot's own MTGO match logs into records")
 
+    tracked = commands.add_parser("weekly", help="freeze and render a tracked deck's weekly report")
+    tracked.add_argument("--deck", default="blink", choices=sorted(config.TRACKED_DECKS))
+    tracked.add_argument("--variant", default=None, help="defaults to the deck's blue variant")
+    tracked.add_argument("--week", help="the Monday to report, defaults to the last full week")
+
     args = parser.parse_args(argv)
+    if args.command == "weekly":
+        variant = args.variant or config.TRACKED_DECKS[args.deck]["variant_with"]
+        week = args.week or weekly.last_complete_week()
+        added = weekly.freeze(deck=args.deck, variant=variant, through=week)
+        reading = weekly.facts(deck=args.deck, variant=variant, week=week)
+        if "error" in reading:
+            print(f"{week}: {reading['error']}")
+            return
+        print(f"{args.deck}/{variant}, week of {week}")
+        print(f"  froze {added['weeks_added']} week(s), {added['timeline_added']} timeline row(s)")
+        challenge, conversion = reading["challenge"], reading["conversion"]
+        print(f"  {challenge['lists']} challenge-class list(s), {challenge['share']:.1%} of top 32"
+              f"{', VOLUME ELEVATED' if challenge['spiking'] else ''}")
+        print(f"  {conversion['top8']} top 8 ({conversion['top8_share']:.1%} of the band), "
+              f"{conversion['top16']} top 16")
+        print(f"  {reading['leagues']['trophies']} trophy(ies), "
+              f"{reading['orzhov']['lists']} list(s) in the other variant")
+        print(f"  numbers at {weekly.write_facts(reading, args.deck)}")
+        print(f"  report at {weekly.render(deck=args.deck, variant=variant, week=week)}")
+        summary = weekly.deck_dir(args.deck) / "summary" / f"{week}.md"
+        if not summary.exists():
+            print(f"  NO SUMMARY: write {summary} and re-run to render it in")
+        return
+
     if args.command == "gamelogs":
         matches = gamelogs.load()
         if not matches:

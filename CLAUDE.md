@@ -18,6 +18,10 @@ Default canonical vocabulary: `needs-triage`, `needs-info`, `ready-for-agent`, `
 
 Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
 
+### Weekly tracked-deck report
+
+The Monday run that produces the team meeting's report: refresh, freeze, render, then write the summary to a fixed clause order. See `.claude/skills/weekly-report/SKILL.md`.
+
 ### Heuristics capture
 
 `HEURISTICS.md` at the repo root, maintained by the `mtg-heuristics` skill. See `.claude/skills/mtg-heuristics/SKILL.md`.
