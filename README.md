@@ -1,5 +1,14 @@
 # Deck Optimisation Engine
 
+> **Superseded on 2026-09-11.** This repo is kept as the record of the
+> experiment and its postmortem, and receives no further work. The tracking
+> half moved to [archetype-tracking](https://github.com/AlejandroFuentePinero/archetype-tracking),
+> which owns the frozen fortnightly rows from here on; do not run the weekly
+> report from this checkout. The optimisation half is not continued: what it
+> was trying to answer needs play-by-play signal, and that lives in two private
+> projects, mtgo-insights and arena-insights. Read
+> [the postmortem](docs/postmortem-2026-08-08.md) for why.
+
 Mines published MTGO decklists to inform deckbuilding decisions for one Modern
 archetype ahead of a paper tournament. It caches every published Modern event,
 rebuilds a DuckDB store from that cache, and answers a fixed set of questions
