@@ -32,6 +32,11 @@ import matplotlib.pyplot as plt  # noqa: E402
 # figures inherit the page's ink and theme with it.
 INK = "#010203"
 
+# The page's own ground, swapped for its token on the way out. Used only as a
+# plate behind an event label, so the name stays readable where it crosses a bar
+# or a line instead of competing with the data underneath it.
+GROUND = "#040506"
+
 # Categorical slots 1-3 from the validated reference palette, used here only as
 # sentinels: each is swapped for a CSS variable on the way out, so one rendering
 # of a figure serves both themes and the dark steps are a selected palette in
@@ -65,6 +70,7 @@ def _svg(fig) -> str:
     markup = buffer.getvalue()
     markup = markup[markup.index("<svg") :]
     markup = re.sub(re.escape(INK), "currentColor", markup, flags=re.IGNORECASE)
+    markup = re.sub(re.escape(GROUND), "var(--surface)", markup, flags=re.IGNORECASE)
     for slot, colour in enumerate(SERIES, start=1):
         markup = re.sub(re.escape(colour), f"var(--series-{slot})", markup, flags=re.IGNORECASE)
     # A fixed pixel width would overflow a narrow screen; the viewBox already
@@ -73,21 +79,26 @@ def _svg(fig) -> str:
 
 
 def _days(rows: list[dict], key: str = "week") -> list[date]:
-    return [date.fromisoformat(row[key]) for row in rows]
+    """A week's mark sits on the Sunday it closed, not the Monday it opened.
+
+    Stored by its Monday, because that is the bucket the store groups on. Drawn
+    at its end, because a point at the opening day reads as the last day there
+    is data for, and the reader is then a week behind what the chart holds.
+    """
+    return [date.fromisoformat(row[key]) + timedelta(days=6) for row in rows]
 
 
 def _visible(days: list[date], events: list[dict]) -> list[tuple[date, str]]:
     """The events that fall inside the reported span, dated and named.
 
-    A week runs to the Sunday after its Monday, so an event late in the last
-    reported week sits days past the final data point and still belongs on the
-    chart.
+    The span runs from the first plotted week's Monday to the last one's Sunday,
+    which are six days before the first mark and the last mark itself.
     """
     if not days:
         return []
-    limit = max(days) + timedelta(days=6)
+    first, last = min(days) - timedelta(days=6), max(days)
     marks = [(date.fromisoformat(e["date"]), e["label"]) for e in events]
-    return sorted((when, label) for when, label in marks if min(days) <= when <= limit)
+    return sorted((when, label) for when, label in marks if first <= when <= last)
 
 
 def _frame(ax, days: list[date], events: list[dict], ylabel: str) -> None:
@@ -96,16 +107,17 @@ def _frame(ax, days: list[date], events: list[dict], ylabel: str) -> None:
     ax.grid(axis="y", color=INK, alpha=0.12, linewidth=0.8)
     ax.set_axisbelow(True)
     ax.tick_params(length=0)
-    ax.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.MO, interval=2))
+    ax.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.SU, interval=2))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%d %b"))
     marks = _visible(days, events)
     if days:
-        # Room on the right for the series labels, and for an event that lands
-        # after the last data point without being drawn off the axis.
+        # Wide enough for every event line, which can fall days either side of a
+        # week's own mark, and for the series labels past the right spine.
+        left = min([min(days)] + [when for when, _ in marks])
         right = max([max(days)] + [when for when, _ in marks])
-        ax.set_xlim(min(days) - timedelta(days=4), right + timedelta(days=4))
+        ax.set_xlim(left - timedelta(days=4), right + timedelta(days=4))
     for when, _ in marks:
-        ax.axvline(when, color=INK, alpha=0.35, linewidth=1, linestyle=(0, (4, 3)))
+        ax.axvline(when, color=INK, alpha=0.6, linewidth=1.4, linestyle=(0, (5, 3)))
 
 
 def _label_events(ax, days: list[date], events: list[dict]) -> None:
@@ -120,13 +132,14 @@ def _label_events(ax, days: list[date], events: list[dict]) -> None:
             label,
             xy=(when, 1),
             xycoords=("data", "axes fraction"),
-            xytext=(-4, -3),
+            xytext=(-7, -6),
             textcoords="offset points",
             rotation=90,
             va="top",
             ha="right",
-            fontsize=7,
-            alpha=0.7,
+            fontsize=8,
+            fontweight="bold",
+            bbox={"facecolor": GROUND, "edgecolor": "none", "pad": 1.5},
         )
 
 
@@ -241,37 +254,73 @@ def conversion(weeks: list[dict], events: list[dict]) -> str:
     return _svg(fig)
 
 
-def copy_drift(rows: list[dict], events: list[dict]) -> str:
-    """The counts the deck argues about, as a mean over the lists that run them.
+def spotlight_finishes(readings: list[dict]) -> str:
+    """Where the deck's lists finished at each Spotlight, against chance.
 
-    The mode is not used and should not be: on these cards it oscillates every
-    other week and every oscillation reverses, because a plurality one pilot can
-    flip is holding it. The mean moves where the mode only flickers, and on this
-    deck it is the only place adaptation is visible at all, every one of these
-    cards sitting at an adoption no share reading will ever move.
+    Read as a cumulative share of the deck's own lists over the top share of the
+    field, which is what makes a 932-seat event and a 574-seat one one axis: rank
+    300 is the top third of one and past the halfway mark of the other, so raw
+    rank would report the bigger event as the deeper run every time.
+
+    The diagonal is the null and is the whole point of the form. A deck whose
+    lists are spread evenly through the standings plots as that line, so height
+    above it is the performance and needs no second reading. A histogram of the
+    same data cannot show it: an even spread and a good result look alike unless
+    the reference is drawn, and at a dozen lists over twenty-odd bins the bars
+    are one pilot moving three places anyway.
+
+    The strip below carries every list as its own mark, because a curve over a
+    dozen lists invites being read as a distribution when it is a handful of
+    finishes, and the dots say which.
     """
-    palette = SERIES
-    cards = sorted({row["card"] for row in rows})
-    fig, ax = plt.subplots(figsize=(9, 3.4))
-    days: list[date] = []
-    labelled = []
-    for slot, card in enumerate(cards):
-        points = [row for row in rows if row["card"] == card]
-        card_days, means = _days(points), [row["mean_copies"] for row in points]
-        days = days or card_days
-        colour = palette[slot % len(palette)]
-        ax.plot(card_days, means, color=colour, linewidth=2, marker="o", markersize=4, label=card)
-        labelled.append((means[-1], f"{means[-1]:.1f}", colour))
-    ax.set_title("Copies run, mean over the lists playing the card",
-                 loc="left", fontsize=10, pad=24)
-    _frame(ax, days, events, "mean copies")
-    _label_events(ax, days, events)
-    _end_labels(ax, labelled)
-    _legend(ax, 3)
+    fig, (curve, strip) = plt.subplots(
+        2, 1, figsize=(9, 4.6), gridspec_kw={"hspace": 0.28, "height_ratios": [3, 1]}
+    )
+
+    curve.plot([0, 1], [0, 1], color=INK, alpha=0.35, linewidth=1.2,
+               linestyle=(0, (5, 3)), label="Field average")
+    for slot, reading in enumerate(readings):
+        placings = reading["placings"]
+        if not placings:
+            continue
+        colour = SERIES[slot % len(SERIES)]
+        # A step per list. Held from each finish to the next, the share of the
+        # deck's lists that finished at least that high, closing on all of them.
+        reached = [(index + 1) / len(placings) for index in range(len(placings))]
+        curve.step([0.0, *placings, 1.0], [0.0, *reached, 1.0], where="post",
+                   color=colour, linewidth=2)
+        curve.plot(placings, reached, linestyle="none", marker="o", markersize=3.5,
+                   color=colour, label=f"{reading['label']} ({len(placings)} lists)")
+        strip.plot(placings, [slot] * len(placings), linestyle="none", marker="o",
+                   markersize=6, color=colour, alpha=0.55,
+                   markeredgecolor=GROUND, markeredgewidth=1.2)
+
+    curve.set_title("Cumulative share of the deck's lists by finishing position",
+                    loc="left", fontsize=10, pad=24)
+    curve.set_ylabel("% of the deck's lists")
+    for axis in (curve, strip):
+        axis.grid(axis="x", color=INK, alpha=0.12, linewidth=0.8)
+        axis.set_axisbelow(True)
+        axis.tick_params(length=0)
+        axis.set_xlim(-0.02, 1.02)
+        axis.xaxis.set_major_formatter(lambda value, _: f"{value:.0%}")
+    curve.grid(axis="y", color=INK, alpha=0.12, linewidth=0.8)
+    curve.set_ylim(-0.03, 1.05)
+    curve.yaxis.set_major_formatter(lambda value, _: f"{value:.0%}")
+    _legend(curve, 3)
+
+    strip.set_title("Every list, one mark", loc="left", fontsize=10, pad=6)
+    # The axis is named once, under the panel that carries the individual marks,
+    # both panels being the same scale and a second label landing on this title.
+    strip.set_xlabel("finished within this top share of the field")
+    strip.set_yticks(range(len(readings)))
+    strip.set_yticklabels([reading["label"] for reading in readings], fontsize=8)
+    strip.set_ylim(-0.7, len(readings) - 0.3)
+    strip.spines["left"].set_visible(False)
     return _svg(fig)
 
 
-def stability(rows: list[dict], events: list[dict]) -> str:
+def goldfishing(rows: list[dict], events: list[dict]) -> str:
     """How much of a week is last week's most-played list, registered again.
 
     High is not good and not bad, it is settled: a week that is mostly one 75
@@ -284,7 +333,7 @@ def stability(rows: list[dict], events: list[dict]) -> str:
     shares = [(row["copied_share"] or 0) * 100 for row in rows]
     fig, ax = plt.subplots(figsize=(9, 2.8))
     ax.bar(days, shares, width=5, color=series, linewidth=0)
-    ax.set_title("Stability: share of the week identical to last week's most-played list",
+    ax.set_title("% of lists identical to last week's most-played list",
                  loc="left", fontsize=10, pad=14)
     _frame(ax, days, events, "% of lists")
     _label_events(ax, days, events)

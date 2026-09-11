@@ -1,6 +1,7 @@
 """Terminal entry points: refresh a day, then ask what Goryo's did."""
 
 import argparse
+import json
 from pathlib import Path
 
 from . import (
@@ -10,10 +11,12 @@ from . import (
     index,
     ledger,
     meta,
+    melee,
     movement,
     outcome,
     reference,
     report,
+    spotlight,
     weekly,
 )
 from .classify import camp as camp_of
@@ -462,9 +465,36 @@ def main(argv=None) -> None:
     tracked = commands.add_parser("weekly", help="freeze and render a tracked deck's weekly report")
     tracked.add_argument("--deck", default="blink", choices=sorted(config.TRACKED_DECKS))
     tracked.add_argument("--variant", default=None, help="defaults to the deck's blue variant")
-    tracked.add_argument("--week", help="the Monday to report, defaults to the last full week")
+    tracked.add_argument("--week", help="the Monday keying the week to report, defaults to the last full week")
+
+    spot = commands.add_parser("spotlight-fetch", help="cache a paper Spotlight's standings and lists")
+    spot.add_argument("--id", type=int, help="melee tournament id, defaults to every one configured")
 
     args = parser.parse_args(argv)
+    if args.command == "spotlight-fetch":
+        wanted = [s for s in config.SPOTLIGHTS if args.id in (None, s["id"])]
+        if not wanted:
+            print(f"{args.id} is not a configured Spotlight; add it to config.SPOTLIGHTS")
+            return
+        config.MELEE_DIR.mkdir(parents=True, exist_ok=True)
+        for entry in wanted:
+            path = spotlight.cached(entry)
+            # Kept once fetched. A field of nine hundred is nine hundred requests
+            # to someone else's server, and a played-out event does not change.
+            known = (
+                {row["decklist_id"]: row for row in spotlight.load(entry)["lists"]}
+                if path.exists()
+                else {}
+            )
+            print(f"{entry['label']} ({entry['id']}): {len(known)} list(s) already cached")
+            payload = melee.tournament(entry["id"], known)
+            path.write_text(json.dumps(payload), encoding="utf-8")
+            meta = payload["tournament"]
+            print(f"  {meta['name']}")
+            print(f"  {meta['players']} players, {len(payload['lists'])} lists, "
+                  f"final round {meta['round']} -> {path}")
+        return
+
     if args.command == "weekly":
         variant = args.variant or config.TRACKED_DECKS[args.deck]["variant_with"]
         week = args.week or weekly.last_complete_week()
@@ -473,10 +503,11 @@ def main(argv=None) -> None:
         if "error" in reading:
             print(f"{week}: {reading['error']}")
             return
-        print(f"{args.deck}/{variant}, week of {week}")
+        print(f"{args.deck}/{variant}, week ending {weekly.week_label(week)}")
         print(f"  froze {added['weeks_added']} week(s), {added['timeline_added']} timeline row(s)")
         challenge, conversion = reading["challenge"], reading["conversion"]
-        print(f"  {challenge['lists']} challenge-class list(s), {challenge['share']:.1%} of top 32"
+        print(f"  {challenge['lists']} finish(es) in swiss-like tournaments, "
+              f"{challenge['share']:.1%} of top 32"
               f"{', VOLUME ELEVATED' if challenge['spiking'] else ''}")
         print(f"  {conversion['top8']} top 8 ({conversion['top8_share']:.1%} of the band), "
               f"{conversion['top16']} top 16")

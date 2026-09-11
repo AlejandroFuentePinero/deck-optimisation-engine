@@ -3,6 +3,11 @@
 __pycache__/
 data/raw/
 data/engine.duckdb
+# data/raw-melee/ is deliberately NOT ignored, where data/raw above is. An MTGO
+# event can be refetched from a stable public archive any time. A paper
+# Spotlight is fifteen hundred decklist pages on a third-party site, scraped
+# rather than served by an API, for an event that is over: the same reason the
+# hand-transcribed meta snapshots are committed.
 # The ledger itself is committed: it is the engine's memory of what it has
 # raised, and a flag whose appearance has left the fresh window is in no cache
 # to rebuild from. Only the write-ahead file is transient.

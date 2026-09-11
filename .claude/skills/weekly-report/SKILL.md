@@ -59,6 +59,12 @@ than comparing two pieces of writing.
 
 Rules for the prose:
 
+- **The words are fixed too.** A placement-publishing event is a **swiss-like
+  tournament**, never "challenge-class". The history since 2026-05-18 is
+  **since the Modern bans**, never "post-regime". The deck **achieves finishes
+  in swiss-like tournaments**; it does not "take lists". Those are the reader's
+  words. The JSON keys stay as they are (`challenge.lists` and the rest), and
+  so does the engine's own vocabulary outside this report.
 - **Every claim comes from the JSON.** No matchup opinions, no predictions, no
   "suggesting that". If the numbers do not say it, it does not go in.
 - **Print the n beside a share.** A week can be nine lists.
@@ -68,7 +74,8 @@ Rules for the prose:
 
 ## Before you hand it over
 
-- The rendered file opens and the four figures are there.
+- The rendered file opens and the three weekly figures are there, plus the
+  Spotlights figure on any week a paper event is cached.
 - The summary's five clauses are in order and every number in it appears in the
   JSON.
 - `git status` shows changes under `data/tracking/`, and `data/index.csv` moved.
@@ -82,11 +89,43 @@ Rules for the prose:
   A past week's numbers can genuinely move when a league dump fills in, and the
   frozen row is what was reported.
 - Do not rewrite an old summary. If one was wrong, say so in this week's.
-- Do not add a card to `copy_drift` in config because it moved once. That plot
-  carries the same lines every week on purpose.
+- Do not add a card to `copy_drift` in config because it moved once. That tuple
+  decides which slots a count change earns a timeline row for, and it reads the
+  same slots every fortnight on purpose.
 - Do not widen the membership rule to catch a list that looks like the deck.
   Raise it with Alejandro; it is his call, and `HEURISTICS.md` is where the
   answer goes.
+
+## Paper Spotlights
+
+A Spotlight is fetched once and kept:
+
+```bash
+uv run deck-engine spotlight-fetch
+```
+
+It reads `config.SPOTLIGHTS`, skips every list already cached, and writes one
+JSON per event to `data/raw-melee/`. A played-out event does not change, so this
+is not part of the Monday run: fetch it the week the event lands and never again.
+A field of nine hundred is nine hundred requests to someone else's server.
+
+The report picks up whatever is cached and renders the Spotlights section from
+it. Nothing else in the run changes.
+
+- **Paper figures never share an axis with MTGO ones.** A Spotlight publishes
+  every finisher and a challenge publishes its top 32, so the Spotlight's *field
+  share* is a true metagame share with no MTGO counterpart. The only like-for-
+  like number is its *top 32* column, and that is a handful of lists, so it is
+  printed with its count and never as a bare percentage.
+- **Do not put a Spotlight in the store.** The challenge-class readings are
+  defined as every event class except league, so a paper event in `decklists`
+  would be counted as challenge-class by default and would swamp the week.
+- **A Spotlight row against MTGO is marked cross-population** and means less
+  than one against the Spotlight before it. Brisbane to Dallas is paper on both
+  sides, a week apart: that is the comparison to write a clause about.
+- Adding a Spotlight is adding it to `config.SPOTLIGHTS` **and** to
+  `data/events.csv`, the first for the reading and the second for the line on
+  the figures. Which events count is Alejandro's call, same as `events.csv`.
 
 ## When something new turns up
 

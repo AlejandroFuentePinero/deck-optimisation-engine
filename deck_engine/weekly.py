@@ -19,7 +19,7 @@ import json
 from datetime import date, timedelta
 from pathlib import Path
 
-from . import config, plots, timeline, tracking
+from . import config, plots, spotlight, timeline, tracking
 
 WEEKLY_COLUMNS = (
     "week", "lists", "chal", "chal_field", "chal_share", "top8", "top8_field",
@@ -42,6 +42,17 @@ def last_complete_week(today: str | None = None) -> str:
     day = date.fromisoformat(today) if today else date.today()
     monday = day - timedelta(days=day.weekday())
     return (monday - timedelta(days=7)).isoformat()
+
+
+def week_label(monday: str) -> str:
+    """A week named by the Sunday it closed on.
+
+    Keyed by its Monday everywhere it is stored, that being the bucket the store
+    groups on and the name every frozen row and summary file is written under.
+    Shown by its Sunday, because a week labelled with the day it opened reads as
+    the day the data stops, and the report then looks a week behind itself.
+    """
+    return (date.fromisoformat(monday) + timedelta(days=6)).isoformat()
 
 
 def _read(path: Path) -> list[dict]:
@@ -135,10 +146,12 @@ def facts(
 
     frozen = _read(deck_dir(deck) / "timeline.csv")
     latest = max((row["start"] for row in frozen), default=None)
-    stability = [row for row in tracking.stability(db_path, deck, variant) if row["week"] == week]
+    copying = [row for row in tracking.goldfishing(db_path, deck, variant)
+               if row["week"] == week]
 
     return {
         "week": week,
+        "week_ending": week_label(week),
         "lists": int(this["lists"]),
         "challenge": {
             "lists": int(this["chal"]),
@@ -163,7 +176,7 @@ def facts(
             "challenge": orzhov[0]["chal"] if orzhov else 0,
             "trophies": orzhov[0]["trophies"] if orzhov else 0,
         },
-        "stability": stability[0] if stability else None,
+        "goldfishing": copying[0] if copying else None,
         "timeline_latest": [row for row in frozen if row["start"] == latest and row["text"]],
         "excluded_off_colour": tracking.excluded(db_path, deck),
     }
@@ -176,6 +189,7 @@ _STYLE = """
   --ink: #0b0b0b; --ink-2: #52514e; --ink-3: #86847d;
   --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a;
   --flag: #fdf3e7; --flag-line: #eda100;
+  --major: #c2410c;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -184,6 +198,7 @@ _STYLE = """
     --ink: #f5f4ef; --ink-2: #c3c2b7; --ink-3: #8b8a80;
     --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
     --flag: #2a2113; --flag-line: #c98500;
+    --major: #f97316;
   }
 }
 :root[data-theme="dark"] {
@@ -192,6 +207,7 @@ _STYLE = """
   --ink: #f5f4ef; --ink-2: #c3c2b7; --ink-3: #8b8a80;
   --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70;
   --flag: #2a2113; --flag-line: #c98500;
+  --major: #f97316;
 }
 * { box-sizing: border-box; }
 body {
@@ -224,7 +240,10 @@ tbody tr:hover { background: var(--panel); }
 .tl td { vertical-align: top; }
 .tl td:last-child { text-align: left; }
 .tl .none { color: var(--ink-3); }
-.tl .open { color: var(--flag-line); font-size: 11px; margin-top: 2px; }
+/* A major event's storyline row, set apart from the fortnights around it. */
+.tl .major { color: var(--major); font-weight: 650; }
+.open { color: var(--flag-line); font-size: 11px; margin-top: 2px; }
+.note { color: var(--ink-3); font-size: 12px; line-height: 1.55; margin: 12px 0 0; }
 .tag { display: inline-block; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
        color: var(--ink-3); border: 1px solid var(--line); border-radius: 3px;
        padding: 1px 5px; margin-right: 7px; }
@@ -242,6 +261,68 @@ def _found(found: list[dict]) -> str:
         if row.get("text")
     )
     return marks or '<span class="none">Stable against the fortnight before.</span>'
+
+
+def spotlights_through(week: str) -> tuple[dict, ...]:
+    """The Spotlights a given week's report may show: played by then, and fetched.
+
+    Cut off at the week for the reason the weekly rows and the timeline are.
+    A Spotlight cache is the one input that arrives for every event at once, so
+    rebuilt in October without this, the report for the week before Brisbane
+    would carry Dallas, an event a fortnight in its own future. A report whose
+    past changes under it is a report nobody can cite.
+
+    Fetched, because the report is the week's and has to render on a machine
+    that has never pulled a paper event.
+    """
+    return tuple(
+        entry
+        for entry in config.SPOTLIGHTS
+        if spotlight.week(entry) <= week and spotlight.cached(entry).exists()
+    )
+
+
+def _spotlights(entries: list[dict]) -> str:
+    """The paper section: where the deck finished, and the numbers behind it.
+
+    Its own section and its own axis, never the weekly one. A Spotlight publishes
+    every finisher where a challenge publishes its top 32, so a share of a
+    Spotlight field is a true metagame share and a share of a challenge is
+    already a share of a cut. Only `of top 32` is the same quantity the weekly
+    figures carry, and it is printed with its own count because thirty-two slots
+    is a handful of lists.
+    """
+    if not entries:
+        return ""
+    rows = [
+        [
+            f"{entry['label']}<div class=\"open\">week ending {week_label(entry['week'])}</div>",
+            f"{entry['field']:,}",
+            str(entry["lists"]),
+            f"{entry['field_share']:.1%}",
+            f"{entry['cut_lists']}/32" if entry["lists"] else "-",
+            "-" if entry["conversion"] is None else f"{entry['conversion']:.2f}x",
+            f"#{entry['best']}" if entry["best"] else "-",
+            f"{entry['wins']}-{entry['losses']}-{entry['draws']}",
+            "-" if entry["win_rate"] is None else f"{entry['win_rate']:.1%}",
+            "-" if entry["field_win_rate"] is None else f"{entry['field_win_rate']:.1%}",
+        ]
+        for entry in entries
+    ]
+    return f"""<h2>Spotlights</h2>
+<figure>{plots.spotlight_finishes(entries)}</figure>
+{_table(
+    ["Event", "Field", "Lists", "of field", "Top 32", "Conversion", "Best",
+     "Match record", "Win rate", "Field win rate"],
+    rows,
+)}
+<p class="note">Paper, from melee. The field is every published list, not a top
+32, so <em>of field</em> is a true metagame share and has no MTGO counterpart:
+only <em>of top 32</em> is the quantity the weekly figures carry.
+<em>Conversion</em> is the deck's share of the top 32 over its share of the whole
+field, so above 1.00 it held more of the cut than of the room. Win rate counts
+match wins and losses as played, the top cut included, because points stop
+accruing at the cut and would score the event's winner below the Swiss leader.</p>"""
 
 
 def _table(columns: list[str], rows: list[list[str]], klass: str = "") -> str:
@@ -263,10 +344,11 @@ def render(
     week = week or last_complete_week()
     root, name = deck_dir(deck), f"{variant.title()} {deck.title()}"
     weeks = [row for row in tracking.weekly(db_path, deck, variant) if row["week"] <= week]
-    drift = [row for row in tracking.copy_drift(db_path, deck, variant) if row["week"] <= week]
-    settled = [row for row in tracking.stability(db_path, deck, variant) if row["week"] <= week]
+    copying = [row for row in tracking.goldfishing(db_path, deck, variant) if row["week"] <= week]
     marks = timeline.events()
     reading = facts(db_path, deck, variant, week)
+    played = spotlights_through(week)
+    spotlights = spotlight.chain(db_path, deck, variant, played) if played else []
 
     summary_path = root / "summary" / f"{week}.md"
     summary = (
@@ -278,9 +360,10 @@ def render(
     if reading.get("challenge", {}).get("spiking"):
         banner = (
             f'<p class="flag"><strong>Volume is elevated.</strong> '
-            f'{reading["challenge"]["lists"]} challenge-class lists against a post-regime '
-            f'median of {reading["challenge"]["median_lists"]}. Performance figures taken '
-            f"over a spike measure how many pilots copied the deck, not how good it is.</p>"
+            f'{reading["challenge"]["lists"]} finishes in swiss-like tournaments against a '
+            f'median of {reading["challenge"]["median_lists"]} since the Modern bans. '
+            f"Performance figures taken over a spike measure how many pilots copied the deck, "
+            f"not how good it is.</p>"
         )
 
     frozen: dict[tuple[str, str], list[dict]] = {}
@@ -295,21 +378,38 @@ def render(
         for entry in timeline.findings(db_path, deck, variant)
         if entry["start"] <= week and (entry["start"], entry["end"]) not in frozen
     ]
-    timeline_rows = [
-        [
-            f"{entry['start']} to {entry['end']}<div class=\"open\">in progress</div>",
-            _found(entry["found"]),
-        ]
-        for entry in sorted(running, key=lambda e: e["start"], reverse=True)
+    # Fortnights and Spotlights in one sequence, ordered by the day each closed.
+    # A Spotlight is a week rather than a fortnight and is read against the entry
+    # before it rather than against the bin it falls inside, so it enters the
+    # storyline as its own row instead of being folded into one.
+    # Ordered on the day each period closed, then on the day it opened, so a
+    # Spotlight week and the fortnight it falls inside sort by their own dates
+    # rather than by however their labels happen to compare.
+    entries = [
+        (entry["end"], entry["start"],
+         f"{entry['start']} to {entry['end']}<div class=\"open\">in progress</div>",
+         _found(entry["found"]))
+        for entry in running
     ] + [
-        [f"{start} to {end}", _found(found)]
-        for (start, end), found in sorted(frozen.items(), reverse=True)
+        (end, start, f"{start} to {end}", _found(found)) for (start, end), found in frozen.items()
+    ] + [
+        (
+            week_label(entry["week"]),
+            entry["week"],
+            f'<span class="major">{entry["label"]}</span>',
+            _found(entry["found"]),
+        )
+        for entry in spotlights
+    ]
+    timeline_rows = [
+        [period, found]
+        for _, _, period, found in sorted(entries, key=lambda row: row[:2], reverse=True)
     ]
 
     body = f"""<div class="page">
 <header>
   <h1>{name}</h1>
-  <p class="dek">Week of {week} &middot; MTGO Modern &middot; built {date.today().isoformat()}</p>
+  <p class="dek">Week ending {week_label(week)} &middot; built {date.today().isoformat()}</p>
 </header>
 
 <h2>This week</h2>
@@ -321,20 +421,19 @@ def render(
 <h2>Conversion</h2>
 <figure>{plots.conversion(weeks, marks)}</figure>
 
-<h2>Copies run</h2>
-<figure>{plots.copy_drift(drift, marks)}</figure>
+<h2>Goldfishing</h2>
+<figure>{plots.goldfishing(copying, marks)}</figure>
 
-<h2>Stability</h2>
-<figure>{plots.stability(settled, marks)}</figure>
-
-<h2>What changed, fortnight by fortnight</h2>
-{_table(["Fortnight", "Findings"], timeline_rows, "tl")}
+{_spotlights(spotlights)}
+<h2>What changed</h2>
+{_table(["Period", "Findings"], timeline_rows, "tl")}
 
 <h2>The numbers</h2>
 {_table(
-    ["Week", "Lists", "Top 32", "of field", "Top 8", "of field", "Top 16", "Trophies", "of field"],
+    ["Week ending", "Lists", "Top 32", "of field", "Top 8", "of field",
+     "Top 16", "Trophies", "of field"],
     [[
-        row["week"], str(row["lists"]), str(row["chal"]), f'{(row["chal_share"] or 0):.1%}',
+        week_label(row["week"]), str(row["lists"]), str(row["chal"]), f'{(row["chal_share"] or 0):.1%}',
         str(row["top8"]), f'{(row["top8_share"] or 0):.1%}', str(row["top16"]),
         str(row["trophies"]), f'{(row["trophy_share"] or 0):.1%}',
     ] for row in reversed(weeks)],
@@ -348,7 +447,7 @@ The {config.TRACKED_DECKS[deck]["variant_with"]} variant mainboards
 {config.TRACKED_DECKS[deck]["variant_without"]} variant does not. Every reading above is the
 {variant} variant alone. {reading.get("excluded_off_colour", 0)} list(s) held the signature and
 were turned away on colour.</p>
-<p>Challenge-class is every event that publishes a placement, pooled. League trophies are
+<p>A swiss-like tournament is every event that publishes a placement, pooled. League trophies are
 uncapped, so one pilot's repeats count. Top 8 is shown because it is the band a team talks in;
 top 16 is the band this project reads performance evidence at. Timeline findings are detected
 over a fortnight, because weekly detection on this population reverses about two times in five
@@ -359,7 +458,7 @@ at any threshold. Rows are frozen once written.</p>
     html = (
         f"<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">"
         f'<meta name="viewport" content="width=device-width,initial-scale=1">'
-        f"<title>{name}, week of {week}</title><style>{_STYLE}</style></head>"
+        f"<title>{name}, week ending {week_label(week)}</title><style>{_STYLE}</style></head>"
         f"<body>{body}</body></html>"
     )
     config.REPORT_DIR.mkdir(parents=True, exist_ok=True)

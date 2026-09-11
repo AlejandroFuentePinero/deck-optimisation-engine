@@ -215,6 +215,17 @@ def test_the_reported_week_is_the_last_one_that_closed():
     assert weekly.last_complete_week("2026-09-13") == "2026-08-31"
 
 
+def test_a_week_is_stored_by_its_monday_and_read_by_its_sunday():
+    """The label is the day the week closed, not the day it opened.
+
+    Both names are for the same seven days, and the stored one has to stay the
+    Monday because every frozen row and summary file is written under it. What
+    a reader sees is the Sunday: a chart whose last point says the Monday reads
+    as a chart missing the week it is actually showing.
+    """
+    assert weekly.week_label("2026-08-31") == "2026-09-06"
+
+
 def test_membership_is_read_off_the_rule_and_not_a_list_of_names(tmp_path):
     """A rule that grows a card takes effect everywhere, including here."""
     raw = synthetic.write_cache(tmp_path / "raw", [_lists(FIRST, 1)])

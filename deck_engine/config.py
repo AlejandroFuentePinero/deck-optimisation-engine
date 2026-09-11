@@ -151,9 +151,10 @@ TRACKED_DECKS = {
         "variant_card": "Watery Grave",
         "variant_with": "esper",
         "variant_without": "orzhov",
-        # The cards the deck argues about the number of. Named rather than
-        # found by a scan, so the drift plot carries the same lines every week
-        # and a line arriving is a decision somebody made. All three sit at
+        # The cards the deck argues about the number of, and the only ones a
+        # count change earns a timeline row for. Named rather than found by a
+        # scan, so the timeline reads the same slots every fortnight and a card
+        # arriving is a decision somebody made. All three sit at
         # near-total adoption, which is why no adoption reading sees them: the
         # whole of the disagreement is how many, and it has moved about a copy
         # since mid-June while every other slot held.
@@ -213,6 +214,22 @@ TRACK_SPIKE_MULTIPLE = 2.0
 # `date,label`. Committed and hand-maintained: what counts as a major event is
 # the pilot's call, and no feed serves it.
 EVENTS_PATH = REPO_ROOT / "data" / "events.csv"
+
+# The paper Spotlights, by their melee tournament id. One-off events rather than
+# a feed, so they are named here rather than discovered: a Spotlight enters the
+# analysis because the pilot says it matters, the same way `events.csv` works.
+# The date is the local day the event started, which is the day `events.csv`
+# marks it on and the day its week is taken from; melee publishes a UTC start,
+# and Brisbane's is the evening before.
+SPOTLIGHTS = (
+    {"id": 441441, "label": "Spotlight Brisbane", "date": "2026-08-29"},
+    {"id": 405590, "label": "Spotlight Dallas", "date": "2026-09-05"},
+)
+
+# One JSON per Spotlight, fetched once and kept. The melee equivalent of RAW_DIR
+# and separate from it, because a paper event and an MTGO event are not the same
+# population and nothing downstream may pool them by accident.
+MELEE_DIR = REPO_ROOT / "data" / "raw-melee"
 
 # What the weekly report is built from and cannot rebuild: the frozen weekly
 # figures, the frozen timeline rows, and the summary written over them. Committed

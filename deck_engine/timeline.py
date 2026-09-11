@@ -81,6 +81,49 @@ def events(path: Path = config.EVENTS_PATH) -> list[dict]:
         return sorted(csv.DictReader(handle), key=lambda row: row["date"])
 
 
+def adoption_row(card: str, zone: str, n: int, size: int, was: int, was_size: int) -> dict:
+    """The deck took a card up or put it down, phrased once.
+
+    Shared with the Spotlight readings rather than written twice, so a paper row
+    and a fortnight row that found the same thing say it the same way.
+    """
+    share = n / size
+    was_share = was / was_size if was_size else 0.0
+    return {
+        "kind": "adoption",
+        "zone": zone,
+        "card": card,
+        "text": f"{card} {'climbed' if share > was_share else 'fell'} in the "
+        f"{zone}board, {was}/{was_size} to {n}/{size} lists "
+        f"({was_share:.0%} to {share:.0%})",
+    }
+
+
+def copies_row(card: str, zone: str, now: float, before: float) -> dict:
+    """The deck kept a card and changed its mind about how many."""
+    return {
+        "kind": "copies",
+        "zone": zone,
+        "card": card,
+        "text": f"{card} {'up' if now > before else 'down'} from "
+        f"{before:.1f} to {now:.1f} copies on average",
+    }
+
+
+def moved(n: int, size: int, was: int, was_size: int) -> bool:
+    """Whether a share moved far enough, in both units, to be a row.
+
+    The share is what makes a move large and the count is what makes it
+    evidence, so a thin population cannot clear the bar on one pilot.
+    """
+    share = n / size
+    was_share = was / was_size if was_size else 0.0
+    return (
+        abs(share - was_share) >= config.TRACK_ADOPTION_DELTA
+        and abs(n - was) >= config.TRACK_MIN_LISTS
+    )
+
+
 def findings(
     db_path: Path = config.DB_PATH,
     deck: str = "blink",
@@ -146,21 +189,8 @@ def findings(
                         "text": f"{card} {phrase}, {n} of {size} lists ({share:.0%})",
                     }
                 )
-            elif (
-                comparable
-                and abs(share - was_share) >= config.TRACK_ADOPTION_DELTA
-                and abs(n - was) >= config.TRACK_MIN_LISTS
-            ):
-                found.append(
-                    {
-                        "kind": "adoption",
-                        "zone": zone,
-                        "card": card,
-                        "text": f"{card} {'climbed' if share > was_share else 'fell'} in the "
-                        f"{zone}board, {was}/{was_size} to {n}/{size} lists "
-                        f"({was_share:.0%} to {share:.0%})",
-                    }
-                )
+            elif comparable and moved(n, size, was, was_size):
+                found.append(adoption_row(card, zone, n, size, was, was_size))
 
             if comparable and zone == "main" and card in drift_cards and (card, zone) in copies:
                 bin_copies = copies[(card, zone)]
@@ -168,15 +198,7 @@ def findings(
                     now = sum(bin_copies[index]) / len(bin_copies[index])
                     before = sum(bin_copies[index - 1]) / len(bin_copies[index - 1])
                     if abs(now - before) >= config.TRACK_COPY_DELTA:
-                        found.append(
-                            {
-                                "kind": "copies",
-                                "zone": zone,
-                                "card": card,
-                                "text": f"{card} {'up' if now > before else 'down'} from "
-                                f"{before:.1f} to {now:.1f} copies on average",
-                            }
-                        )
+                        found.append(copies_row(card, zone, now, before))
 
         for event in events():
             if start <= event["date"] <= end:

@@ -1,4 +1,4 @@
-"""The weekly readings of a tracked deck: presence, conversion, drift, stability.
+"""The weekly readings of a tracked deck: presence, conversion, goldfishing.
 
 A tracked deck gets no slot audit and no hypotheses. What it gets is a fixed set
 of numbers, computed the same way every week, that say how much of the field it
@@ -91,42 +91,6 @@ def weekly(
         )
 
 
-def copy_drift(
-    db_path: Path = config.DB_PATH,
-    deck: str = "blink",
-    variant: str = "esper",
-    since: str = config.REGIME_BOUNDARY,
-) -> list[dict]:
-    """Mean mainboard copies per week, for the cards the deck argues about.
-
-    The cards are named in the deck's own config entry rather than found by a
-    scan, so the plot carries the same lines every week and a line appearing is
-    a decision somebody made. What they have in common is near-universal
-    adoption: nothing about them shows up in an adoption reading, because every
-    list plays them and the whole of the disagreement is how many.
-
-    The mean is taken over the lists that register the card, which separates the
-    count decision from the inclusion one. The list count rides along, since a
-    mean off four lists is not a mean.
-    """
-    cards = list(config.TRACKED_DECKS[deck]["copy_drift"])
-    placeholders = ",".join("?" * len(cards))
-    with duckdb.connect(db_path, read_only=True) as con:
-        return _rows(
-            con.execute(
-                f"""
-                SELECT {_WEEK} AS week, c.card,
-                       avg(c.main) AS mean_copies, count(*) AS lists
-                FROM decklists d JOIN configurations c USING (list_id)
-                WHERE d.archetype = ? AND d.camp = ? AND d.date >= ?
-                  AND c.main > 0 AND c.card IN ({placeholders})
-                GROUP BY week, c.card ORDER BY week, c.card
-                """,
-                [deck, variant, since, *cards],
-            )
-        )
-
-
 def signatures(
     db_path: Path = config.DB_PATH,
     deck: str = "blink",
@@ -135,10 +99,10 @@ def signatures(
 ) -> list[dict]:
     """Every list's mainboard as one string, with the week it was published in.
 
-    The unit a stability reading needs: two lists are the same 75 or they are
+    The unit a goldfishing reading needs: two lists are the same 75 or they are
     not, and a comparison card by card would call a one-card difference most of
     a match. Sideboards are left out because they are the part of a copied list
-    a pilot changes first, so a stability reading taken over all 75 would report
+    a pilot changes first, so a goldfishing reading taken over all 75 would report
     the field's sideboarding as innovation.
     """
     with duckdb.connect(db_path, read_only=True) as con:
@@ -156,13 +120,15 @@ def signatures(
         )
 
 
-def stability(
+def goldfishing(
     db_path: Path = config.DB_PATH,
     deck: str = "blink",
     variant: str = "esper",
     since: str = config.REGIME_BOUNDARY,
 ) -> list[dict]:
     """Per week, how much of it is last week's most-played list registered again.
+
+    How much of the field is copying rather than building.
 
     The direct reading of whether a deck is still being built. Every other
     reading here answers it by absence: a week nothing moved in looks the same

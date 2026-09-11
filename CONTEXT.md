@@ -7,10 +7,16 @@ A system that mines published MTGO decklist data to back up, or challenge, exper
 ### Data source
 
 **MTGO**:
-Magic: The Gathering Online. The sole source of decklist-level data for this project.
+Magic: The Gathering Online. The source of every weekly reading in this project, and of every reading the optimisation layer makes. Melee is the only other source of decklist-level data and is never pooled with it.
 
 **MTGGoldfish**:
 The aggregator supplying archetype-level meta share. Never a source of decklist-level data.
+
+**Melee**:
+The tournament platform the paper Spotlights publish on, and the second source of decklist-level data. It publishes what MTGO cannot: every finisher of an event rather than its top 32, with each player's match record. It also names modal double-faced cards `Front // Back` where MTGO names them by the front face, so the fold to the front face happens on fetch. Unfolded it is not a missing card but a missing archetype, every Blink list failing membership on Witch Enchanter with nothing about the result looking wrong.
+
+**Spotlight**:
+A paper tournament of several hundred players, entering the analysis by name in config rather than by a feed, the way `events.csv` works. Read entirely apart from the MTGO figures and never loaded into the store: the challenge-class readings are defined as every event class except league, so a Spotlight landing in `decklists` would be counted as challenge-class by default and nine hundred paper lists would swamp a weekly field of four hundred. It sits on the report's calendar as the week it was played in, keyed by that week's Monday and named by its Sunday, like every other week.
 
 **League**:
 A continuous MTGO event. Only undefeated (5-0) lists are published, as trophy reports.
@@ -86,6 +92,9 @@ The colour half of Blink's membership rule. A Mardu build shares all four signat
 **Esper Blink / Orzhov Blink**:
 Blink's two variants, split on mainboard Watery Grave. Presence and not a count, a variant here being which colours the deck is, which one copy settles. The card partitions the archetype exactly, where a rule drawn on blue sources throws away the Orzhov lists that fetch and one drawn on blue spells drops any Esper list that cut Teferi. Every reading in the weekly report is the Esper variant alone; Orzhov is carried as bare numbers in the summary, its challenge-class population being single figures over the whole post-regime history, which is enough to say it exists and nowhere near enough to read a build or a conversion rate off.
 
+**Week**:
+Monday to Sunday, the bucket every weekly reading groups on. Keyed by its Monday wherever it is stored, that being what the store's `date_trunc` returns and the name every frozen row and summary file carries. Named by its Sunday wherever it is read, on the report's header, its table and the x-axis of every figure, because a week labelled with the day it opened reads as the day the data stops and puts the reader a week behind the figures.
+
 **Detection bin**:
 The fortnight a change is read over, anchored at the regime boundary and never overlapping. A week of this deck runs from nine published lists to sixty-four, so a threshold set as a share of a week measures the sample size: at every bar from five points to twenty-five a weekly reading reverses in the next week about two times in five, and raising the bar loses findings without buying purity. Over a fortnight the same bars reverse between fifteen and twenty-two percent of the time and the rate falls as the bar rises. The plots stay weekly; only the detection is binned. Anchored rather than trailing, so the bin a date falls in never moves and a row written six weeks ago still describes the same fortnight.
 
@@ -97,10 +106,23 @@ _Avoid_: fringe card (the archetype-level reading, which is a share of a whole h
 A returning card that was in the other zone the bin before. Read one zone at a time it is new to the mainboard, which is true and reads as novelty, so the row says which it is: a sideboard staple being promoted is a decision about what the card is for, not the deck discovering it.
 
 **Copy drift**:
-The mean copies of a named card, over the lists that register it, week by week. The reading for the slots the deck argues about the number of rather than the presence of, which no adoption share can see because those cards sit at near-total adoption. Read on the mean and never the mode: on this deck's cards the modal count oscillates every other week and every oscillation reverses, a plurality one pilot can flip holding it. The cards are named in config rather than found by a scan, so the plot carries the same lines every week and a line arriving is a decision somebody made.
+The mean copies of a named card, over the lists that register it, read fortnight to fortnight as a timeline row. The reading for the slots the deck argues about the number of rather than the presence of, which no adoption share can see because those cards sit at near-total adoption. Read on the mean and never the mode: on this deck's cards the modal count oscillates every other week and every oscillation reverses, a plurality one pilot can flip holding it. The cards are named in config rather than found by a scan, so the timeline reads the same slots every fortnight and a card arriving is a decision somebody made.
 
-**Stability**:
-The share of a week's lists whose mainboard is identical to the previous week's most-played mainboard. The direct reading of whether a deck is still being built, where every other reading answers it only by absence: a week nothing moved in looks the same whether the field settled or the field was quiet. High is neither good nor bad, it is settled. It is also the warning that such a week is not the sample its list count claims, the evidence in it being closer to its distinct builds than to its lists. Mainboards only, the sideboard being the part of a copied list a pilot changes first.
+**Goldfishing**:
+The share of a week's lists whose mainboard is identical to the previous week's most-played mainboard, which is to say how much of the field is copying rather than building. The direct reading of whether a deck is still being built, where every other reading answers it only by absence: a week nothing moved in looks the same whether the field stopped building or the field was quiet. High is neither good nor bad. It is also the warning that such a week is not the sample its list count claims, the evidence in it being closer to its distinct builds than to its lists. The reference is the most-played list of the week before and never the winning one: a week's best finish is one list, where what this counts is what the field converged on. Mainboards only, the sideboard being the part of a copied list a pilot changes first.
+
+**Field share, against cut share**:
+The two shares a Spotlight yields, and the difference between them is why paper and MTGO figures never share an axis. A challenge publishes its top 32, so every MTGO share in this project is already a share of a cut. A Spotlight publishes every finisher, so its field share is a true metagame share and has no MTGO counterpart at all. Only a Spotlight's own top-32 share is the quantity `chal_share` carries, and it is printed with its count, thirty-two slots being a handful of lists.
+_Avoid_: presence, on a Spotlight (the weekly word, which means the cut share and would read as the field one)
+
+**Finishing share**:
+Where a list placed, as the share of the field that finished above it: nought is the winner and a half is the middle of the room. The positional unit, because rank is not comparable between events of different size, rank 300 being the top third of a 932-seat event and past the halfway mark of a 574-seat one. In these units a deck whose lists are spread evenly through the standings reads as the diagonal, which is the null every positional figure is drawn against.
+
+**Conversion, at a Spotlight**:
+The deck's share of the top 32 over its share of the whole field. Above one it held more of the cut than of the room, which is the honest performance reading and is comparable between events of different size. The reading MTGO cannot make, its challenge data being a cut with no field under it to divide by.
+
+**Cross-population reading**:
+A comparison whose two sides are different rooms: an Australian paper field, an American one and the MTGO field are three populations. A card at nine tenths of one and half of another is not the deck changing its mind, so a row spanning two of them is marked as one. The Spotlight chain exists to keep such rows rare: the first Spotlight is read against MTGO because there is nothing else behind it, and every one after it against the Spotlight before, which holds the format and the medium constant.
 
 **Frozen row**:
 A week's figures or a fortnight's findings, written once and never edited. The store is rebuilt from the cache on every run and a past week can genuinely move, a league dump gaining trophies through its own day being the usual reason, so the report renders what was reported rather than what the store now says. Appended and never rewritten, for the reason reference list versions are: a history that can be rebuilt is a history that can come to disagree with itself, and a timeline nobody can cite is not a timeline.
