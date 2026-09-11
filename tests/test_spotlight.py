@@ -216,7 +216,7 @@ def test_the_first_spotlight_is_marked_as_crossing_populations(tmp_path):
     _cache(tmp_path, BRISBANE, _payload(BRISBANE, [_list(rank) for rank in range(1, 21)]))
     chain = spotlight.chain(config.DB_PATH, spotlights=(BRISBANE,), directory=tmp_path)
     assert chain[0]["cross_population"] is True
-    assert chain[0]["against"].startswith("the MTGO fortnight to ")
+    assert chain[0]["against"].startswith("the fortnight to ")
 
 
 def test_a_thin_spotlight_does_not_earn_rows_off_the_size_difference(tmp_path):
@@ -315,3 +315,169 @@ def test_a_spotlight_never_reports_a_returning_card(tmp_path):
     _cache(tmp_path, DALLAS, _payload(DALLAS, exotic))
     chain = spotlight.chain(config.DB_PATH, spotlights=(BRISBANE, DALLAS), directory=tmp_path)
     assert not [row for row in chain[1]["found"] if row["kind"] == "return"]
+
+
+def _sized(main: dict, total: int) -> dict:
+    """`main` padded with basics to exactly `total` cards, the guard being a count."""
+    return {**main, "Wastes": total - sum(main.values())}
+
+
+def test_a_list_whose_boards_did_not_separate_is_not_read_as_a_member():
+    """A parse failure may not add lists to the archetype.
+
+    Melee groups a decklist page under type headings and the split is the
+    heading, so a sideboard filed under one the fetch does not know puts the
+    whole 75 in the mainboard. Membership is a mainboard test, so a list that
+    only sideboarded a signature card would join the deck on that failure.
+    Melee's own history carries three such lists, at 75, 76 and 146 cards.
+    """
+    # A non-member whose sideboarded signature cards landed in the mainboard.
+    leaked = _list(5)
+    leaked["main"] = _sized({**FILLER, "Broadside Bombardiers": 4, **SIGNATURE, **ESPER}, 75)
+    leaked["side"] = {}
+    assert spotlight.unread(leaked)
+
+    payload = _payload(BRISBANE, [_list(1), leaked])
+    assert [row["rank"] for row in spotlight.members(payload, "blink", "esper")] == [1]
+    reading = spotlight.reading(payload, "blink", "esper")
+    # Published and in the field, so still in every denominator; just not ours.
+    assert (reading["field"], reading["lists"], reading["unread"]) == (2, 1, 1)
+
+
+def test_a_pilot_who_registered_no_sideboard_is_read_normally():
+    """Sixty cards and an empty sideboard is a legal registration, not a failure.
+
+    The signature of the failure is the pair: a mainboard past 60 *and* nothing
+    in the sideboard. Melee's history has three lists on 60 with no sideboard,
+    and turning those away would be the guard costing real lists.
+    """
+    bare = _list(2)
+    bare["main"] = _sized(bare["main"], 60)
+    bare["side"] = {}
+    assert not spotlight.unread(bare)
+    assert len(spotlight.members(_payload(BRISBANE, [_list(1), bare]), "blink", "esper")) == 2
+
+
+def _other(rank):
+    """A finisher of some other deck: the shape of a row, none of the signature."""
+    return {**_list(rank, name="Other"), "main": {"Lightning Bolt": 4, "Mountain": 56}}
+
+
+def test_the_reading_names_who_finished():
+    """The finishes, with pilots and records, not just the best rank.
+
+    A Spotlight is the biggest tournament of its era and the paper paragraph
+    leads with who finished. Left out of the reading, those names come off the
+    standings page by hand, which is the one part of the report written from
+    whatever the writer happened to scroll past.
+    """
+    field = [_other(rank) for rank in range(1, 101)]
+    field[0] = _list(1, wins=13, losses=1)
+    field[39] = _list(40, wins=11, losses=4)
+    top = spotlight.reading(_payload(DALLAS, field))["top"]
+    assert [(row["rank"], row["pilot"], row["record"]) for row in top] == [
+        (1, "pilot1", "13-1-0")
+    ]
+
+
+def test_a_deck_that_missed_the_cut_still_reports_its_best_finish():
+    """Nothing in the top 32 is a finding, not a blank: the best list is named."""
+    field = [_other(rank) for rank in range(1, 101)]
+    field[39] = _list(40, wins=11, losses=4)
+    assert spotlight.reading(_payload(DALLAS, field))["top"] == [
+        {"rank": 40, "pilot": "pilot40", "record": "11-4-0"}
+    ]
+
+
+def test_the_weeks_spotlight_reaches_the_summary_writer(tmp_path):
+    """The paper figures are in the JSON the summary is written from, or nowhere.
+
+    Every other clause is written from that file. This one was written off the
+    rendered page, and nothing in the file said an event had fallen in the week
+    at all, so whether the report got a paper paragraph depended on the writer
+    remembering it had.
+    """
+    _cache(tmp_path, BRISBANE, _payload(BRISBANE, [_list(rank) for rank in range(1, 12)]))
+    _cache(tmp_path, DALLAS, _payload(DALLAS, [_list(rank) for rank in range(1, 21)]))
+    chain = spotlight.chain(config.DB_PATH, spotlights=(BRISBANE, DALLAS), directory=tmp_path)
+
+    reported = weekly._paper(chain, spotlight.week(DALLAS))
+    assert reported["label"] == "Spotlight Dallas"
+    assert reported["top"][0]["pilot"] == "pilot1"
+    # Both sides of the comparison, because the clause quotes both.
+    assert reported["against"] == "Spotlight Brisbane"
+    assert reported["against_row"]["lists"] == 11
+    assert weekly._paper(chain, "2026-08-17") is None
+
+
+AMSTERDAM = {"id": 434455, "label": "Pro Tour Amsterdam", "date": "2026-07-17", "format": "Modern"}
+
+
+def test_each_event_reads_against_whatever_the_storyline_said_last(tmp_path):
+    """A major event is a storyline entry, not a thing only another event may follow.
+
+    MTGO moves what pilots take to a Pro Tour and a Pro Tour moves what turns up
+    on MTGO the fortnight after, so an event weeks from the nearest other one is
+    read against the fortnight that closed before it rather than against
+    nothing. Dallas is the other case: Brisbane was played after that fortnight
+    closed, so Brisbane is the entry it follows.
+    """
+    field = [_list(rank) for rank in range(1, 4)] + [_other(rank) for rank in range(4, 6)]
+    _cache(tmp_path, AMSTERDAM, _payload(AMSTERDAM, field))
+    _cache(tmp_path, BRISBANE, _payload(BRISBANE, [_list(rank) for rank in range(1, 12)]))
+    _cache(tmp_path, DALLAS, _payload(DALLAS, [_list(rank) for rank in range(1, 21)]))
+
+    amsterdam, brisbane, dallas = spotlight.chain(
+        config.DB_PATH, spotlights=(AMSTERDAM, BRISBANE, DALLAS), directory=tmp_path
+    )
+    assert amsterdam["lists"] == 3 and amsterdam["field"] == 5
+    assert amsterdam["against"] == "the fortnight to 2026-07-12"
+    assert brisbane["against"] == "the fortnight to 2026-08-23"
+    assert (dallas["against"], dallas["cross_population"]) == ("Spotlight Brisbane", False)
+
+
+def test_the_constructed_rounds_of_a_two_format_event_are_read_apart():
+    """Which rounds a Pro Tour's record is taken over, and where each run opens.
+
+    Melee publishes a running total over the whole event, so the Modern record is
+    the difference across each Modern run: the standings at its last round, less
+    the standings at the round before it started. Read whole instead, a Modern
+    deck's win rate is six rounds of limited and the column means nothing.
+    """
+    played = [
+        {"id": str(n), "name": name, "format": fmt}
+        for n, (name, fmt) in enumerate(
+            [(f"Round {r}", fmt) for r, fmt in enumerate(
+                ["Draft"] * 3 + ["Modern"] * 5 + ["Draft2"] * 3 + ["Modern"] * 5, start=1
+            )]
+            + [("Quarterfinals", "Draft 3"), ("Semifinals", "Draft 3"), ("Finals", "Draft 3")],
+            start=1,
+        )
+    ]
+    # Rounds 4 to 8 opening off round 3, and 12 to 16 opening off round 11.
+    assert melee._blocks(played, "Modern") == [("3", "8"), ("11", "16")]
+
+
+def test_an_empty_paper_row_says_it_was_the_sample_and_not_the_fetch():
+    """A bare "stable" on a thin event reads as data that failed to arrive.
+
+    Esper Blink took eight lists to Amsterdam against a fortnight of twenty
+    seven, and the gate wants the move worth five lists in the smaller of the
+    two, so five of those eight have to change their mind about one card. The
+    row says which entry it was read against and how much of the event a finding
+    costs, because a reader cannot otherwise tell a quiet event from a broken
+    fetch.
+
+    Whichever of the two bars asks for more lists is the one quoted. Past
+    twenty-five lists the count gate is no longer the binding one and the
+    adoption share is, so a row there costs a fifth of the smaller side rather
+    than a flat five.
+    """
+    thin = {"against": "the fortnight to 2026-07-12", "build_lists": 8, "baseline_lists": 27}
+    assert "the fortnight to 2026-07-12" in weekly._stable(thin)
+    assert "at 8 lists" in weekly._stable(thin)
+    assert f"worth {config.TRACK_MIN_LISTS} of them" in weekly._stable(thin)
+
+    fat = {"against": "Spotlight Brisbane", "build_lists": 77, "baseline_lists": 29}
+    assert "at 29 lists" in weekly._stable(fat)
+    assert "worth 6 of them" in weekly._stable(fat)

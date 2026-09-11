@@ -195,33 +195,59 @@ def _legend(ax, columns: int) -> None:
     )
 
 
-def presence(weeks: list[dict], events: list[dict]) -> str:
+def presence(weeks: list[dict], events: list[dict], versions: list[tuple]) -> str:
     """How much of the published field the deck holds, week by week.
 
-    Two panels rather than two axes. The challenge stratum is read as a share
-    because the number of events a week runs is the calendar's decision and not
-    the deck's, and the league stratum is read as a raw count because that is
-    what a trophy dump is: every 5-0 published, one pilot's repeats included,
-    since what the panel measures is how much of that stratum the deck occupies.
+    Two panels rather than two axes, and both read as a share of their own
+    stratum, because the number of events a week runs is the calendar's decision
+    and not the deck's. That holds as hard for leagues as for challenges: this
+    history's weekly league field runs from 340 published 5-0s to 511, so a
+    trophy count drawn as a bar is half the calendar. Uncapped still, every 5-0
+    published and one pilot's repeats included, which is what a trophy dump is;
+    uncapped is a question about the numerator and the denominator is separate.
+
+    The third panel splits the first by version of the deck, on the same axis
+    and the same scale, so the two read together: a flat archetype whose
+    versions are trading places is a different week from a flat archetype that
+    did not move. Observability only, and MTGO only. It carries no verdict, and
+    a version this deck barely publishes plots as the floor rather than being
+    left off, a version nobody is playing being a reading in itself.
     """
     series = SERIES[0]
     days = _days(weeks)
-    fig, (top, bottom) = plt.subplots(
-        2, 1, figsize=(9, 4.4), sharex=True, gridspec_kw={"hspace": 0.18}
+    # Wider than the two-panel gap was: the third panel carries a key as well as
+    # a title, and at the old spacing the title landed on the axis above it.
+    fig, (top, middle, bottom) = plt.subplots(
+        3, 1, figsize=(9, 7), sharex=True, gridspec_kw={"hspace": 0.46}
     )
 
     shares = [(row["chal_share"] or 0) * 100 for row in weeks]
     top.plot(days, shares, color=series, linewidth=2, marker="o", markersize=4)
-    top.set_title("Share of published top-32 slots", loc="left", fontsize=10, pad=14)
+    top.set_title("Share of published top-32 slots (MTGO)", loc="left", fontsize=10, pad=14)
     _frame(top, days, events, "% of top 32")
     _label_events(top, days, events)
     _end_labels(top, [(shares[-1], f"{shares[-1]:.1f}%", series)])
 
-    trophies = [row["trophies"] for row in weeks]
-    bottom.bar(days, trophies, width=5, color=series, linewidth=0)
-    bottom.set_title("League trophies, uncapped", loc="left", fontsize=10, pad=6)
-    _frame(bottom, days, events, "5-0 lists")
-    _end_labels(bottom, [(trophies[-1], str(trophies[-1]), series)])
+    trophies = [(row["trophy_share"] or 0) * 100 for row in weeks]
+    middle.bar(days, trophies, width=5, color=series, linewidth=0)
+    middle.set_title("Share of published league trophies, uncapped (MTGO)",
+                     loc="left", fontsize=10, pad=6)
+    _frame(middle, days, events, "% of 5-0s")
+    _end_labels(middle, [(trophies[-1], f"{trophies[-1]:.1f}%", series)])
+
+    labelled = []
+    for slot, (name, rows) in enumerate(versions):
+        colour = SERIES[slot % len(SERIES)]
+        split = [(row["chal_share"] or 0) * 100 for row in rows]
+        bottom.plot(_days(rows), split, color=colour, linewidth=1.6, marker="o",
+                    markersize=3.5, label=name)
+        if split:
+            labelled.append((split[-1], name, colour))
+    bottom.set_title("Share of published top-32 slots by version of the deck (MTGO)",
+                     loc="left", fontsize=10, pad=24)
+    _frame(bottom, days, events, "% of top 32")
+    _end_labels(bottom, labelled)
+    _legend(bottom, len(versions))
     return _svg(fig)
 
 
@@ -245,7 +271,7 @@ def conversion(weeks: list[dict], events: list[dict]) -> str:
             label="Share of top 32")
     ax.plot(days, top8_pct, color=second, linewidth=2, marker="o", markersize=4,
             label="Share of top 8")
-    ax.set_title("Conversion: top-8 share against top-32 share",
+    ax.set_title("Conversion: top-8 share against top-32 share (MTGO)",
                  loc="left", fontsize=10, pad=24)
     _frame(ax, days, events, "% of published slots")
     _label_events(ax, days, events)
@@ -255,7 +281,7 @@ def conversion(weeks: list[dict], events: list[dict]) -> str:
 
 
 def spotlight_finishes(readings: list[dict]) -> str:
-    """Where the deck's lists finished at each Spotlight, against chance.
+    """Where the deck's lists finished at each major paper event, against chance.
 
     Read as a cumulative share of the deck's own lists over the top share of the
     field, which is what makes a 932-seat event and a 574-seat one one axis: rank
@@ -277,7 +303,7 @@ def spotlight_finishes(readings: list[dict]) -> str:
         2, 1, figsize=(9, 4.6), gridspec_kw={"hspace": 0.28, "height_ratios": [3, 1]}
     )
 
-    curve.plot([0, 1], [0, 1], color=INK, alpha=0.35, linewidth=1.2,
+    curve.plot([0, 1], [0, 1], color=INK, alpha=0.35, linewidth=1,
                linestyle=(0, (5, 3)), label="Field average")
     for slot, reading in enumerate(readings):
         placings = reading["placings"]
@@ -287,15 +313,18 @@ def spotlight_finishes(readings: list[dict]) -> str:
         # A step per list. Held from each finish to the next, the share of the
         # deck's lists that finished at least that high, closing on all of them.
         reached = [(index + 1) / len(placings) for index in range(len(placings))]
+        # Thinner than the weekly series, three curves crossing each other over
+        # the same span being the whole reading: at the weight of a single line
+        # the overlaps read as one band rather than as three events.
         curve.step([0.0, *placings, 1.0], [0.0, *reached, 1.0], where="post",
-                   color=colour, linewidth=2)
-        curve.plot(placings, reached, linestyle="none", marker="o", markersize=3.5,
+                   color=colour, linewidth=1.2)
+        curve.plot(placings, reached, linestyle="none", marker="o", markersize=3,
                    color=colour, label=f"{reading['label']} ({len(placings)} lists)")
         strip.plot(placings, [slot] * len(placings), linestyle="none", marker="o",
                    markersize=6, color=colour, alpha=0.55,
                    markeredgecolor=GROUND, markeredgewidth=1.2)
 
-    curve.set_title("Cumulative share of the deck's lists by finishing position",
+    curve.set_title("Cumulative share of the deck's lists by finishing position (paper)",
                     loc="left", fontsize=10, pad=24)
     curve.set_ylabel("% of the deck's lists")
     for axis in (curve, strip):
@@ -307,7 +336,9 @@ def spotlight_finishes(readings: list[dict]) -> str:
     curve.grid(axis="y", color=INK, alpha=0.12, linewidth=0.8)
     curve.set_ylim(-0.03, 1.05)
     curve.yaxis.set_major_formatter(lambda value, _: f"{value:.0%}")
-    _legend(curve, 3)
+    # One row: an event per column plus the null. Wrapped onto a second row the
+    # key lands on the title, the pad above it being one row's worth.
+    _legend(curve, len(readings) + 1)
 
     strip.set_title("Every list, one mark", loc="left", fontsize=10, pad=6)
     # The axis is named once, under the panel that carries the individual marks,
@@ -321,20 +352,24 @@ def spotlight_finishes(readings: list[dict]) -> str:
 
 
 def goldfishing(rows: list[dict], events: list[dict]) -> str:
-    """How much of a week is last week's most-played list, registered again.
+    """How many of a week's pilots registered last week's top 60 again.
 
     High is not good and not bad, it is settled: a week that is mostly one 75
     copied is a week the deck stopped being built. It is also the warning that
     such a week is not the sample its list count claims, since the evidence in
     it is closer to its distinct builds than to its lists.
+
+    Per pilot per 60 and never per publication, for the reason
+    `tracking.goldfishing` gives: a league publishes every 5-0, so counted by
+    publication one grinder reads as the field copying.
     """
     series = SERIES[0]
     days = _days(rows)
     shares = [(row["copied_share"] or 0) * 100 for row in rows]
     fig, ax = plt.subplots(figsize=(9, 2.8))
     ax.bar(days, shares, width=5, color=series, linewidth=0)
-    ax.set_title("% of lists identical to last week's most-played list",
+    ax.set_title("% of the week's builds identical to last week's most-registered list (MTGO)",
                  loc="left", fontsize=10, pad=14)
-    _frame(ax, days, events, "% of lists")
+    _frame(ax, days, events, "% of builds")
     _label_events(ax, days, events)
     return _svg(fig)

@@ -1,4 +1,4 @@
-"""Network layer: fetch a paper Spotlight's standings and lists into the raw cache.
+"""Network layer: fetch a major paper event's standings and lists into the raw cache.
 
 Melee is the second source of decklist-level data and the only one that is not
 MTGO. It is here for one reason: a Spotlight publishes every finisher, where a
@@ -116,11 +116,11 @@ def final_round(tournament: int) -> tuple[str, str]:
     return rounds[-1]
 
 
-def _standings_page(tournament: int, round_id: str, start: int) -> dict:
+def _standings_page(tournament: int, round_id: str, start: int, length: int = PAGE) -> dict:
     form = {
         "draw": "1",
         "start": str(start),
-        "length": str(PAGE),
+        "length": str(length),
         "search[value]": "",
         "search[regex]": "false",
         "order[0][column]": "0",
@@ -147,6 +147,72 @@ def _standings_page(tournament: int, round_id: str, start: int) -> dict:
         },
     )
     return response.json()
+
+
+def rounds(tournament: int) -> list[dict]:
+    """Every round the event played, in order, with the format it was played in.
+
+    The round buttons carry no format, so it comes off a single standings row
+    per round. One small request each, which is nothing beside a field's worth
+    of decklists, and it is the only way to tell a Pro Tour's draft rounds from
+    its constructed ones.
+    """
+    response = _request("GET", f"/Tournament/View/{tournament}", lambda r: ROUND_RE.search(r.text))
+    played = []
+    for round_id, name in dict.fromkeys(ROUND_RE.findall(response.text)):
+        rows = _standings_page(tournament, round_id, 0, length=1)["data"]
+        played.append(
+            {"id": round_id, "name": name, "format": rows[0]["FormatName"] if rows else None}
+        )
+        time.sleep(PAUSE)
+    if not played:
+        raise Unavailable(f"tournament {tournament} published no rounds")
+    return played
+
+
+def _blocks(played: list[dict], fmt: str) -> list[tuple[str | None, str]]:
+    """Each unbroken run of rounds in one format, as the round before it and its last.
+
+    A record is published as a running total over the whole event, so a format's
+    own record is the difference across the run: the standings at the end of the
+    block, less the standings at the round before it started.
+    """
+    blocks: list[tuple[str | None, str]] = []
+    for index, entry in enumerate(played):
+        if entry["format"] != fmt:
+            continue
+        if blocks and index and blocks[-1][1] == played[index - 1]["id"]:
+            blocks[-1] = (blocks[-1][0], entry["id"])
+        else:
+            blocks.append((played[index - 1]["id"] if index else None, entry["id"]))
+    return blocks
+
+
+def _totals(tournament: int, round_id: str) -> dict[int, tuple[int, int, int]]:
+    """Each team's running match record as it stood after a round."""
+    return {
+        row["TeamId"]: (row["MatchWins"], row["MatchLosses"], row["MatchDraws"])
+        for row in standings(tournament, round_id)
+    }
+
+
+def format_record(tournament: int, blocks: list[tuple[str | None, str]]) -> dict[int, tuple]:
+    """Each team's record over one format's rounds alone, by difference.
+
+    A Pro Tour ranks sixteen rounds of two formats under one record, six of them
+    draft. Reported whole, a Modern deck's win rate is most of a limited win rate
+    and the column means nothing, so the draft rounds are subtracted off rather
+    than dressed up.
+    """
+    record: dict[int, list[int]] = {}
+    for before, last in blocks:
+        opening = _totals(tournament, before) if before else {}
+        for team, closing in _totals(tournament, last).items():
+            was = opening.get(team, (0, 0, 0))
+            running = record.setdefault(team, [0, 0, 0])
+            for slot in range(3):
+                running[slot] += closing[slot] - was[slot]
+    return {team: tuple(values) for team, values in record.items()}
 
 
 def standings(tournament: int, round_id: str) -> list[dict]:
@@ -202,16 +268,32 @@ def decklist(decklist_id: str) -> tuple[dict[str, int], dict[str, int]]:
     return boards(response.text)
 
 
-def tournament(tournament_id: int, known: dict | None = None) -> dict:
-    """A whole Spotlight: its metadata, its final standings, and every list.
+def tournament(tournament_id: int, known: dict | None = None, played_in: str | None = None) -> dict:
+    """A whole major event: its metadata, its final standings, and every list.
 
     `known` is a cache of lists already fetched, keyed by decklist id. A field
     of nine hundred is nine hundred requests to someone else's server, so a
     refetch costs nothing it does not have to.
+
+    `played_in` names the constructed format, at an event that played more than
+    one. A Pro Tour is three draft pods and ten rounds of Modern under a single
+    ranking, and its top 8 is a draft pod too, so the event is read at the end of
+    its last Modern round: that is the last standing the Modern deck earned, and
+    the playoff reorders the top 8 on limited results alone. The record kept is
+    the Modern rounds by themselves, for the reason `format_record` gives.
     """
     known = known or {}
     meta = details(tournament_id)
-    round_id, round_name = final_round(tournament_id)
+    record: dict[int, tuple] = {}
+    if played_in:
+        played = rounds(tournament_id)
+        constructed = [entry for entry in played if entry["format"] == played_in]
+        if not constructed:
+            raise Unavailable(f"tournament {tournament_id} published no {played_in} round")
+        round_id, round_name = constructed[-1]["id"], constructed[-1]["name"]
+        record = format_record(tournament_id, _blocks(played, played_in))
+    else:
+        round_id, round_name = final_round(tournament_id)
     rows = standings(tournament_id, round_id)
     lists = []
     for row in rows:
@@ -223,16 +305,19 @@ def tournament(tournament_id: int, known: dict | None = None) -> dict:
             else:
                 main, side = decklist(entry["DecklistId"])
                 time.sleep(PAUSE)
+            wins, losses, draws = record.get(
+                row["TeamId"], (row["MatchWins"], row["MatchLosses"], row["MatchDraws"])
+            )
             lists.append(
                 {
                     "decklist_id": entry["DecklistId"],
                     "rank": row["Rank"],
                     "pilot": players[0]["Username"] if players else None,
                     "name": entry["DecklistName"].strip(),
-                    "record": row["MatchRecord"],
-                    "wins": row["MatchWins"],
-                    "losses": row["MatchLosses"],
-                    "draws": row["MatchDraws"],
+                    "record": f"{wins}-{losses}-{draws}",
+                    "wins": wins,
+                    "losses": losses,
+                    "draws": draws,
                     "points": row["Points"],
                     "main": main,
                     "side": side,
@@ -245,6 +330,7 @@ def tournament(tournament_id: int, known: dict | None = None) -> dict:
             "organiser": meta.get("OrganizationName"),
             "start": meta.get("StartDate"),
             "round": round_name,
+            "format": played_in,
             "players": len(rows),
         },
         "lists": lists,

@@ -505,7 +505,7 @@
   "challenge_after": 0.09375,
   "tilt_after": -0.0015115298087739204,
   "resolved_on": "2026-07-19",
-  "now_adoption": 0.037037037037037035,
+  "now_adoption": 0.034482758620689655,
   "standing": "lapsed",
   "first_seen": "2026-08-07"
  },
@@ -530,7 +530,7 @@
   "challenge_after": 0.4,
   "tilt_after": 0.006926406926406781,
   "resolved_on": "2026-07-05",
-  "now_adoption": 0.2222222222222222,
+  "now_adoption": 0.27586206896551724,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -555,7 +555,7 @@
   "challenge_after": 0.07894736842105263,
   "tilt_after": 0.002908020392044214,
   "resolved_on": "2026-07-26",
-  "now_adoption": 0.037037037037037035,
+  "now_adoption": 0.034482758620689655,
   "standing": "lapsed",
   "first_seen": "2026-08-07"
  },
@@ -580,7 +580,7 @@
   "challenge_after": 0.05263157894736842,
   "tilt_after": 0.01168336940577909,
   "resolved_on": "2026-07-26",
-  "now_adoption": 0.037037037037037035,
+  "now_adoption": 0.034482758620689655,
   "standing": "lapsed",
   "first_seen": "2026-08-07"
  },
@@ -605,7 +605,7 @@
   "challenge_after": 0.2619047619047619,
   "tilt_after": -0.006602967451254771,
   "resolved_on": "2026-08-09",
-  "now_adoption": 0.2222222222222222,
+  "now_adoption": 0.20689655172413793,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -630,7 +630,7 @@
   "challenge_after": 0.2857142857142857,
   "tilt_after": 0.015264507107900116,
   "resolved_on": "2026-08-09",
-  "now_adoption": 0.1111111111111111,
+  "now_adoption": 0.13793103448275862,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -655,7 +655,7 @@
   "challenge_after": 0.2857142857142857,
   "tilt_after": 0.01406926406926401,
   "resolved_on": "2026-07-05",
-  "now_adoption": 0.1111111111111111,
+  "now_adoption": 0.10344827586206896,
   "standing": "holding",
   "first_seen": "2026-08-07"
  },
@@ -3002,12 +3002,12 @@
   "camp": "hybrid",
   "card": "Ghost Vacuum",
   "main": 0,
-  "side": 1,
-  "appeared_on": "2026-08-11",
-  "pilot": "ptn",
-  "event": "Modern League",
-  "placement": null,
-  "historical_adoption": 0.03496503496503497,
+  "side": 2,
+  "appeared_on": "2026-09-10",
+  "pilot": "SantiMagicOnline",
+  "event": "Modern Challenge 64",
+  "placement": 16,
+  "historical_adoption": 0.03220035778175313,
   "returning": false,
   "absent_days": null,
   "first_seen": "2026-08-11"
@@ -3133,7 +3133,7 @@
   "challenge_after": 0.4,
   "tilt_after": -0.026028559831740627,
   "resolved_on": "2026-08-23",
-  "now_adoption": 0.1111111111111111,
+  "now_adoption": 0.10344827586206896,
   "standing": "holding",
   "first_seen": "2026-08-11"
  },
@@ -4124,7 +4124,7 @@
   "challenge_after": 0.21052631578947367,
   "tilt_after": 0.007729716864894209,
   "resolved_on": "2026-09-06",
-  "now_adoption": 0.37037037037037035,
+  "now_adoption": 0.3448275862068966,
   "standing": "holding",
   "first_seen": "2026-08-28"
  },
@@ -4149,7 +4149,7 @@
   "challenge_after": 0.12280701754385964,
   "tilt_after": 4.703824068552631e-05,
   "resolved_on": "2026-09-06",
-  "now_adoption": 0.037037037037037035,
+  "now_adoption": 0.034482758620689655,
   "standing": "lapsed",
   "first_seen": "2026-08-28"
  },
@@ -4228,6 +4228,54 @@
   "state": "watching",
   "followers": [],
   "adopted_card": "Cursed Totem",
+  "needed": 2,
+  "first_seen": "2026-09-11"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "fallaji",
+  "stratum": "challenge-class",
+  "pilot": "SantiMagicOnline",
+  "event": "Modern Challenge 64",
+  "date": "2026-09-10",
+  "placement": 16,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Ghost Vacuum",
+    0,
+    2
+   ]
+  ],
+  "missing": [],
+  "state": "watching",
+  "followers": [],
+  "adopted_card": "Ghost Vacuum",
+  "needed": 2,
+  "first_seen": "2026-09-11"
+ },
+ {
+  "kind": "breakthrough",
+  "camp": "non-fallaji",
+  "stratum": "league",
+  "pilot": "mcrmy4lyf",
+  "event": "Modern League",
+  "date": "2026-09-10",
+  "placement": null,
+  "mode": "fringe",
+  "delta": 1,
+  "novel": [
+   [
+    "Valgavoth, Terror Eater",
+    0,
+    1
+   ]
+  ],
+  "missing": [],
+  "state": "watching",
+  "followers": [],
+  "adopted_card": "Valgavoth, Terror Eater",
   "needed": 2,
   "first_seen": "2026-09-11"
  },
@@ -4350,6 +4398,21 @@
   "historical_adoption": 0.0883495145631068,
   "returning": true,
   "absent_days": 36,
+  "first_seen": "2026-09-11"
+ },
+ {
+  "kind": "fringe",
+  "camp": "non-fallaji",
+  "card": "Valgavoth, Terror Eater",
+  "main": 0,
+  "side": 1,
+  "appeared_on": "2026-09-10",
+  "pilot": "mcrmy4lyf",
+  "event": "Modern League",
+  "placement": null,
+  "historical_adoption": 0.0,
+  "returning": false,
+  "absent_days": null,
   "first_seen": "2026-09-11"
  },
  {

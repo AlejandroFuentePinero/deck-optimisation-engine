@@ -191,6 +191,19 @@ def _rows(cursor: duckdb.DuckDBPyConnection) -> list[dict]:
     return [dict(zip(names, row)) for row in cursor.fetchall()]
 
 
+def population(archetype: str, camp: str | None, prefix: str = "") -> tuple[str, list]:
+    """The predicate naming the lists a reading is taken over, and its parameters.
+
+    `camp` of `None` pools every camp of the archetype, which is what a reading
+    of the whole deck wants: a metagame share read on one camp of three is a
+    third of the answer. A named camp is the reading the build questions want,
+    where pooling would report a camp arriving as the deck changing its mind.
+    """
+    if camp is None:
+        return f"{prefix}archetype = ?", [archetype]
+    return f"{prefix}archetype = ? AND {prefix}camp = ?", [archetype, camp]
+
+
 def _count(counts: list[dict], stratum: str, camp: str, unit: str) -> int:
     """One camp's population in one stratum, in `unit`: `pilots` counts a pilot
     once however many times they published, `lists` counts every publication."""

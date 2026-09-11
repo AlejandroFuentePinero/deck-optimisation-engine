@@ -463,18 +463,17 @@ def main(argv=None) -> None:
     commands.add_parser("gamelogs", help="parse the pilot's own MTGO match logs into records")
 
     tracked = commands.add_parser("weekly", help="freeze and render a tracked deck's weekly report")
-    tracked.add_argument("--deck", default="blink", choices=sorted(config.TRACKED_DECKS))
-    tracked.add_argument("--variant", default=None, help="defaults to the deck's blue variant")
+    tracked.add_argument("--deck", default="blink", choices=sorted(config.REPORTS))
     tracked.add_argument("--week", help="the Monday keying the week to report, defaults to the last full week")
 
-    spot = commands.add_parser("spotlight-fetch", help="cache a paper Spotlight's standings and lists")
+    spot = commands.add_parser("event-fetch", help="cache a major paper event's standings and lists")
     spot.add_argument("--id", type=int, help="melee tournament id, defaults to every one configured")
 
     args = parser.parse_args(argv)
-    if args.command == "spotlight-fetch":
-        wanted = [s for s in config.SPOTLIGHTS if args.id in (None, s["id"])]
+    if args.command == "event-fetch":
+        wanted = [s for s in config.MAJOR_EVENTS if args.id in (None, s["id"])]
         if not wanted:
-            print(f"{args.id} is not a configured Spotlight; add it to config.SPOTLIGHTS")
+            print(f"{args.id} is not a configured event; add it to config.MAJOR_EVENTS")
             return
         config.MELEE_DIR.mkdir(parents=True, exist_ok=True)
         for entry in wanted:
@@ -487,23 +486,23 @@ def main(argv=None) -> None:
                 else {}
             )
             print(f"{entry['label']} ({entry['id']}): {len(known)} list(s) already cached")
-            payload = melee.tournament(entry["id"], known)
+            payload = melee.tournament(entry["id"], known, entry.get("format"))
             path.write_text(json.dumps(payload), encoding="utf-8")
             meta = payload["tournament"]
             print(f"  {meta['name']}")
             print(f"  {meta['players']} players, {len(payload['lists'])} lists, "
-                  f"final round {meta['round']} -> {path}")
+                  f"read at {meta['round']} -> {path}")
         return
 
     if args.command == "weekly":
-        variant = args.variant or config.TRACKED_DECKS[args.deck]["variant_with"]
+        report = config.REPORTS[args.deck]
         week = args.week or weekly.last_complete_week()
-        added = weekly.freeze(deck=args.deck, variant=variant, through=week)
-        reading = weekly.facts(deck=args.deck, variant=variant, week=week)
+        added = weekly.freeze(deck=args.deck, through=week)
+        reading = weekly.facts(deck=args.deck, week=week)
         if "error" in reading:
             print(f"{week}: {reading['error']}")
             return
-        print(f"{args.deck}/{variant}, week ending {weekly.week_label(week)}")
+        print(f"{report['name']}, week ending {weekly.week_label(week)}")
         print(f"  froze {added['weeks_added']} week(s), {added['timeline_added']} timeline row(s)")
         challenge, conversion = reading["challenge"], reading["conversion"]
         print(f"  {challenge['lists']} finish(es) in swiss-like tournaments, "
@@ -511,10 +510,13 @@ def main(argv=None) -> None:
               f"{', VOLUME ELEVATED' if challenge['spiking'] else ''}")
         print(f"  {conversion['top8']} top 8 ({conversion['top8_share']:.1%} of the band), "
               f"{conversion['top16']} top 16")
-        print(f"  {reading['leagues']['trophies']} trophy(ies), "
-              f"{reading['orzhov']['lists']} list(s) in the other variant")
+        print(f"  {reading['leagues']['trophies']} trophy(ies)")
+        observed = ", ".join(
+            f"{name} {seen['lists']}" for name, seen in reading["versions"].items()
+        )
+        print(f"  versions observed: {observed}")
         print(f"  numbers at {weekly.write_facts(reading, args.deck)}")
-        print(f"  report at {weekly.render(deck=args.deck, variant=variant, week=week)}")
+        print(f"  report at {weekly.render(deck=args.deck, week=week)}")
         summary = weekly.deck_dir(args.deck) / "summary" / f"{week}.md"
         if not summary.exists():
             print(f"  NO SUMMARY: write {summary} and re-run to render it in")

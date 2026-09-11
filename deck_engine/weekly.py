@@ -16,7 +16,9 @@ asked about weeks that have no row yet.
 
 import csv
 import json
+import statistics
 from datetime import date, timedelta
+from math import ceil
 from pathlib import Path
 
 from . import config, plots, spotlight, timeline, tracking
@@ -62,6 +64,38 @@ def _read(path: Path) -> list[dict]:
         return list(csv.DictReader(handle))
 
 
+_COUNTS = ("lists", "chal", "chal_field", "top8", "top8_field", "top16", "trophies", "league_field")
+_SHARES = ("chal_share", "top8_share", "trophy_share")
+
+
+def _numbers(row: dict) -> dict:
+    """A frozen weekly row read back as the numbers it froze.
+
+    The file holds text, and everything downstream of it plots, compares and
+    formats. Done once here rather than at each reader, so the figures and the
+    facts cannot come to disagree about what an empty share means.
+    """
+    return {**row, **{k: int(row[k]) for k in _COUNTS}, **{k: float(row[k] or 0) for k in _SHARES}}
+
+
+def weeks_through(db_path: Path, deck: str, report: dict, week: str) -> list[dict]:
+    """The weekly rows a report renders: the frozen ones, and the store only for
+    a week no run has frozen yet.
+
+    The split this module opens on is only half kept while the plots and the
+    table are computed live: the summary is then written from the frozen file
+    and printed above figures drawn from the store, and a league dump filling in
+    behind a past week moves one and not the other with no diff to show for it.
+    A run whose weeks are all frozen reads nothing from the store at all.
+    """
+    frozen = {row["week"]: _numbers(row) for row in _read(deck_dir(deck) / "weekly.csv")}
+    return [
+        frozen.get(row["week"], row)
+        for row in tracking.weekly(db_path, report["archetype"], report["camp"])
+        if row["week"] <= week
+    ]
+
+
 def _append(path: Path, columns: tuple[str, ...], rows: list[dict]) -> int:
     """Add rows the file does not hold yet, leaving the ones it does alone."""
     if not rows:
@@ -80,7 +114,6 @@ def _append(path: Path, columns: tuple[str, ...], rows: list[dict]) -> int:
 def freeze(
     db_path: Path = config.DB_PATH,
     deck: str = "blink",
-    variant: str = "esper",
     through: str | None = None,
 ) -> dict:
     """Compute the weeks and fortnights that have closed, and commit the new ones.
@@ -88,22 +121,34 @@ def freeze(
     `through` is the last week to freeze, so a run never writes a row for a week
     still gaining lists. Weeks already on file are not recomputed: what was
     reported is what stands.
+
+    One report per directory, which is why the population is the subject's and
+    never an argument: a pooled row and a one-camp row in the same `weekly.csv`
+    would be two measurements under one column heading, and nothing in the file
+    would say which a row was.
     """
     through = through or last_complete_week()
+    report = config.REPORTS[deck]
     root = deck_dir(deck)
     weekly_path, timeline_path = root / "weekly.csv", root / "timeline.csv"
 
     held = {row["week"] for row in _read(weekly_path)}
     weeks = [
         row
-        for row in tracking.weekly(db_path, deck, variant)
+        for row in tracking.weekly(db_path, report["archetype"], report["camp"])
         if row["week"] <= through and row["week"] not in held
     ]
 
     held_bins = {row["start"] for row in _read(timeline_path)}
     rows = []
-    for entry in timeline.findings(db_path, deck, variant):
-        if entry["end"] > through or entry["start"] in held_bins:
+    # Against the week's Sunday and not its Monday key. A fortnight closing on
+    # the reported week's own last day has closed, and compared against the key
+    # it reads as still filling: the report would then show the fortnight it is
+    # reporting on as in progress, and freeze it a week late under a later run's
+    # phrasing.
+    closed = week_label(through)
+    for entry in timeline.findings(db_path, report):
+        if entry["end"] > closed or entry["start"] in held_bins:
             continue
         found = entry["found"] or [{"kind": "stable", "zone": "", "card": "", "text": ""}]
         rows.extend({**entry, **finding} for finding in found)
@@ -115,10 +160,38 @@ def freeze(
     }
 
 
+def _paper(entries: list[dict], week: str) -> dict | None:
+    """The major event that fell in the reported week, with the row it reads against.
+
+    The paper clause was the one clause whose figures were not in this file, so
+    it was the one clause written off the rendered page, which is the thing
+    `facts` exists to prevent. Nothing in the JSON even said an event had fallen
+    in the week, so whether the report got a paper paragraph at all depended on
+    the writer remembering.
+
+    The comparison row rides along with its own numbers rather than its label
+    alone: the clause quotes both sides, and a label would send the writer back
+    to the page for the other half. `placings` is dropped from both, being the
+    positional plot's series and no sentence.
+    """
+    entry = next((row for row in entries if row["week"] == week), None)
+    if entry is None:
+        return None
+    earlier = entries[: entries.index(entry)]
+    before = earlier[-1] if earlier else None
+    return {
+        **{key: value for key, value in entry.items() if key != "placings"},
+        "against_row": (
+            {key: value for key, value in before.items() if key not in ("placings", "found")}
+            if before
+            else None
+        ),
+    }
+
+
 def facts(
     db_path: Path = config.DB_PATH,
     deck: str = "blink",
-    variant: str = "esper",
     week: str | None = None,
 ) -> dict:
     """Everything the summary is written from, as numbers rather than prose.
@@ -129,56 +202,73 @@ def facts(
     kinds of things about the same figures every week.
     """
     week = week or last_complete_week()
-    rows = _read(deck_dir(deck) / "weekly.csv")
-    numbered = [{**row, **{k: float(row[k] or 0) for k in ("chal_share", "top8_share",
-                                                           "trophy_share")}} for row in rows]
+    report = config.REPORTS[deck]
+    numbered = [_numbers(row) for row in _read(deck_dir(deck) / "weekly.csv")]
     this = next((row for row in numbered if row["week"] == week), None)
     if this is None:
         return {"week": week, "error": "no frozen week on file; run freeze first"}
 
-    history = [row for row in numbered if row["week"] < week]
+    history = sorted((row for row in numbered if row["week"] < week), key=lambda r: r["week"])
     previous = history[-1] if history else None
-    counts = sorted(int(row["chal"]) for row in numbered)
-    median = counts[len(counts) // 2]
+    # The deck's own history to the reported week and never past it. Taken over
+    # the whole file, a week re-rendered in October quotes a baseline that did
+    # not exist when it was reported, and clause 2 of a past summary stops being
+    # checkable against the report it was written from: Goryo's week of 8 June
+    # was written against a median of 13 and the file now says 31.
+    median = statistics.median(sorted(row["chal"] for row in history + [this]))
+    # The spike is read against the level the deck was just at instead, for the
+    # reason `config.TRACK_SPIKE_WEEKS` gives.
+    recent = [row["chal"] for row in history[-config.TRACK_SPIKE_WEEKS :]]
+    recent_median = statistics.median(recent) if recent else median
 
-    other = config.TRACKED_DECKS[deck]["variant_without"]
-    orzhov = [row for row in tracking.weekly(db_path, deck, other) if row["week"] == week]
+    # The versions of the deck the report names but does not read: observability,
+    # and already counted in the figures above wherever the population is pooled.
+    observed = {}
+    for name in report["observe"]:
+        rows_ = tracking.weekly(db_path, report["archetype"], name)
+        row = next((r for r in rows_ if r["week"] == week), None)
+        observed[config.version_name(name)] = {
+            "lists": row["lists"] if row else 0,
+            "challenge": row["chal"] if row else 0,
+            "trophies": row["trophies"] if row else 0,
+        }
 
     frozen = _read(deck_dir(deck) / "timeline.csv")
     latest = max((row["start"] for row in frozen), default=None)
-    copying = [row for row in tracking.goldfishing(db_path, deck, variant)
+    copying = [row for row in tracking.goldfishing(db_path, report["archetype"],
+                                                   report["build_camp"])
                if row["week"] == week]
+    played = spotlights_through(week)
+    paper = _paper(spotlight.chain(db_path, report, played), week) if played else None
 
     return {
         "week": week,
         "week_ending": week_label(week),
-        "lists": int(this["lists"]),
+        "lists": this["lists"],
         "challenge": {
-            "lists": int(this["chal"]),
+            "lists": this["chal"],
             "share": this["chal_share"],
             "previous_share": previous["chal_share"] if previous else None,
             "median_lists": median,
-            "spiking": int(this["chal"]) >= config.TRACK_SPIKE_MULTIPLE * median,
+            "recent_median": recent_median,
+            "spiking": this["chal"] >= config.TRACK_SPIKE_MULTIPLE * max(median, recent_median),
         },
         "conversion": {
-            "top8": int(this["top8"]),
+            "top8": this["top8"],
             "top8_share": this["top8_share"],
-            "top16": int(this["top16"]),
+            "top16": this["top16"],
             "over_converting": this["top8_share"] > this["chal_share"],
         },
         "leagues": {
-            "trophies": int(this["trophies"]),
+            "trophies": this["trophies"],
             "share": this["trophy_share"],
-            "previous": int(previous["trophies"]) if previous else None,
+            "previous": previous["trophies"] if previous else None,
         },
-        "orzhov": {
-            "lists": orzhov[0]["lists"] if orzhov else 0,
-            "challenge": orzhov[0]["chal"] if orzhov else 0,
-            "trophies": orzhov[0]["trophies"] if orzhov else 0,
-        },
+        "versions": observed,
         "goldfishing": copying[0] if copying else None,
         "timeline_latest": [row for row in frozen if row["start"] == latest and row["text"]],
-        "excluded_off_colour": tracking.excluded(db_path, deck),
+        "major_event": paper,
+        "excluded_off_colour": tracking.excluded(db_path, report["archetype"]),
     }
 
 
@@ -247,20 +337,36 @@ tbody tr:hover { background: var(--panel); }
 .tag { display: inline-block; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase;
        color: var(--ink-3); border: 1px solid var(--line); border-radius: 3px;
        padding: 1px 5px; margin-right: 7px; }
-footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid var(--line);
-         color: var(--ink-3); font-size: 12px; }
-footer code { font-size: 11px; }
 """
 
 
-def _found(found: list[dict]) -> str:
+def _found(found: list[dict], stable: str = "Stable against the fortnight before.") -> str:
     """A fortnight's findings as cells, or the sentence that says there were none."""
     marks = "".join(
         f'<div><span class="tag">{row["kind"]}</span>{row["text"]}</div>'
         for row in found
         if row.get("text")
     )
-    return marks or '<span class="none">Stable against the fortnight before.</span>'
+    return marks or f'<span class="none">{stable}</span>'
+
+
+def _stable(entry: dict) -> str:
+    """Why a paper row is empty, which at these populations is usually the sample.
+
+    A bare "stable" on an eight-list event reads as a fetch that failed. The row
+    is empty because nothing cleared the bar, and at eight lists the bar is most
+    of the event: the gate wants the move to be worth `TRACK_MIN_LISTS` in the
+    smaller population, and the adoption share to move `TRACK_ADOPTION_DELTA`,
+    whichever of the two asks for more lists. Esper Blink at Amsterdam is eight
+    lists against a fortnight of twenty-seven, so five of those eight have to
+    change their mind about one card, and its largest move was three.
+    """
+    floor = min(entry["build_lists"], entry["baseline_lists"])
+    needed = max(config.TRACK_MIN_LISTS, ceil(floor * config.TRACK_ADOPTION_DELTA))
+    return (
+        f"Nothing moved against {entry['against']}: at {floor} lists, the smaller "
+        f"of the two, a row needs a shift worth {needed} of them."
+    )
 
 
 def spotlights_through(week: str) -> tuple[dict, ...]:
@@ -277,23 +383,47 @@ def spotlights_through(week: str) -> tuple[dict, ...]:
     """
     return tuple(
         entry
-        for entry in config.SPOTLIGHTS
+        for entry in config.MAJOR_EVENTS
         if spotlight.week(entry) <= week and spotlight.cached(entry).exists()
     )
 
 
-def _spotlights(entries: list[dict]) -> str:
+def _spotlights(entries: list[dict], camp: str | None = None, build: str = "") -> str:
     """The paper section: where the deck finished, and the numbers behind it.
 
-    Its own section and its own axis, never the weekly one. A Spotlight publishes
-    every finisher where a challenge publishes its top 32, so a share of a
-    Spotlight field is a true metagame share and a share of a challenge is
-    already a share of a cut. Only `of top 32` is the same quantity the weekly
-    figures carry, and it is printed with its own count because thirty-two slots
-    is a handful of lists.
+    Its own section and its own axis, never the weekly one. A major paper event
+    publishes every finisher where a challenge publishes its top 32, so a share
+    of its field is a true metagame share and a share of a challenge is already a
+    share of a cut. Only `of top 32` is the same quantity the weekly figures
+    carry, and it is printed with its own count because thirty-two slots is a
+    handful of lists.
     """
     if not entries:
         return ""
+    # Which lists the counts are over, said whether or not the report splits its
+    # populations. A report reading one version publishes that version's field
+    # share under the deck's name, and unsaid it reads as the whole archetype's:
+    # Esper Blink took 63 lists to Dallas and the row says 61, the two Orzhov
+    # lists being outside the population and nowhere on the page.
+    said = " The lists counted here are " + (
+        "every version of the archetype"
+        if camp is None
+        else f"the {config.version_name(camp)} version"
+    )
+    said += "."
+    if build and build != camp:
+        said += (
+            f" The paper rows in the storyline below are the {config.version_name(build)} "
+            f"version's build readings, "
+            f"{entries[-1]['build_lists']} of the {entries[-1]['lists']} at the latest event."
+        )
+    unread = sum(entry["unread"] for entry in entries)
+    if unread:
+        said += (
+            f" {unread} published list(s) could not be read: melee grouped the 75 under a"
+            f" heading the fetch does not know, so the boards did not separate and membership"
+            f" could not be tested."
+        )
     rows = [
         [
             f"{entry['label']}<div class=\"open\">week ending {week_label(entry['week'])}</div>",
@@ -309,20 +439,17 @@ def _spotlights(entries: list[dict]) -> str:
         ]
         for entry in entries
     ]
-    return f"""<h2>Spotlights</h2>
+    return f"""<h2>Major competitive events (paper)</h2>
 <figure>{plots.spotlight_finishes(entries)}</figure>
 {_table(
     ["Event", "Field", "Lists", "of field", "Top 32", "Conversion", "Best",
      "Match record", "Win rate", "Field win rate"],
     rows,
 )}
-<p class="note">Paper, from melee. The field is every published list, not a top
-32, so <em>of field</em> is a true metagame share and has no MTGO counterpart:
-only <em>of top 32</em> is the quantity the weekly figures carry.
-<em>Conversion</em> is the deck's share of the top 32 over its share of the whole
+<p class="note"><em>Conversion</em> is the deck's share of the top 32 over its share of the whole
 field, so above 1.00 it held more of the cut than of the room. Win rate counts
 match wins and losses as played, the top cut included, because points stop
-accruing at the cut and would score the event's winner below the Swiss leader.</p>"""
+accruing at the cut and would score the event's winner below the Swiss leader.{said}</p>"""
 
 
 def _table(columns: list[str], rows: list[list[str]], klass: str = "") -> str:
@@ -334,21 +461,55 @@ def _table(columns: list[str], rows: list[list[str]], klass: str = "") -> str:
     )
 
 
+def _population(build: str, built: list[dict]) -> str:
+    """Which version a build reading was taken on, said where the reader is looking.
+
+    Empty where the report reads one population throughout, which is every
+    report whose pooled figures and build figures are the same lists. Where they
+    differ the note is not optional: the figures above a storyline row would
+    otherwise put a list count beside it that the row was never read against.
+    """
+    if not build:
+        return ""
+    return (
+        f'<p class="note">Read on the {config.version_name(build)} version alone, '
+        f"{sum(row['lists'] for row in built)} lists since the Modern bans, where the volume "
+        f"and performance figures are the whole archetype's. Pooled, a card at nine tenths of "
+        f"one version and none of another would read as the deck at half of it, and a version "
+        f"arriving would read as the deck changing its mind.</p>"
+    )
+
+
 def render(
     db_path: Path = config.DB_PATH,
     deck: str = "blink",
-    variant: str = "esper",
     week: str | None = None,
 ) -> Path:
     """Build the week's HTML from the frozen rows, the store and the summary."""
     week = week or last_complete_week()
-    root, name = deck_dir(deck), f"{variant.title()} {deck.title()}"
-    weeks = [row for row in tracking.weekly(db_path, deck, variant) if row["week"] <= week]
-    copying = [row for row in tracking.goldfishing(db_path, deck, variant) if row["week"] <= week]
+    report = config.REPORTS[deck]
+    archetype, camp, build = report["archetype"], report["camp"], report["build_camp"]
+    root, name = deck_dir(deck), report["name"]
+    weeks = weeks_through(db_path, deck, report, week)
+    copying = [
+        row for row in tracking.goldfishing(db_path, archetype, build) if row["week"] <= week
+    ]
     marks = timeline.events()
-    reading = facts(db_path, deck, variant, week)
+    # Every version of the deck the subject names: the one its figures are read
+    # on, where it reads one, and the ones it only observes. Split out for the
+    # presence figure and nowhere else, no reading in the report being taken
+    # over a version the subject does not name.
+    versions = [
+        (config.version_name(name),
+         [row for row in tracking.weekly(db_path, archetype, name) if row["week"] <= week])
+        for name in ((camp, *report["observe"]) if camp else report["observe"])
+    ]
+    reading = facts(db_path, deck, week)
     played = spotlights_through(week)
-    spotlights = spotlight.chain(db_path, deck, variant, played) if played else []
+    spotlights = spotlight.chain(db_path, report, played) if played else []
+    # Named only where the two differ, which is where a reader would otherwise
+    # have to guess which population a figure was taken over.
+    split = build if camp != build else ""
 
     summary_path = root / "summary" / f"{week}.md"
     summary = (
@@ -361,9 +522,11 @@ def render(
         banner = (
             f'<p class="flag"><strong>Volume is elevated.</strong> '
             f'{reading["challenge"]["lists"]} finishes in swiss-like tournaments against a '
-            f'median of {reading["challenge"]["median_lists"]} since the Modern bans. '
-            f"Performance figures taken over a spike measure how many pilots copied the deck, "
-            f"not how good it is.</p>"
+            f'median of {reading["challenge"]["recent_median"]:g} over the '
+            f"{config.TRACK_SPIKE_WEEKS} weeks behind it and "
+            f'{reading["challenge"]["median_lists"]:g} since the Modern bans. Performance '
+            f"figures taken over a spike measure how many pilots copied the deck, not how "
+            f"good it is.</p>"
         )
 
     frozen: dict[tuple[str, str], list[dict]] = {}
@@ -375,7 +538,7 @@ def render(
     # what it is: a reading that can still move, unlike every row above it.
     running = [
         entry
-        for entry in timeline.findings(db_path, deck, variant)
+        for entry in timeline.findings(db_path, report)
         if entry["start"] <= week and (entry["start"], entry["end"]) not in frozen
     ]
     # Fortnights and Spotlights in one sequence, ordered by the day each closed.
@@ -397,7 +560,7 @@ def render(
             week_label(entry["week"]),
             entry["week"],
             f'<span class="major">{entry["label"]}</span>',
-            _found(entry["found"]),
+            _found(entry["found"], _stable(entry)),
         )
         for entry in spotlights
     ]
@@ -416,19 +579,16 @@ def render(
 {banner}<div class="summary">{summary}</div>
 
 <h2>Presence</h2>
-<figure>{plots.presence(weeks, marks)}</figure>
+<figure>{plots.presence(weeks, marks, versions)}</figure>
 
 <h2>Conversion</h2>
 <figure>{plots.conversion(weeks, marks)}</figure>
 
 <h2>Goldfishing</h2>
 <figure>{plots.goldfishing(copying, marks)}</figure>
+{_population(split, copying)}
 
-{_spotlights(spotlights)}
-<h2>What changed</h2>
-{_table(["Period", "Findings"], timeline_rows, "tl")}
-
-<h2>The numbers</h2>
+<h2>The numbers (MTGO)</h2>
 {_table(
     ["Week ending", "Lists", "Top 32", "of field", "Top 8", "of field",
      "Top 16", "Trophies", "of field"],
@@ -438,21 +598,11 @@ def render(
         str(row["trophies"]), f'{(row["trophy_share"] or 0):.1%}',
     ] for row in reversed(weeks)],
 )}
+{_spotlights(spotlights, camp, build)}
+<h2>What changed</h2>
+{_table(["Period", "Findings"], timeline_rows, "tl")}
+{_population(split, copying)}
 
-<footer>
-<p>Membership: mainboard holds
-{", ".join(config.TRACKED_DECKS[deck]["signature"])}, and no red or green source.
-The {config.TRACKED_DECKS[deck]["variant_with"]} variant mainboards
-{config.TRACKED_DECKS[deck]["variant_card"]}; the
-{config.TRACKED_DECKS[deck]["variant_without"]} variant does not. Every reading above is the
-{variant} variant alone. {reading.get("excluded_off_colour", 0)} list(s) held the signature and
-were turned away on colour.</p>
-<p>A swiss-like tournament is every event that publishes a placement, pooled. League trophies are
-uncapped, so one pilot's repeats count. Top 8 is shown because it is the band a team talks in;
-top 16 is the band this project reads performance evidence at. Timeline findings are detected
-over a fortnight, because weekly detection on this population reverses about two times in five
-at any threshold. Rows are frozen once written.</p>
-</footer>
 </div>"""
 
     html = (
@@ -462,7 +612,7 @@ at any threshold. Rows are frozen once written.</p>
         f"<body>{body}</body></html>"
     )
     config.REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    out = config.REPORT_DIR / f"{deck}-{variant}-{week}.html"
+    out = config.REPORT_DIR / f"{deck}-{week}.html"
     partial = out.with_suffix(".partial")
     partial.write_text(html, encoding="utf-8")
     partial.replace(out)

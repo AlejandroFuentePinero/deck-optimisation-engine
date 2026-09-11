@@ -55,15 +55,32 @@ co-occurrence is tracked as a cheap partial guard.
 
 ## Archetype knowledge
 
-**Goryo's forks on Fallaji Archaeologist** (2026-08-07):
+**Goryo's forks on Fallaji Archaeologist, and non-Fallaji is the one we track**
+(2026-09-11):
 Current Goryo's builds split into a Fallaji Archaeologist camp (3-4 copies)
 and a non-Fallaji camp (0 copies). These are divergent construction
 directions, not flex-slot drift; the non-Fallaji build is the more stable of
-the two. Lists on 1-2 copies are hybrid experiments, innovation probing in
-both directions, and belong to neither consensus.
+the two and is the primary camp. Lists on 1-2 copies are hybrid experiments,
+innovation probing in both directions, and belong to neither consensus.
 *Applies*: consensus builds, novelty deltas, and slot comparisons are computed
 within-camp; hybrids are flagged as innovation, excluded from camp consensus.
-The camp ratio over time is a tracked signal.
+The camp ratio over time is a tracked signal. In the weekly report the camps are
+pooled for volume and performance, a metagame share being a share of the whole
+archetype, and every build reading is the non-Fallaji camp's.
+
+**Goryo's argues about its manabase: 21 lands against 22, and Hedge Maze over
+Breeding Pool** (2026-09-11):
+The live construction questions in the deck are how much land it runs and which
+dual fills the last land slot, not which spells it plays. Both are
+one-card decisions that no adoption share and no mean copy count can see: the
+land added is a different card in every list, and the duals are one-ofs swapping
+places.
+*Applies*: the weekly report reads the land count as a configuration of the whole
+list, so a camp walking from 21 to 22 earns a timeline row. Hedge Maze and
+Breeding Pool are watched slots, read at ten points rather than twenty, because
+the move that matters is smaller than the ordinary bar: non-Fallaji Hedge Maze
+went 11% to 30% in the fortnight to 6 September, which the twenty-point bar
+missed by one point.
 
 **Ephemerate is part of what makes the deck Esper** (2026-08-07):
 The trio alone (Goryo's Vengeance, Atraxa, Psychic Frog) admits Grixis
